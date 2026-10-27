@@ -6,14 +6,11 @@ const R = f => fs.readFileSync(path.join(__dirname, '../..', f), 'utf8');
 
 let pass = 0;
 const t = (ime, fn) => { fn(); pass++; console.log('  ✔ ' + ime); };
-console.log('Desktop verzija (GitHub Pages / PWA):');
+console.log('Desktop / PWA (samo APK se objavljuje):');
 
-t('pages.yml: isti paket kao APK (copy-assets.sh), objavljuje taj folder, build-apk.yml netaknut', () => {
-  const y = R('.github/workflows/pages.yml');
-  assert.ok(y.includes('branches: [claude/serene-tesla-piw1y5]') && y.includes('bash android/copy-assets.sh'));
-  assert.ok(y.includes('path: android/app/src/main/assets') && y.includes('actions/deploy-pages@v4') && y.includes('pages: write') && y.includes('id-token: write'));
-  assert.ok(y.includes('.nojekyll'));
-  assert.ok(!R('.github/workflows/build-apk.yml').includes('deploy-pages'), 'APK workflow ne objavljuje Pages');
+t('nema Pages workflowa: desktop verzija se ne objavljuje (dijelila bi localStorage/IndexedDB s Grmeč Navigatorom na istom domenu)', () => {
+  assert.ok(!fs.existsSync(path.join(__dirname, '../../.github/workflows/pages.yml')));
+  assert.ok(!R('.github/workflows/build-apk.yml').includes('deploy-pages'));
 });
 
 t('manifest: instalabilan na podputanji (relativni id/start_url/scope), ikone i maskable', () => {

@@ -30,8 +30,9 @@ drugi package, drugi podaci, drugi update kanal.
   `_escHtml`/escape; `firebase/firestore.rules` ne slabiti. Svaki mrežni poziv ima istek (AbortController ili
   `reliableFetch`), loading stanje i rezervu bez signala.
 - `index.html` se NE povećava — nova logika ide u module `static/js/`, stilovi u `static/css/geoforest.css`.
-- **Desktop (PWA)**: `.github/workflows/pages.yml` objavljuje isti paket na GitHub Pages (jednokratno
-  Settings → Pages → Source = GitHub Actions, inače job pada na `configure-pages`).
+- **Desktop se NE objavljuje**: nema GitHub Pages workflowa. `pogonboskrupa.github.io` je zajednički domen sa
+  Grmeč Navigatorom (localStorage/IndexedDB se dijele po domenu, ne po putanji, a ključevi `usf_*` su isti) —
+  Pages bi miješao podatke. Postavke → Prikaz (auto/računar/mobilni) ostaje samo kao opcija prikaza.
 
 ## Mogućnosti (Meni)
 
