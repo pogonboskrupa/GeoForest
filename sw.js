@@ -2,7 +2,7 @@
 // Service Worker — GeoForest
 // Promijeni APP_VERSION pri svakom deploymentu → okida update
 // =====================================================================
-const APP_VERSION = '1.0.1';
+const APP_VERSION = '1.0.2';
 const APP_CACHE   = 'geoforest-app-v' + APP_VERSION;
 const TILE_CACHE  = 'geoforest-tiles-v1';
 const LIB_CACHE   = 'geoforest-lib-v1';
@@ -30,12 +30,11 @@ const APP_SHELL = [
   './static/js/drive-karte.js',
   './static/js/tabovi.js',
   './static/js/karte-tab.js',
+  './static/js/postavke.js',
   './static/css/geoforest.css',
   './static/data/karte_drive.json',
   './static/data/kml_drive.json',
   './static/data/karte_github.json',
-  './static/fonts/dancing-script-latin-700-normal.woff2',
-  './static/fonts/dancing-script-latin-ext-700-normal.woff2',
   './static/js/nagib-poligon.js',
   './static/js/tacke.js',
   './static/js/ikone.js',

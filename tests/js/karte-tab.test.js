@@ -58,7 +58,7 @@ t('Postavke: 4 taba, iste opcije (ID-ovi), skok otvara tab, bez harmonike', () =
   assert.ok(pp.includes('data-tabovi="postavke"'));
   const tabovi = ['app', 'prikaz', 'gps', 'podaci'];
   const sek = tab => { const a = pp.indexOf('<div class="gf-tab-sek" data-tab="' + tab + '">'); const b = pp.indexOf('<div class="gf-tab-sek"', a + 10); return pp.slice(a, b > 0 ? b : undefined); };
-  const gdje = { app: ['set-update-card', 'set-korisnik-dno'], prikaz: ['set-s-razmjera', 'set-s-ui', 'ui-koord', 'ui-btnOblik', 'ui-btnZ', 'set-s-prikaz'],
+  const gdje = { app: ['set-update-card'], prikaz: ['set-s-sablon', 'set-sablon', 'set-s-razmjera', 'set-razmjera', 'set-s-ui', 'ui-koord', 'ui-btnOblik', 'ui-btnZ', 'set-s-prikaz'],
     gps: ['set-s-gps', 'set-bat-btn', 'set-autostart', 'set-s-trag', 'set-trag-w', 'set-trag-op', 'set-trag-ac'],
     podaci: ['set-s-podaci', 'set-restore-input', 'set-s-karte', 'set-kes-plocice', 'set-kes-teren', 'protomaps-key', 'set-uid-txt'] };
   for (const tb of tabovi) for (const id of gdje[tb]) assert.ok(sek(tb).includes('id="' + id + '"'), tb + ': ' + id);
@@ -78,6 +78,48 @@ t('Meni: velike kartice za radne tokove, pločice za ostalo, tap >= 48 px', () =
   assert.ok(/#meni-panel \.meni-card \{[^}]*min-height: 84px/.test(css));
   assert.ok(css.includes('#meni-panel section.meni-grp:nth-of-type(n+2) { display: grid; grid-template-columns: 1fr 1fr'));
   assert.ok(/#meni-panel \.meni-set \{[^}]*min-height: var\(--gf-tap\)/.test(css));
+});
+
+t('Korisnik aplikacije je uklonjen (kod, HTML, font)', () => {
+  for (const x of ['set-korisnik', 'set-profil', 'meni-korisnik', '_korisnikUi', 'Ko koristi aplikaciju', 'Dancing Script', 'kor-ime']) assert.ok(!HTML.includes(x), x);
+  assert.ok(!fs.existsSync(path.join(__dirname, '../../static/fonts')));
+  assert.ok(!R('sw.js').includes('static/fonts') && !R('android/copy-assets.sh').includes('static/fonts'));
+});
+
+t('donji bar: SVG ikone, 60 px, natpis uvijek vidljiv, aktivna stavka puna zelena', () => {
+  const nav = HTML.slice(HTML.indexOf('<nav id="main-tabs"'), HTML.indexOf('</nav>', HTML.indexOf('<nav id="main-tabs"')));
+  assert.strictEqual((nav.match(/class="mtab( active)?"/g) || []).length, 4);
+  assert.strictEqual((nav.match(/<svg/g) || []).length, 4);
+  assert.ok(!/\p{Extended_Pictographic}/u.test(nav), 'bez emoji ikona');
+  ['Mapa', 'Karte', 'Meni', 'Postavke'].forEach(n => assert.ok(nav.includes('</span>' + n + '</button>'), n));
+  const css = R('static/css/geoforest.css');
+  assert.ok(/#main-tabs \.mtab \{[^}]*min-height: 60px/.test(css) && /#main-tabs \.mtab\.active \{[^}]*background: var\(--gf-zel-jak\)/.test(css));
+});
+
+t('šabloni interfejsa: 4 šablona, primjena mijenja samo izgled (ne koordinatni sistem), prepoznaje aktivni', () => {
+  const P = require('../../static/js/postavke.js');
+  assert.deepStrictEqual(P.SABLONI.map(s => s.id), ['standard', 'teren', 'noc', 'kompakt']);
+  const zad = { tema: 'tamna', bdgA: 55, bdgFs: 11, bdgOut: 'tanak', blur: 0, btnA: 86, btnZ: 100, btnOblik: 'zaobljeno', btnIk: 'normalne', koord: 'wgs', bdgElev: false };
+  assert.strictEqual(P.aktivniSablon(zad).id, 'standard');
+  assert.strictEqual(P.aktivniSablon({ ...zad, bdgA: 60 }), null, 'ručna izmjena = prilagođeno');
+  const teren = P.SABLONI.find(s => s.id === 'teren').v;
+  assert.ok(teren.tema === 'svijetla' && teren.btnZ >= 120 && teren.bdgFs >= 14);
+  for (const s of P.SABLONI) assert.ok(!('koord' in s.v) && !('bdgElev' in s.v) && !('bdgMgi' in s.v) && !('bdgRz' in s.v), s.id + ' ne dira koordinate');
+  const kljucevi = Object.keys(P.SABLONI[0].v).sort();
+  for (const s of P.SABLONI) assert.deepStrictEqual(Object.keys(s.v).sort(), kljucevi);
+});
+
+t('prikaz po razmjeri: tragovi, KML, sjekačke linije, tačke, mjerenja; sjekačke poštuju razmjeru osim dok traje vodič/crtanje', () => {
+  const P = require('../../static/js/postavke.js');
+  assert.strictEqual(P.zaokruzi(31234), 31000); assert.strictEqual(P.zaokruzi(10), 500); assert.strictEqual(P.zaokruzi(9e9), 5000000);
+  const js = R('static/js/postavke.js');
+  for (const k of ["'tragovi'", "'kml'", "'sjek'", "'slike'", "'mjerenja'"]) assert.ok(js.includes(k), k);
+  assert.ok(HTML.includes("sjek: 0, mjerenja: 25000") && HTML.includes("sjek: false, mjerenja: false") && HTML.includes("USFSjek.osvjezi()"));
+  const sj = R('static/js/sjekacke.js');
+  assert.ok(sj.includes("_razmjeraSkriva('sjek') && !vodic && !crt && !ured") && sj.includes('osvjezi: () => crtaj()'));
+  assert.ok(sj.includes('p.vidljiv !== false && !skriv') && sj.includes('!sakrivenoRazmjerom()'), 'crtanje i dodir');
+  assert.ok(R('static/js/postavke.js').includes('Sada sakriveno') && R('static/js/postavke.js').includes('_setRazmjeraTrenutna'));
+  for (const f of ['static/js/postavke.js']) { assert.ok(HTML.includes('<script src="' + f + '"></script>')); assert.ok(R('sw.js').includes("'./" + f + "'") && R('android/copy-assets.sh').includes(f)); }
 });
 
 console.log('\n' + pass + ' prošlo, ' + (process.exitCode ? 'IMA PALIH' : '0 palo') + ' — karte tab');

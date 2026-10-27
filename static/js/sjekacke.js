@@ -1107,9 +1107,13 @@ if (typeof module !== 'undefined' && module.exports) module.exports = { slIzoDij
   // ── Karta ────────────────────────────────────────────────────────────
   const zadnjiBr = p => p.linije.reduce((m, x) => Math.max(m, x.br || 0), 0);
   function oznaka(lin) { return 'L' + lin.br + (lin.dio ? String.fromCharCode(97 + lin.dio) : ''); }
+  // Postavke → Prikaz po razmjeri → Sjekačke linije: sakriveno kad je razmjera sitnija od granice;
+  // za vrijeme vodiča, crtanja i uređivanja linije se uvijek vide.
+  const sakrivenoRazmjerom = () => typeof _razmjeraSkriva === 'function' && _razmjeraSkriva('sjek') && !vodic && !crt && !ured;
   function crtaj() {
     grp.clearLayers(); natpisi = [];
-    citaj().filter(p => p.vidljiv !== false).forEach(p => {
+    const skriv = sakrivenoRazmjerom();
+    citaj().filter(p => p.vidljiv !== false && !skriv).forEach(p => {
       const akt = p.id === aktivni;
       L.polygon(p.ring, { pane: 'sjekackePane', color: '#fde68a', weight: akt ? 2.5 : 1.5, dashArray: '6 4', fill: false, interactive: false }).addTo(grp);
       const vodiOvdje = vodic && vodic.pid === p.id;
@@ -1185,7 +1189,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = { slIzoDij
   map.on('zoomend', () => { const z = map.getZoom(); if ((z >= 15) !== (zZadnji >= 15)) crtaj(); else postaviNatpise(); zZadnji = z; });
   if (typeof _kartaKlikIzvor === 'function') _kartaKlikIzvor((ll, kp) => {
     const out = [];
-    citaj().filter(p => p.vidljiv !== false).forEach(p => p.linije.forEach(lin => {
+    citaj().filter(p => p.vidljiv !== false && !sakrivenoRazmjerom()).forEach(p => p.linije.forEach(lin => {
       out.push({ vrsta: 'linija', d: _pxDoLinije(kp, slGeo(lin).map(q => L.latLng(q[0], q[1]))), otvori: at => popup(p, lin, at) });
     }));
     return out;
@@ -1720,7 +1724,7 @@ ${folderi}
     izIzvora() { const k = document.getElementById('sl-izvor')?.value, s = izvori().find(x => x.k === k); if (!s) { showToast('Izaberi poligon s liste'); return; } napravi(s.ring(), s.ime || s.t.replace(/^\S+\s/, '')); },
     izPrstena(ring, naziv) { map.closePopup(); if (!Array.isArray(ring) || ring.length < 3) return; _openStubPanel('sjekacke-panel', 'meni'); napravi(ring, naziv || 'Spojeni odsjeci'); },
     izKljuca(k) { map.closePopup(); const s = izvori().find(x => x.k === k); if (!s) { showToast('⚠ Poligon nije pronađen'); return; } _openStubPanel('sjekacke-panel', 'meni'); napravi(s.ring(), s.ime || s.t.replace(/^\S+\s/, '')); },
-    vodi, vodicKraj, zavrsiLiniju, crtPocni, izKml, partije,
+    vodi, vodicKraj, zavrsiLiniju, crtPocni, izKml, partije, osvjezi: () => crtaj(),
     projekti: () => citaj().map(p => ({ id: p.id, naziv: p.naziv, ring: p.ring, linija: p.linije.filter(x => !x.dio).length })),
     posaljiLiniju(pid, lid) { const p = nadji(pid); if (!p) return; map.closePopup(); izvozKml(p, false, lid); },
     snimanje() { if (vodic) { vodic.snima = !vodic.snima; vodicOsvjezi(); } },

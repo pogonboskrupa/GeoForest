@@ -52,9 +52,15 @@ drugi package, drugi podaci, drugi update kanal.
   preuzima se % > spremno > uz PIN, veličina, traka napretka, pregled lokalne karte; `#kh-server` KML sa servera),
   **🌍 Podloga i teren** (`#kh-razmjera`, bazna karta, Nagib terena, Ekspozicija i sjenčenje). `_khStat` i
   `_driveKarteRender` zovu `USFKarteTab.render()`; preuzimanje i dalje `_dkPreuzmi`/`_dkOtkljucaj`/`_dkPrekini`.
-- **Postavke** = četiri taba (`data-tabovi="postavke"`): Aplikacija (ažuriranje, korisnik), Prikaz (razmjera,
-  koordinate i dugmad, desktop/mobilni), GPS i trag, Podaci (kopija, memorija, Protomaps, napredno). Sekcije su
+- **Postavke** = četiri taba (`data-tabovi="postavke"`): Aplikacija (ažuriranje), Prikaz (🎨 šablon interfejsa,
+  prikaz po razmjeri, koordinate i dugmad, desktop/mobilni), GPS i trag, Podaci (kopija, memorija, Protomaps, napredno). Sekcije su
   otvorene kartice `section.set-kar` (`#set-s-*`); `_setSkok(id)` prvo otvori tab (`USFTabovi.otvoriZa`).
+- **Šablon interfejsa** (`static/js/postavke.js`, `_setSablon`): Standardni / Teren (svijetla podloga, krupan tekst, dugmad 125 %) /
+  Noć / Kompaktni — postavlja ključeve `_uiPrikaz` (tema, providnost, veličina, oblik/debljina dugmadi), NE koordinatni sistem
+  ni „šta se prikazuje”; ručna izmjena = „Prilagođeno”. **Prikaz po razmjeri** (isti modul, `_prRazmjera`, `usf_prikaz_razmjera`):
+  tragovi, KML/SHP, sjekačke linije (`sjek`, `USFSjek.osvjezi`; uvijek vidljive tokom vodiča/crtanja/uređivanja), tačke, mjerenja;
+  čipovi 1:5 000…1:250 000, vlastita vrijednost i „📍 Trenutna razmjera”; status „Sada vidljivo/sakriveno”.
+- **Donji bar** (`#main-tabs`, nav): SVG ikone, 60 px, aktivna stavka puna zelena; `--dock-b` (76 px) se ne mijenja.
 - Dizajn za sunce i rukavice (`static/css/geoforest.css`, učitava se POSLIJE inline stilova): tabovi 64 px,
   dugmad ≥ `--gf-tap` (52 px), tekst ≥ 14 px, stanje = ikona + tekst. Test `tests/js/karte-tab.test.js`.
 - **Liste karata sa servera** (opcija A): app čita `karte_drive.json`, `kml_drive.json`, `karte_github.json` sa
@@ -64,6 +70,7 @@ drugi package, drugi podaci, drugi update kanal.
 - **Teren**: lokalni DEM `static/data/dem_opcine.tif` (`dem-local.js`, `USFDem`, sam učitava `static/libs/geotiff.js`)
   + Terrarium pločice (`_getTerrariumTile`/`_terrariumDecodeTile`, blok TEREN u `index.html`, keš `_TERR_CACHE`).
 - **Izvještaj odjela** (`odjeli.js`): samo teren (nagib %, visine, ekspozicija, ruža), slika A4 i izvoz KML/CSV.
+- Korisnik aplikacije (ime) i font Dancing Script su uklonjeni.
 - Rezervna kopija piše `app: 'geoforest'`, a prima i kopiju Grmeč Navigatora (`_KOPIJA_APP`) — isti `usf_` ključevi.
 
 ## Detalji naslijeđenih modula
@@ -302,9 +309,6 @@ drugi package, drugi podaci, drugi update kanal.
   susjeda; „S” ispod strelice izostavljen. Pita se `prompt` za natpis (`opis.natpisGore`, gore u sredini; prazno = bez ičega, Odustani = ne sprema).
   Glavna granica (`glavni`) ima bijeli rub ispod crte da se ne gubi na podlozi (važi i za sjekačke linije).
 - **Slika odjela — linije poligona**: SVE crno isprekidano, ISTO (odjel i susjedi 9 px `[30,14]` s bijelim rubom, `rub`), bez crvene; natpisi odjela i susjeda ostaju na slici (`_odjelOznaka`: atribut ODJEL · ODSJEK, inače naziv) — kao štampana granica na podlozi.
-- **Korisnik** (localStorage `usf_korisnik` {ime, datum prvog upisa}; `_korisnikUi`, `_korisnikSpremi/Uredi/Ukloni`): bez imena gore u Postavkama kartica s poljem za unos (`#set-profil`);
-  s imenom gore SAMO ime i prezime centrirano preko cijele kartice, pismom Dancing Script 700 (`.kor-ime`; font lokalno u `static/fonts/` — SIL OFL, latin + latin-ext za č ć š đ ž, radi offline; u sw.js i copy-assets.sh), isto u Meniju `#meni-korisnik`, a uređivanje (✏ Uredi / Odustani / 🗑 Ukloni) je u kartici NA DNU Postavki (`#set-korisnik-dno`).
-  Prazno ime ne briše (samo Ukloni). `usf_` ključ ide u rezervnu kopiju. Test `tests/js/korisnik.test.js`.
 - **Sjekačke linije — sve projekte odjednom**: traka na vrhu liste (`sl-sve`): „Sakrij sve / Prikaži sve” (`p.vidljiv` svih, prekidač po stanju) i „Obriši sve (N)” (confirm, `pisi([])`, gasi vodič).
   Obrađuje se u `akcija` PRIJE `nadji(id)` (dugmad nemaju data-id). Test `tests/js/sjekacke-sve.test.js`.
 - **Karte iz GitHub releasea** (`pogonboskrupa/KARTE`, Učitaj kartu → „☁ Karte za preuzimanje”): ZASEBNA lista `static/data/karte_github.json` (`id, naziv, opis, mb, url` — javni
