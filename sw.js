@@ -2,7 +2,7 @@
 // Service Worker — GeoForest
 // Promijeni APP_VERSION pri svakom deploymentu → okida update
 // =====================================================================
-const APP_VERSION = '1.0.3';
+const APP_VERSION = '1.0.4';
 const APP_CACHE   = 'geoforest-app-v' + APP_VERSION;
 const TILE_CACHE  = 'geoforest-tiles-v1';
 const LIB_CACHE   = 'geoforest-lib-v1';
@@ -127,8 +127,6 @@ self.addEventListener('fetch', event => {
   // API pozivi — nikad ne keširati
   if (url.includes('firestore.googleapis.com') || url.includes('firebaseio.com') ||
       url.includes('identitytoolkit.googleapis.com') ||
-      url.includes('firms.modaps.eosdis.nasa.gov') ||
-      url.includes('globalforestwatch.org') || url.includes('effis') ||
       url.includes('elevation-tiles-prod')) {
     return;
   }
@@ -242,21 +240,6 @@ self.addEventListener('message', event => {
     event.waitUntil(self.registration.getNotifications({ tag: 'gps-recording' })
       .then(ns => ns.forEach(n => n.close())));
     _stopRecLock();
-    return;
-  }
-  // Upozorenje na nov požar u blizini. requireInteraction: korisnik je na
-  // terenu i telefon mu je u džepu — obavještenje ne smije samo proći i nestati.
-  if (event.data?.type === 'show-pozar-notification') {
-    const { naslov, tijelo, la, lo } = event.data;
-    event.waitUntil(self.registration.showNotification(naslov || '🔥 Nov požar u blizini', {
-      body: tijelo,
-      icon: './icon-192.png',
-      badge: './icon-192.png',
-      tag: 'pozar-blizu',
-      data: { la, lo },
-      requireInteraction: true,
-      vibrate: [300, 120, 300]
-    }));
     return;
   }
 });

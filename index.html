@@ -2285,7 +2285,7 @@ body.sl-uredi #sl-ured { display: block; }
 // android/app/build.gradle versionCode+versionName. Sva tri MORAJU biti
 // usklađena prije svakog commita.
 // =====================================================================
-const APP_VER = 'v1.0.3';
+const APP_VER = 'v1.0.4';
 document.getElementById('meni-ver-badge').textContent = 'GeoForest ' + APP_VER;
 
 // Verzije koriste tri jednocifrena segmenta: patch i minor idu 0–9.
@@ -7119,47 +7119,6 @@ async function _sqlmapRestoreManual(name) {
 }
 
 _sqlmapRestoreAll();
-
-// =====================================================================
-// NATIVE HTTP MOST (APK) — zaobilazi CORS preko MainActivity.NetBridge
-// (Java). FIRMS ne šalje CORS zaglavlja ni za arhivske CSV izvoze — CORS
-// je pravilo BROWSERA, iz JS-a se ne može zaobići nijednim trikom, ali
-// native Java HTTP poziv ga uopšte nema. U APK-u ide native put; u
-// običnom browseru (GitHub Pages) AndroidNet ne postoji pa se tiho
-// koristi obični fetch() (tamo CORS blokada ostaje dok NASA ne doda
-// zaglavlja).
-// =====================================================================
-const _NET_ceka = {};
-let _netSeq = 0;
-function _nativeNetDostupan() { return typeof AndroidNet !== 'undefined' && AndroidNet && typeof AndroidNet.fetchText === 'function'; }
-// Java (MainActivity.NetBridge.fetchText) zove ovo kad zahtjev završi.
-// Tijelo stiže kao Base64 da se CSV (navodnici, prelomi reda) ne pokvari.
-function _nativeNetOdgovor(id, status, b64, greska) {
-  const p = _NET_ceka[id];
-  if (!p) return;
-  delete _NET_ceka[id];
-  clearTimeout(p.t);
-  if (greska) { const e = new Error(greska); e.name = 'NativeError'; p.reject(e); return; }
-  try {
-    const bin = atob(b64 || '');
-    const bytes = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    p.resolve({ status, text: new TextDecoder('utf-8').decode(bytes) });
-  } catch(e) { p.reject(e); }
-}
-function _nativeNetFetch(url, ms, zaglavlja, tijelo) {
-  return new Promise((resolve, reject) => {
-    const id = 'n' + (++_netSeq);
-    const t = setTimeout(() => { delete _NET_ceka[id]; const e = new Error('native timeout'); e.name = 'TimeoutError'; reject(e); }, (ms || 20000) + 5000);
-    _NET_ceka[id] = { resolve, reject, t };
-    try { AndroidNet.fetchText(id, url, ms || 20000, zaglavlja ? JSON.stringify(zaglavlja) : null, tijelo ? JSON.stringify(tijelo) : null); }
-    catch(e) { clearTimeout(t); delete _NET_ceka[id]; reject(e); }
-  });
-}
-function _withTimeout(promise, ms) {
-  const t = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout ' + ms + 'ms')), ms));
-  return Promise.race([promise, t]);
-}
 
 // ── PIN karata: zajednički unos (Drive/GitHub karte i KML sa servera, drive-karte.js) ──
 async function _pinUnos(poruka, greskeKljuc, provjeri) {

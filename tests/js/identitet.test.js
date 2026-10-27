@@ -67,4 +67,10 @@ t('rezervna kopija: piše geoforest, prima i Grmeč Navigator', () => {
   assert.ok(H.includes("JSON.stringify({ app: 'geoforest',") && H.includes("const _KOPIJA_APP = ['geoforest', 'grmec-navigator'];"));
 });
 
+t('nema mrtvih nativnih mostova uklonjenih modula (AndroidNet, AndroidNotif, AndroidRange)', () => {
+  const j = R('android/app/src/main/java/ba/spd/geoforest/MainActivity.java');
+  for (const x of ['NetBridge', 'AppNotifBridge', 'RangeBridge', 'AndroidNet', 'AndroidNotif', 'AndroidRange', 'firms.modaps', 'deadtrees', 'pozari_upozorenja']) assert.ok(!j.includes(x), x);
+  assert.ok(!/AndroidNet|_nativeNet/.test(R('index.html')) && !/pozar|firms/i.test(R('sw.js')));
+});
+
 console.log('\n' + pass + ' prošlo, ' + (process.exitCode ? 'IMA PALIH' : '0 palo') + ' — identitet');
