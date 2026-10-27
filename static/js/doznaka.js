@@ -204,8 +204,9 @@
     if (!snima) return;
     const gps = typeof lastP !== 'undefined' && lastP && Number.isFinite(lastP.la) ? lastP : null;
     bar.style.setProperty('--c', snima.boja);
-    bar.innerHTML = `<div class="db-top"><i></i><b>${esc(snima.ime)}</b><span>${fmtM(duzinaLL(snima.pts))}${gps ? ' · GPS ±' + Math.round(gps.ac || 0) + ' m' : ' · čekam GPS…'}</span></div>
-      <div class="db-dug"><button data-a="kraj">✓ Završi pojas</button><button data-a="odbaci">✕ Odbaci</button></div>`;
+    bar.classList.add('rec');
+    bar.innerHTML = `<div class="db-top"><i></i><b>${esc(snima.ime)}</b><span>${fmtM(duzinaLL(snima.pts))}</span></div>
+      <div class="db-dug"><button data-a="kraj" aria-label="Završi pojas">✓ Završi</button><button data-a="odbaci" aria-label="Odbaci pojas">✕</button></div>`;
   }
   function snimaTik() {
     if (!snima) return;
@@ -282,8 +283,7 @@
       <div class="sl-dug"><button data-a="uvezi">📥 Uvezi trag (KML)</button><button data-a="posalji" ${p.tragovi.length ? '' : 'disabled'}>📤 Pošalji sve</button></div>
       <input type="file" id="doz-fajl" accept=".kml,application/vnd.google-earth.kml+xml,text/xml" hidden>
       ${red ? `<h4 class="dz-h">Projektanti</h4>${red}` : ''}
-      ${tr ? `<h4 class="dz-h">Pojasevi</h4>${tr}` : '<p class="uk-izvor">Još nema pojaseva. Pokreni snimanje i kreći se onuda kuda doznačuješ stabla, ili uvezi KML trag.</p>'}
-      <p class="uk-izvor">Prostor odjela se dijeli po najbližem pojasu: sredina između susjednih pojaseva je isprekidana linija, svaka polovina dobija boju svog projektanta, a prvi pojas boji sve do granice odjela.</p></section>`;
+      ${tr ? `<h4 class="dz-h">Pojasevi</h4>${tr}` : ''}</section>`;
   }
   function render() {
     const e = typeof document !== 'undefined' && el(); if (!e) return;
@@ -292,7 +292,7 @@
     const lista = S.projekti.map(p => `<div class="dz-pr${p.id === S.akt ? ' akt' : ''}" data-id="${esc(p.id)}"><button class="dz-pr-i" data-a="otvori"><b>${esc(p.naziv)}</b><small>${esc(p.odjel || '')} · ${fmt(p.ha, 2)} ha · ${p.tragovi.length} ${p.tragovi.length === 1 ? 'pojas' : 'pojasa'}</small></button>
       <button data-a="zoom" aria-label="Na karti">🔍</button><button data-a="vid" aria-label="Prikaži/sakrij">${p.vis === false ? '🙈' : '👁'}</button><button data-a="bris" aria-label="Izbriši">🗑</button></div>`).join('');
     const p = aktivni();
-    e.innerHTML = `<section class="ng-card dz-uvod"><h3>Doznaka stabala</h3><p class="uk-izvor">Napravi projekat, izaberi poligon odjela (iz njega dolazi površina), pa na terenu snimaj pojaseve kojima se kreće projektant.</p>
+    e.innerHTML = `<section class="ng-card dz-uvod"><h3>Doznaka stabala</h3>
       <div class="sl-dug"><button class="zp-glavno" data-a="novi">＋ Novi projekat</button></div>${lista ? `<div class="dz-lista">${lista}</div>` : ''}</section>${p ? projektHtml(p) : ''}`;
     if (p && !p._pod && !p._racuna && p.tragovi.length) preracunaj(p);
   }
@@ -321,9 +321,9 @@
     bar.classList.toggle('show', !!izbor || !!snima);
     if (!izbor) return;
     const s = izbor.sel;
-    bar.style.setProperty('--c', '#fb7185');
-    bar.innerHTML = `<div class="db-top"><b>🗺 Dodirni odjel na karti</b><span>${map.getZoom() < 11 ? 'zumiraj bliže da se vide poligoni' : esc(izbor.naziv)}</span></div>
-      <div class="db-izb">${s ? `<b>${esc(s.ime)}</b> · ${fmt(s.ha, 2)} ha <small>${esc(s.sloj)}</small>` : 'Dodirom izaberi poligon koji predstavlja odjel.'}</div>
+    bar.style.setProperty('--c', '#fb7185'); bar.classList.remove('rec');
+    bar.innerHTML = `<div class="db-top"><b>🗺 Dodirni odjel na karti</b><span>${esc(izbor.naziv)}</span></div>
+      <div class="db-izb"${s ? '' : ' hidden'}>${s ? `<b>${esc(s.ime)}</b> · ${fmt(s.ha, 2)} ha <small>${esc(s.sloj)}</small>` : ''}</div>
       <div class="db-dug"><button data-a="izb-ok" ${s ? '' : 'disabled'}>✓ Napravi projekat</button><button data-a="izb-x">✕ Odustani</button></div>`;
   }
   function izbKlik(e) {
@@ -364,7 +364,7 @@
   const zapamtiProjektanta = ime => { try { localStorage.setItem(KLJUC_PROJ, ime); } catch (e) {} };
   const zadnjiProjektant = () => { try { return localStorage.getItem(KLJUC_PROJ) || ''; } catch (e) { return ''; } };
   async function pitajProjektanta(naslov, zad) {
-    const v = typeof _dlgPrompt === 'function' ? await _dlgPrompt('Ime projektanta (svaki projektant dobija svoju boju)', zad || zadnjiProjektant(), { title: naslov, okLabel: 'Spremi' }) : prompt('Projektant', zad || '');
+    const v = typeof _dlgPrompt === 'function' ? await _dlgPrompt('Ime projektanta', zad || zadnjiProjektant(), { title: naslov, okLabel: 'Spremi' }) : prompt('Projektant', zad || '');
     const ime = v == null ? '' : String(v).trim().slice(0, 40);
     return ime || null;
   }

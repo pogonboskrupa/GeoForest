@@ -55,4 +55,8 @@ t('odjel se bira dodirom na karti (ne listom)', () => {
   assert.ok(!J.includes('doz-trazi') && !J.includes('izborHtml'), 'nema liste za izbor');
 });
 
+t('Doznaka: bez opisnih hint tekstova', () => {
+  assert.ok(!R('static/js/doznaka.js').includes('uk-izvor'));
+});
+
 console.log('\n' + pass + ' prošlo, ' + (process.exitCode ? 'IMA PALIH' : '0 palo') + ' — doznaka');

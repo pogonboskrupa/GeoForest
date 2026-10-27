@@ -507,3 +507,11 @@ html[data-btn-stil="akcent"] #ab-loc:not(.active) { box-shadow: 0 0 0 1px rgba(7
 #doz-bar .db-izb small { display: block; color: var(--gf-dim, #94a3b8); font-size: 14px; }
 #doz-bar .db-dug button:disabled { opacity: .4; }
 #doz-bar .db-dug button[data-a="izb-ok"] { flex: 2; background: var(--gf-zel-jak, #22c55e); border-color: #86efac; color: #06140d; }
+/* traka snimanja pojasa: jedan kompaktan red */
+#doz-bar.show.rec { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 16px; }
+#doz-bar.rec .db-top { flex: 1; min-width: 0; gap: 8px; font-size: 14px; }
+#doz-bar.rec .db-top b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; }
+#doz-bar.rec .db-dug { margin: 0; flex: none; gap: 6px; }
+#doz-bar.rec .db-dug button { min-height: 44px; flex: none; padding: 0 14px; font-size: 15px; }
+#doz-bar.rec .db-dug button[data-a="odbaci"] { width: 44px; padding: 0; }
+#doz-bar .db-izb[hidden] { display: none; }
