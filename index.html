@@ -1962,6 +1962,7 @@ body.sl-uredi #sl-ured { display: block; }
 <div id="karte-panel" class="usf-panel">
   <div class="up-hdr"><h2>🗺 Karte</h2><button class="up-close" onclick="switchMainTab('karta')">✕</button></div>
   <div class="up-body">
+    <section class="kh-gran-sve" id="kh-gran-sve" hidden></section>
     <div class="gf-tabs" role="tablist" aria-label="Karte po izvoru" data-tabovi="karte">
       <button role="tab" data-t="tel"><i>📱</i><span>Na telefonu</span><b id="kt-n-tel"></b></button>
       <button role="tab" data-t="srv"><i>☁</i><span>Server</span><b id="kt-n-srv"></b></button>
@@ -2285,7 +2286,7 @@ body.sl-uredi #sl-ured { display: block; }
 // android/app/build.gradle versionCode+versionName. Sva tri MORAJU biti
 // usklađena prije svakog commita.
 // =====================================================================
-const APP_VER = 'v1.1.1';
+const APP_VER = 'v1.1.2';
 document.getElementById('meni-ver-badge').textContent = 'GeoForest ' + APP_VER;
 
 // Verzije koriste tri jednocifrena segmenta: patch i minor idu 0–9.
@@ -6267,7 +6268,7 @@ function _khStat() {
     if (kml) kml.textContent = kmlLs.length ? kmlLs.length + (kmlLs.length === 1 ? ' sloj' : ' sloja') + ' · ' + st.pol + ' poligona · ' + Math.round(st.ha).toLocaleString('bs-BA') + ' ha' : 'Odjeli, odsjeci, putevi i tačke iz .kml / .kmz / .shp';
     const vidljivi = kmlLs.filter(_kmlNaKarti).length;
     bedz('kh-b-kml', kmlLs.length ? vidljivi + '/' + kmlLs.length + ' na karti' : '');
-    _khGranice(); _khRazmjera(); _khOffline(); _khServer(); _khSlojevi(); _khObavijest();
+    _khGranSve(); _khGranice(); _khRazmjera(); _khOffline(); _khServer(); _khSlojevi(); _khObavijest();
     if (window.USFKarteTab) USFKarteTab.render();
     bedz('kh-b-ozn', kmlLs.length ? kmlLs.length + (kmlLs.length === 1 ? ' sloj' : ' sloja') : ''); _kedHubRender();
     // Pregled: podloga, offline, KML, uključeni slojevi (teren + praćenje šume) — dodir vodi u odgovarajuću sekciju
@@ -6308,6 +6309,29 @@ function _khObavijest() {
 function _khGranicaZapis() { return _kmlServerLista().find(z => _KML_POLIGONSKI.test(z.naziv)); }
 // Preuzmi/osvježi zapis sa servera: bez PIN-a prvo traži otključavanje
 function _khSrvAkcija(id) { _dkKljuc() ? _dkmlPreuzmi(id) : _dkOtkljucaj(); }
+// „Prikaži granice odjela” (vrh taba Karte): jedan prekidač za SVE KML/KMZ/SHP slojeve s poligonima.
+// Isključeno: „Granice taksacije” ostaje kao izvor za izbor odjela (samoOdabir), ostali poligonski slojevi se skrivaju.
+const _kmlPoligonskiSlojevi = () => kmlLs.filter(k => k && k.grp && _kmlStat(k).pol > 0);
+function _khGranSve() {
+  const el = document.getElementById('kh-gran-sve'); if (!el) return;
+  const l = _kmlPoligonskiSlojevi();
+  el.hidden = !l.length; if (!l.length) return;
+  const n = l.filter(_kmlNaKarti).length, on = n > 0;
+  el.className = 'kh-gran-sve' + (on ? ' on' : '');
+  el.innerHTML = `<div class="kgs-t"><b>▱ Prikaži granice odjela</b><small>${n} od ${l.length} sloja s poligonima na karti</small></div>
+    <label class="ng-switch" aria-label="Prikaži granice odjela"><input type="checkbox" ${on ? 'checked' : ''} onchange="_khGranSveVid(this.checked)"><span></span></label>`;
+}
+function _khGranSveVid(on) {
+  _kmlPoligonskiSlojevi().forEach(k => {
+    if (on) { k.samoOdabir = false; k.vis = true; _kmlPrimijeniPrikaz(k); if (_kmlJePoligonski(k.name)) _kmlGranicaIstakni(k); }
+    else if (_kmlJePoligonski(k.name)) { k.samoOdabir = true; _kmlPrimijeniPrikaz(k); }
+    else { k.vis = false; _kmlPrimijeniPrikaz(k); }
+  });
+  try { _kmlSaveAllFromRegistry(); } catch (e) {}
+  if (typeof _oznOsvjezi === 'function') _oznOsvjezi();
+  _kmlRegRender(); _khStat();
+  showToast(on ? '👁 Granice odjela prikazane' : '🙈 Granice odjela sakrivene');
+}
 function _khGranice() {
   const el = document.getElementById('kh-gran'); if (!el) return;
   const k = kmlLs.find(x => _kmlJePoligonski(x.name)), z = _khGranicaZapis();

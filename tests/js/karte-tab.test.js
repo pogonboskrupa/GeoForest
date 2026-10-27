@@ -178,4 +178,10 @@ t('Postavke: kartice su sklopive i pamte stanje, _setSkok ih otvara', () => {
   assert.ok(HTML.includes('_setSekOtvori(el)'));
 });
 
+t('Karte: na vrhu prekidač „Prikaži granice odjela” za sve poligonske KML slojeve', () => {
+  assert.ok(HTML.indexOf('id="kh-gran-sve"') > 0 && HTML.indexOf('id="kh-gran-sve"') < HTML.indexOf('data-tabovi="karte"'));
+  assert.ok(HTML.includes('function _khGranSveVid(on)') && HTML.includes('_khGranSve(); _khGranice();'));
+  assert.ok(R('static/css/geoforest.css').includes('.kh-gran-sve'));
+});
+
 console.log('\n' + pass + ' prošlo, ' + (process.exitCode ? 'IMA PALIH' : '0 palo') + ' — karte tab');

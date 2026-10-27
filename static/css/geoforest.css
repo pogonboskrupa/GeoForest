@@ -453,3 +453,11 @@ html[data-btn-stil="akcent"] #ab-loc:not(.active) { box-shadow: 0 0 0 1px rgba(7
 #tk-sheet .tk-dno #tk-obrisi { flex: 0 0 60px; }
 #tk-sheet .tk-dno [hidden], #tk-sheet #tk-obrisi[hidden] { display: none !important; }
 #msr-panel .msr-hint small, #msr-panel .msr-hint span { display: block; font-size: 13.5px !important; color: var(--gf-dim) !important; margin-top: 3px; }
+
+/* Karte → „Prikaži granice odjela” (prekidač za sve poligonske KML slojeve), vrh taba */
+#karte-panel .kh-gran-sve { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 64px; margin: 0 0 12px; padding: 10px 16px; border: 2px solid var(--gf-rub); border-left: 6px solid #4ade80; border-radius: 16px; background: var(--gf-kar); }
+#karte-panel .kh-gran-sve[hidden] { display: none; }
+#karte-panel .kh-gran-sve.on { border-color: #22c55e; background: linear-gradient(145deg, #12402a, #0d1a14); }
+#karte-panel .kh-gran-sve .kgs-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+#karte-panel .kh-gran-sve b { font-size: 17px; font-weight: 900; color: var(--gf-txt); }
+#karte-panel .kh-gran-sve small { font-size: 14px; color: var(--gf-dim); }
