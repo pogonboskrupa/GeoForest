@@ -211,6 +211,12 @@
 #main-tabs .mtab:active { transform: scale(.95); }
 #main-tabs .mtab.active { background: var(--gf-zel-jak); border-color: #86efac; color: var(--gf-zel-tamna); box-shadow: 0 4px 14px rgba(34,197,94,.35); }
 #main-tabs .mtab.active::before { display: none; }
+/* Svaki tab ima svoju boju: ikona i natpis uvijek u boji, aktivni tab pun u toj boji */
+#main-tabs .mtab { --tc: #4ade80; color: var(--tc); border-color: color-mix(in srgb, var(--tc) 45%, #1f2f27); background: color-mix(in srgb, var(--tc) 12%, #0b1511); }
+#main-tabs .mtab[data-tab="karte"] { --tc: #38bdf8; }
+#main-tabs .mtab[data-tab="meni"] { --tc: #fbbf24; }
+#main-tabs .mtab[data-tab="postavke"] { --tc: #c4b5fd; }
+#main-tabs .mtab.active { background: var(--tc); border-color: color-mix(in srgb, var(--tc) 55%, #fff); color: #06140d; box-shadow: 0 4px 14px color-mix(in srgb, var(--tc) 40%, transparent); }
 #main-tabs .mtab.active .mtab-ico svg { stroke-width: 2.5; }
 #main-tabs .mtab:focus-visible { outline: 3px solid #fde047; outline-offset: 1px; }
 
