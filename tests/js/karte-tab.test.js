@@ -171,4 +171,11 @@ t('mjerenje: dok se crta uska traka bez statistike; poslije Završi kartica s po
   assert.ok(f.includes("classList.remove('show')") && f.includes('_msrOpenPopupNa(entry'));
 });
 
+t('Postavke: kartice su sklopive i pamte stanje, _setSkok ih otvara', () => {
+  assert.ok(/set-kar\.sklopljeno > :not\(\.set-kar-h\) \{ display: none/.test(R('static/css/geoforest.css')));
+  const js = R('static/js/postavke.js');
+  assert.ok(js.includes("'usf_set_otv'") && js.includes('_setSekPostavi') && js.includes('_setSekOtvori'));
+  assert.ok(HTML.includes('_setSekOtvori(el)'));
+});
+
 console.log('\n' + pass + ' prošlo, ' + (process.exitCode ? 'IMA PALIH' : '0 palo') + ' — karte tab');

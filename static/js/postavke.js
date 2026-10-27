@@ -121,5 +121,39 @@
   // Zumiraj na željeni nivo, otvori Postavke i dodirni „Trenutna razmjera”: granica = razmjera koja je bila na karti.
   W._setRazmjeraTrenutna = function (k) { _setRazmjera(k, zaokruzi(_razmjera()), true); };
 
+  // ── Sklopive kartice u Postavkama: zadano sklopljene, otvoreno se pamti (usf_set_otv) ──
+  const OTV_KEY = 'usf_set_otv';
+  const citajOtv = () => { try { const a = JSON.parse(localStorage.getItem(OTV_KEY) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } };
+  const spremiOtv = a => { try { localStorage.setItem(OTV_KEY, JSON.stringify(a)); } catch (e) {} };
+
+  W._setSekPostavi = function (sek, otvoreno, pamti) {
+    const h = sek.querySelector('.set-kar-h'); if (!h) return;
+    sek.classList.toggle('sklopljeno', !otvoreno);
+    h.setAttribute('aria-expanded', otvoreno ? 'true' : 'false');
+    if (pamti === false) return;
+    const a = citajOtv().filter(x => x !== sek.id);
+    if (otvoreno) a.push(sek.id);
+    spremiOtv(a);
+  };
+  W._setSekOtvori = function (el) {
+    const sek = el && el.closest && el.closest('.set-kar');
+    if (sek && sek.classList.contains('sklopljeno')) W._setSekPostavi(sek, true);
+  };
+  function sklopiveInit() {
+    if (typeof document === 'undefined') return;
+    const otv = citajOtv();
+    document.querySelectorAll('#postavke-panel .set-kar').forEach(sek => {
+      const h = sek.querySelector('.set-kar-h'); if (!h || h.dataset.skl) return;
+      h.dataset.skl = '1'; h.setAttribute('role', 'button'); h.tabIndex = 0;
+      const prebaci = () => W._setSekPostavi(sek, sek.classList.contains('sklopljeno'));
+      h.addEventListener('click', prebaci);
+      h.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); prebaci(); } });
+      W._setSekPostavi(sek, otv.includes(sek.id), false);
+    });
+  }
+  if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sklopiveInit); else sklopiveInit();
+  }
+
   if (typeof module !== 'undefined') module.exports = { SABLONI, BTN_SABLONI, aktivniSablon, aktivniBtn, sablonJe, zaokruzi };
 })(typeof window !== 'undefined' ? window : {});

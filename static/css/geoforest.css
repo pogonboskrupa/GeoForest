@@ -122,6 +122,11 @@
 #postavke-panel .set-veza { font-size: 13px; font-weight: 800; }
 #postavke-panel .set-kar { border: 2px solid var(--gf-rub); border-left: 6px solid var(--acc, var(--gf-zel)); border-radius: 16px; background: var(--gf-kar); padding: 0; overflow: hidden; margin: 0; }
 #postavke-panel .set-kar-h { margin: 0; padding: 14px 16px 10px; font-size: 17px; font-weight: 900; color: var(--gf-txt); background: linear-gradient(90deg, color-mix(in srgb, var(--acc, #4ade80) 18%, transparent), transparent); }
+#postavke-panel .set-kar-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: var(--gf-tap); cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+#postavke-panel .set-kar-h::after { content: ''; flex: none; width: 10px; height: 10px; border-right: 3px solid var(--gf-dim, #94a3b8); border-bottom: 3px solid var(--gf-dim, #94a3b8); transform: rotate(225deg) translate(-2px, -2px); transition: transform .15s; }
+#postavke-panel .set-kar.sklopljeno .set-kar-h::after { transform: rotate(45deg); }
+#postavke-panel .set-kar.sklopljeno > :not(.set-kar-h) { display: none; }
+#postavke-panel .set-kar.sklopljeno .set-kar-h { padding-bottom: 14px; }
 #postavke-panel .set-acc-body { padding: 6px 16px 16px; }
 #postavke-panel .set-red b { font-size: 15px; color: var(--gf-txt); }
 #postavke-panel .set-red small, #postavke-panel .set-nap { font-size: 13px; color: var(--gf-dim); }

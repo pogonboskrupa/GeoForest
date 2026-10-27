@@ -2285,7 +2285,7 @@ body.sl-uredi #sl-ured { display: block; }
 // android/app/build.gradle versionCode+versionName. Sva tri MORAJU biti
 // usklađena prije svakog commita.
 // =====================================================================
-const APP_VER = 'v1.0.8';
+const APP_VER = 'v1.0.9';
 document.getElementById('meni-ver-badge').textContent = 'GeoForest ' + APP_VER;
 
 // Verzije koriste tri jednocifrena segmenta: patch i minor idu 0–9.
@@ -7481,6 +7481,7 @@ function _setSkok(id) {
   const el = document.getElementById(id);
   if (!el) return;
   if (window.USFTabovi) USFTabovi.otvoriZa(el);
+  if (window._setSekOtvori) _setSekOtvori(el);
   setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 30);
 }
 function _setUiUi() {
