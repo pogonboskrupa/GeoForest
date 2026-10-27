@@ -313,7 +313,12 @@ html[data-btn-stil="akcent"] #ab-loc:not(.active) { box-shadow: 0 0 0 1px rgba(7
 #msr-panel .msr-btns button { flex: 1 1 88px; min-width: 0; max-width: none; min-height: var(--gf-tap); border-radius: 14px; border: 2px solid #3d5a4b; background: var(--gf-kar-2); color: var(--gf-txt); font-size: 15px; font-weight: 800; touch-action: manipulation; }
 #msr-panel .msr-btns button.primary { flex: 1 1 100%; background: var(--gf-zel-jak); border-color: #86efac; color: var(--gf-zel-tamna); font-size: 17px; }
 #msr-panel .msr-btns button.stop { flex: 1 1 100%; background: #b91c1c; border-color: #fca5a5; color: #fff; font-size: 17px; }
-#msr-panel.active { padding: 22px 14px 14px; }
+/* Dok se crta: bez statistike i uputa (karta ostaje vidljiva) — samo uska traka s dugmadi; podaci se vide poslije „Završi” */
+#msr-panel.active { padding: 10px; }
+#msr-panel.active::before, #msr-panel.active .msr-stats, #msr-panel.active .msr-hint { display: none; }
+#msr-panel.active .msr-btns { flex-wrap: nowrap; gap: 6px; }
+#msr-panel.active .msr-btns button { flex: 1 1 0; min-height: 48px; padding: 0 6px; font-size: 14px; }
+#msr-panel.active .msr-btns button.stop { flex: 2 1 0; font-size: 16px; }
 
 /* ── Tragovi ── */
 #tragovi-panel .tp-hdr { padding: 6px 12px 10px 16px; border-bottom: 2px solid var(--gf-rub); }

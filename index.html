@@ -2285,7 +2285,7 @@ body.sl-uredi #sl-ured { display: block; }
 // android/app/build.gradle versionCode+versionName. Sva tri MORAJU biti
 // usklađena prije svakog commita.
 // =====================================================================
-const APP_VER = 'v1.0.7';
+const APP_VER = 'v1.0.8';
 document.getElementById('meni-ver-badge').textContent = 'GeoForest ' + APP_VER;
 
 // Verzije koriste tri jednocifrena segmenta: patch i minor idu 0–9.
@@ -4604,6 +4604,10 @@ function _msrRegAddFromActive() {
   if (_msrLayer) { _msrLayer.clearLayers(); try { map.removeLayer(_msrLayer); } catch(e) {} _msrLayer = null; }
   _msrUpdPanel();
   _msrDrawAllSaved();
+  // Poslije „Završi”: panel se sklanja s karte, a podaci mjerenja se prikažu u kartici na objektu.
+  document.getElementById('msr-panel')?.classList.remove('show');
+  document.getElementById('ab-msr')?.classList.remove('active');
+  setTimeout(() => { try { _msrOpenPopupNa(entry, L.latLngBounds(entry.pts.map(p => [p.lat, p.lng])).getCenter()); } catch (e) {} }, 200);
 }
 
 // ── Razmjera karte ─────────────────────────────────────────────────────

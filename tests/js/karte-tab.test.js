@@ -164,4 +164,11 @@ t('Mjerenja, Tragovi i Nova tačka su u modalu Moja lokacija, ne na karti', () =
   assert.ok(!/btnPoz|btnVis/.test(HTML), 'opcija položaja dugmadi je uklonjena');
 });
 
+t('mjerenje: dok se crta uska traka bez statistike; poslije Završi kartica s podacima', () => {
+  const css = R('static/css/geoforest.css');
+  assert.ok(/#msr-panel\.active \.msr-stats, #msr-panel\.active \.msr-hint \{ display: none/.test(css));
+  const f = HTML.slice(HTML.indexOf('function _msrRegAddFromActive'), HTML.indexOf('// ── Razmjera karte'));
+  assert.ok(f.includes("classList.remove('show')") && f.includes('_msrOpenPopupNa(entry'));
+});
+
 console.log('\n' + pass + ' prošlo, ' + (process.exitCode ? 'IMA PALIH' : '0 palo') + ' — karte tab');
