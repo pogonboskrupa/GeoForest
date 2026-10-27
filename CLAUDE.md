@@ -64,12 +64,10 @@ drugi package, drugi podaci, drugi update kanal.
   Čvrsto / Kontrast / Akcent / Minimal. Stil u `geoforest.css` samo lokalno prepisuje `--ui-*` varijable teme na `.map-ctl, #layer-btn,
   #zoom-grp, #ab-loc:not(.active)`; šablon uz stil postavlja i `btnA/btnZ/btnOblik/btnIk`. Pregled u Postavkama (`.bs-pr`, klase `.bs-btn/.bs-pill`,
   NE `.map-ctl`) koristi iste vrijednosti. Šabloni interfejsa nose i `btnStil`.
-- **Položaj dugmadi na mapi** (`postavke.js` `_setBtnPoz`, `_uiPrikaz.btnPoz` zadano/desno/lijevo/zamjena + `btnVis` nisko/srednje/visoko → `<html data-btn-poz data-btn-vis>`):
-  CSS u `geoforest.css` pomjera `#zoom-grp` i `#map-fabs` (isti `zoom`, pomak 78 px) i podiže ih preko `--poz-lift` (+ `--rec-h`); legenda terena se prilagođava.
-  Nije dio stila dugmadi (nezavisno od šablona); mini-telefon `.poz-tel` u Postavkama prikazuje raspored.
 - **Modali i plutajući prozori** (blok „Modali i plutajući prozori (v1.0.5)” u `geoforest.css`): Mjerenja `#msr-panel`, Tragovi `#tragovi-panel`,
   Moja lokacija `#ab-loc-popup`, traka snimanja `#rec-bar`, dijalozi `#dlg-sheet`, kartica objekta `.pk-pop`, nova tačka `#tk-sheet` — čvrsta tamna
   ljuska (2 px okvir), ručica `::before`, naslov 18 px, dugmad ≥ 52 px (primarna puna zelena, opasna crvena), prekidači 56×32. Samo CSS; ID-ovi i JS isti.
+- **Alati u modalu Moja lokacija (v1.0.7)**: na karti (`#map-fabs`) je samo `#ab-loc`; Mjerenja (`#ab-msr`), Tragovi (`#ab-tragovi`) i Nova terenska tačka (`#ab-tacka`) su red `.loc-alati` (velika dugmad ikona + natpis) u `#ab-loc-popup`. Isti ID-ovi, pa `_updTragFab` (`.recording/.paused`) i `.active` mjerenja rade; klik prvo zatvara modal (`_toggleLocPopup()`). Dok se snima trag (`body.rec-on`) su `#map-fabs` i modal skriveni. Opcija položaja dugmadi je uklonjena.
 - **Donji bar** (`#main-tabs`, nav): SVG ikone, tab 50 px, aktivna stavka puna zelena; `--dock-b` = 66 px (+ safe-area).
 - Dizajn za sunce i rukavice (`static/css/geoforest.css`, učitava se POSLIJE inline stilova): tabovi 64 px,
   dugmad ≥ `--gf-tap` (52 px), tekst ≥ 14 px, stanje = ikona + tekst. Test `tests/js/karte-tab.test.js`.

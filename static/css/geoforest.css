@@ -354,6 +354,14 @@ html[data-btn-stil="akcent"] #ab-loc:not(.active) { box-shadow: 0 0 0 1px rgba(7
 #ab-loc-popup .loc-btn-row { gap: 8px; }
 #ab-loc-popup .loc-btn { min-height: var(--gf-tap); border-radius: 14px; border: 2px solid #3d5a4b; background: var(--gf-kar-2); color: var(--gf-txt); font-size: 15px; font-weight: 800; touch-action: manipulation; }
 #ab-loc-popup .loc-btn-primary { background: var(--gf-zel-jak); border-color: #86efac; color: var(--gf-zel-tamna); }
+/* Alati (Mjerenja, Tragovi, Nova tačka) žive u modalu Moja lokacija */
+#ab-loc-popup .loc-alati { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #2f4a3c; }
+#ab-loc-popup .loc-alat { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 64px; padding: 6px 4px; border-radius: 14px; border: 2px solid #3d5a4b; background: var(--gf-kar-2); color: var(--gf-txt); font-size: 13px; font-weight: 800; touch-action: manipulation; }
+#ab-loc-popup .loc-alat svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+#ab-loc-popup .loc-alat:active { transform: scale(.97); }
+#ab-loc-popup .loc-alat.active { color: #c4b5fd; border-color: #8b5cf6; background: rgba(109,40,217,.32); }
+#ab-loc-popup .loc-alat.recording { color: #fca5a5; border-color: #ef4444; background: rgba(153,27,27,.3); }
+#ab-loc-popup .loc-alat.recording.paused { color: #fcd34d; border-color: #f59e0b; background: rgba(146,64,14,.3); }
 #ab-loc-popup .loc-btn.recording { background: #b91c1c; border-color: #fca5a5; color: #fff; }
 
 /* ── Traka snimanja traga ── */
@@ -429,36 +437,3 @@ html[data-btn-stil="akcent"] #ab-loc:not(.active) { box-shadow: 0 0 0 1px rgba(7
 #tk-sheet .tk-dno #tk-obrisi { flex: 0 0 60px; }
 #tk-sheet .tk-dno [hidden], #tk-sheet #tk-obrisi[hidden] { display: none !important; }
 #msr-panel .msr-hint small, #msr-panel .msr-hint span { display: block; font-size: 13.5px !important; color: var(--gf-dim) !important; margin-top: 3px; }
-
-/* ── Položaj dugmadi na mapi (v1.0.6): data-btn-poz + data-btn-vis na <html> ──
-   Zoom i FAB-ovi dijele isti CSS `zoom`, pa su pomaci u istim jedinicama (78 px = širina FAB-a + razmak). */
-html { --poz-lift: 0px; }
-html[data-btn-vis="srednje"] { --poz-lift: 70px; }
-html[data-btn-vis="visoko"] { --poz-lift: 140px; }
-#zoom-grp { bottom: calc(var(--dock-b) + var(--rec-h) + var(--poz-lift)); }
-#map-fabs { bottom: calc(var(--dock-b) + var(--rec-h) + var(--poz-lift) + 6px); }
-html[data-btn-poz="desno"] #zoom-grp { left: auto; right: 78px; }
-html[data-btn-poz="lijevo"] #map-fabs { right: auto; left: 12px; align-items: flex-start; }
-html[data-btn-poz="lijevo"] #zoom-grp { left: 78px; }
-html[data-btn-poz="zamjena"] #map-fabs { right: auto; left: 12px; align-items: flex-start; }
-html[data-btn-poz="zamjena"] #zoom-grp { left: auto; right: 12px; }
-html[data-btn-poz="desno"] #terrain-map-legend { left: 12px; right: 160px; }
-html[data-btn-poz="lijevo"] #terrain-map-legend { left: 160px; right: 12px; }
-
-/* izbor u Postavkama: mini telefon pokazuje stvarni raspored */
-.poz-nasl { margin: 16px 0 4px; font-size: 16.5px; font-weight: 900; color: var(--gf-txt); }
-.poz-mreza { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0 10px; }
-.poz { display: grid; justify-items: start; gap: 4px; text-align: left; padding: 10px; border-radius: 16px; border: 2px solid var(--gf-rub); background: var(--gf-kar-2); color: var(--gf-txt); font: inherit; cursor: pointer; touch-action: manipulation; }
-.poz.on { border-color: #86efac; background: color-mix(in srgb, var(--gf-zel-jak) 20%, var(--gf-kar)); box-shadow: 0 4px 14px rgba(34,197,94,.3); }
-.poz b { font-size: 16px; font-weight: 900; }
-.poz small { font-size: 12.5px; line-height: 1.3; color: var(--gf-dim); }
-.poz-tel { position: relative; justify-self: center; width: 70px; height: 112px; border-radius: 12px; border: 3px solid #4b6b57; background: linear-gradient(160deg, #35574a, #6d8a73 60%, #b9c9b4); }
-.poz-tel::after { content: ''; position: absolute; left: 6px; right: 6px; bottom: 0; height: 9px; border-radius: 4px 4px 0 0; background: #0a140f; }
-.poz-tel i { position: absolute; border-radius: 5px; background: #0a140f; border: 2px solid #86efac; box-sizing: border-box; bottom: 14px; }
-.poz-tel[data-v="srednje"] i { bottom: 30px; } .poz-tel[data-v="visoko"] i { bottom: 48px; }
-.poz-tel .pz { width: 15px; height: 24px; } .poz-tel .pf { width: 15px; height: 38px; }
-.poz-tel[data-p="zadano"] .pz { left: 5px; } .poz-tel[data-p="zadano"] .pf { right: 5px; }
-.poz-tel[data-p="desno"] .pf { right: 5px; } .poz-tel[data-p="desno"] .pz { right: 24px; }
-.poz-tel[data-p="lijevo"] .pf { left: 5px; } .poz-tel[data-p="lijevo"] .pz { left: 24px; }
-.poz-tel[data-p="zamjena"] .pf { left: 5px; } .poz-tel[data-p="zamjena"] .pz { right: 5px; }
-#set-dugmad-vis { grid-template-columns: repeat(3, 1fr); }

@@ -1797,11 +1797,6 @@ body.sl-uredi #sl-ured { display: block; }
      posebno i najbliže palcu (donji desni ugao). SVG ikone (ne emoji) da boja
      aktivnog stanja radi — CSS `color` ne boji emoji. -->
 <div id="map-fabs">
-  <div class="fab-pill map-ctl">
-    <button id="ab-msr" onclick="_toggleMsrPanel()" title="Mjerenja" aria-label="Mjerenja"><svg viewBox="0 0 24 24"><path d="M3.5 16.5 16.5 3.5l4 4-13 13z"/><path d="M7.5 12.5l2 2M10.5 9.5l2 2M13.5 6.5l2 2"/></svg></button>
-    <button id="ab-tragovi" onclick="openTragoviPanel()" title="Tragovi" aria-label="Tragovi"><svg viewBox="0 0 24 24"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h7.5a3.5 3.5 0 0 0 0-7h-7a3.5 3.5 0 0 1 0-7H16"/></svg></button>
-    <button id="ab-tacka" onclick="USFTacke.dodaj()" title="Nova terenska tačka / fotografija" aria-label="Nova terenska tačka"><svg viewBox="0 0 24 24"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg></button>
-  </div>
   <button id="ab-loc" class="map-ctl" onclick="_toggleLocPopup()" title="Moja lokacija" aria-label="Moja lokacija"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
 </div>
 
@@ -1865,6 +1860,11 @@ body.sl-uredi #sl-ured { display: block; }
     <button class="loc-btn" id="ab-loc-trag" onclick="_locPopupSnimiTrag()"><span id="ab-loc-trag-txt">Snimi trag</span></button>
   </div>
   <div class="loc-btn-row" style="margin-top:6px"><button class="loc-btn loc-btn-sek" onclick="_toggleLocPopup();USFTacke.naGps(true)">📷 Slikaj ovdje</button><button class="loc-btn loc-btn-sek" onclick="_toggleLocPopup();USFTacke.naGps(false)">📍 Tačka ovdje</button></div>
+  <div class="loc-alati" role="group" aria-label="Alati">
+    <button id="ab-msr" class="loc-alat" onclick="_toggleLocPopup();_toggleMsrPanel()" title="Mjerenja" aria-label="Mjerenja"><svg viewBox="0 0 24 24"><path d="M3.5 16.5 16.5 3.5l4 4-13 13z"/><path d="M7.5 12.5l2 2M10.5 9.5l2 2M13.5 6.5l2 2"/></svg><span>Mjerenja</span></button>
+    <button id="ab-tragovi" class="loc-alat" onclick="_toggleLocPopup();openTragoviPanel()" title="Tragovi" aria-label="Tragovi"><svg viewBox="0 0 24 24"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h7.5a3.5 3.5 0 0 0 0-7h-7a3.5 3.5 0 0 1 0-7H16"/></svg><span>Tragovi</span></button>
+    <button id="ab-tacka" class="loc-alat" onclick="_toggleLocPopup();USFTacke.dodaj()" title="Nova terenska tačka / fotografija" aria-label="Nova terenska tačka"><svg viewBox="0 0 24 24"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg><span>Nova tačka</span></button>
+  </div>
 </div>
 
 <!-- Traka aktivnog snimanja traga -->
@@ -2066,10 +2066,6 @@ body.sl-uredi #sl-ured { display: block; }
       <div class="set-acc-body">
       <p class="set-nap">Izgled zoom dugmadi, lokacije, mjerenja, tragova i izbora karte. Pregled je tačan prikaz; finu providnost, veličinu i oblik možeš dalje mijenjati u „Koordinate i dugmad”.</p>
       <div id="set-dugmad-sab" class="bsab-lista" role="radiogroup" aria-label="Šablon dugmadi na mapi"></div>
-      <h4 class="poz-nasl">📍 Položaj dugmadi na mapi</h4>
-      <p class="set-nap">Rasporedi dugmad prema ruci kojom držiš telefon. „Podignuto” ih diže iznad donjeg ruba, gdje ih palac lakše dohvata.</p>
-      <div id="set-dugmad-poz" class="poz-mreza" role="radiogroup" aria-label="Položaj dugmadi"></div>
-      <div id="set-dugmad-vis" class="rz-chips" role="group" aria-label="Visina dugmadi"></div>
       </div>
     </section>
     <section class="ng-card set-kar" id="set-s-razmjera" style="--acc:#38bdf8">
@@ -2289,7 +2285,7 @@ body.sl-uredi #sl-ured { display: block; }
 // android/app/build.gradle versionCode+versionName. Sva tri MORAJU biti
 // usklađena prije svakog commita.
 // =====================================================================
-const APP_VER = 'v1.0.6';
+const APP_VER = 'v1.0.7';
 document.getElementById('meni-ver-badge').textContent = 'GeoForest ' + APP_VER;
 
 // Verzije koriste tri jednocifrena segmenta: patch i minor idu 0–9.
@@ -2691,7 +2687,7 @@ function _prPrimijeni(sve) {
   });
 }
 // Izgled koordinata i dugmadi na karti (Postavke → 🎛 Koordinate i dugmad, pamti se): providnost podloge, obris teksta, veličina, dijelovi
-const _UI_KEY = 'usf_ui_prikaz', _UI_ZAD = { bdgA: 55, bdgFs: 11, bdgOut: 'tanak', bdgElev: true, bdgMgi: true, koord: 'mgi5', bdgRz: true, btnA: 86, btnZ: 100, tema: 'tamna', blur: 0, btnOblik: 'zaobljeno', btnIk: 'normalne', btnStil: 'staklo', btnPoz: 'zadano', btnVis: 'nisko' };
+const _UI_KEY = 'usf_ui_prikaz', _UI_ZAD = { bdgA: 55, bdgFs: 11, bdgOut: 'tanak', bdgElev: true, bdgMgi: true, koord: 'mgi5', bdgRz: true, btnA: 86, btnZ: 100, tema: 'tamna', blur: 0, btnOblik: 'zaobljeno', btnIk: 'normalne', btnStil: 'staklo' };
 const _UI_OBLIK = { okruglo: '26px', zaobljeno: '16px', ostro: '7px' }, _UI_IK = { tanke: '1.5', normalne: '2', podebljane: '2.7' };
 const _UI_TEME = { tamna: { bg: '10,24,18', fg: '#e8f3ec', bd: 'rgba(134,239,172,.22)', sep: 'rgba(134,239,172,.16)', out: '#000', a1: '#4ade80', a2: '#fde68a' }, svijetla: { bg: '255,255,255', fg: '#0f172a', bd: 'rgba(15,23,42,.2)', sep: 'rgba(15,23,42,.16)', out: '#fff', a1: '#15803d', a2: '#b45309' } };
 let _uiPrikaz = { ..._UI_ZAD };
@@ -2704,7 +2700,6 @@ function _uiPrimijeni() {
   r.setProperty('--bdg-a', (u.bdgA / 100).toFixed(2)); r.setProperty('--bdg-fs', u.bdgFs + 'px'); r.setProperty('--bdg-ts', _uiObris(u.bdgOut, t.out));
   r.setProperty('--btn-r', _UI_OBLIK[u.btnOblik] || '16px'); r.setProperty('--btn-sw', _UI_IK[u.btnIk] || '2');
   r.setProperty('--btn-a', (u.btnA / 100).toFixed(2)); r.setProperty('--btn-z', (u.btnZ / 100).toFixed(2));
-  document.documentElement.dataset.btnPoz = u.btnPoz || 'zadano'; document.documentElement.dataset.btnVis = u.btnVis || 'nisko';
   document.documentElement.dataset.btnStil = u.btnStil || 'staklo'; // Postavke → Šablon dugmadi (static/js/postavke.js)
   _geoBadgeRender();
 }
