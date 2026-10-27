@@ -281,3 +281,151 @@ html[data-btn-stil="akcent"] #ab-loc:not(.active) { box-shadow: 0 0 0 1px rgba(7
 #main-tabs .mtab-ico { width: 26px; height: 24px; }
 #main-tabs .mtab-ico svg { width: 24px; height: 24px; }
 #terrain-map-legend { bottom: var(--dock-b); }
+
+/* ═══ Modali i plutajući prozori (v1.0.5): Mjerenja, Tragovi, Moja lokacija, traka snimanja, dijalozi ═══
+   Čvrsta tamna ljuska s debelim okvirom, ručica za povlačenje, naslov 18 px, tekst ≥ 14 px, dugmad ≥ 52 px. */
+#tragovi-panel, #msr-panel, #ab-loc-popup, #rec-bar, #gstab-card, #dlg-sheet {
+  background: #0a140f; border: 2px solid var(--gf-rub); border-radius: 22px;
+  box-shadow: 0 -8px 34px rgba(0,0,0,.6), 0 12px 30px rgba(0,0,0,.45); -webkit-backdrop-filter: none; backdrop-filter: none;
+  color: var(--gf-txt);
+}
+#msr-panel, #ab-loc-popup, #tragovi-panel { padding-top: 22px; }
+#msr-panel::before, #ab-loc-popup::before, #tragovi-panel::before, #dlg-handle {
+  content: ''; position: absolute; top: 8px; left: 50%; width: 44px; height: 5px; margin-left: -22px; border-radius: 3px; background: rgba(134,239,172,.35);
+}
+#dlg-handle { position: static; margin: 0 auto 14px; display: block; }
+#tragovi-panel, #msr-panel, #ab-loc-popup { position: fixed; }
+
+/* ── Mjerenja ── */
+#msr-panel { padding: 22px 14px 14px; }
+#msr-panel .msr-modes { gap: 8px; margin-bottom: 12px; }
+#msr-panel .msr-modes button { min-height: 66px; border-radius: 14px; border: 2px solid #3d5a4b; background: var(--gf-kar-2); color: var(--gf-txt); font-size: 14px; font-weight: 800; gap: 3px; touch-action: manipulation; }
+#msr-panel .msr-modes button i { font-size: 24px; }
+#msr-panel .msr-modes button.on { background: var(--gf-zel-jak); border-color: #86efac; color: var(--gf-zel-tamna); }
+#msr-panel .msr-swatches { gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+#msr-panel .msr-swatch { width: 40px; height: 40px; border-width: 3px; }
+#msr-panel .msr-swatch.on { border-color: #fff; box-shadow: 0 0 0 3px #0a140f, 0 0 0 5px #86efac; }
+#msr-panel label.msr-draw-toggle { min-height: var(--gf-tap); gap: 12px; padding: 0 12px; margin-bottom: 10px; border-radius: 12px; border: 2px solid #3d5a4b; background: var(--gf-kar-2); color: var(--gf-txt); font-size: 14.5px; font-weight: 700; }
+#msr-panel label.msr-draw-toggle input { width: 26px; height: 26px; accent-color: var(--gf-zel-jak); }
+#msr-panel .msr-stats { font-size: 18px; font-weight: 900; padding: 10px 12px; border-radius: 12px; background: #0e2a1b; border: 2px solid #2f7a4d; color: #bbf7d0; margin-bottom: 10px; }
+#msr-panel .msr-hint { font-size: 14px; color: var(--gf-dim); line-height: 1.45; margin-bottom: 12px; }
+#msr-panel .msr-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+#msr-panel .msr-btns button { flex: 1 1 88px; min-width: 0; max-width: none; min-height: var(--gf-tap); border-radius: 14px; border: 2px solid #3d5a4b; background: var(--gf-kar-2); color: var(--gf-txt); font-size: 15px; font-weight: 800; touch-action: manipulation; }
+#msr-panel .msr-btns button.primary { flex: 1 1 100%; background: var(--gf-zel-jak); border-color: #86efac; color: var(--gf-zel-tamna); font-size: 17px; }
+#msr-panel .msr-btns button.stop { flex: 1 1 100%; background: #b91c1c; border-color: #fca5a5; color: #fff; font-size: 17px; }
+#msr-panel.active { padding: 22px 14px 14px; }
+
+/* ── Tragovi ── */
+#tragovi-panel .tp-hdr { padding: 6px 12px 10px 16px; border-bottom: 2px solid var(--gf-rub); }
+#tragovi-panel .tp-hdr h2 { font-size: 18px; font-weight: 900; color: var(--gf-txt); }
+#tragovi-panel .tp-close { width: 48px; height: 48px; border-radius: 14px; border: 2px solid #3d5a4b; background: var(--gf-kar-2); color: var(--gf-txt); font-size: 20px; }
+.treg-kpi div { border: 2px solid #2f7a4d; background: #0e2a1b; padding: 10px 4px; }
+.treg-kpi b { font-size: 17px; color: var(--gf-txt); }
+.treg-kpi span { font-size: 11px; color: var(--gf-dim); }
+.treg-filt button { min-height: var(--gf-tap); font-size: 14px; border-width: 2px; border-color: #3d5a4b; color: var(--gf-txt); }
+.treg-filt button.on { background: var(--gf-zel-jak); border-color: #86efac; color: var(--gf-zel-tamna); }
+.treg-trazi input, .treg-trazi select, .treg-trazi button { min-height: var(--gf-tap); font-size: 14.5px; border-width: 2px; border-color: #3d5a4b; color: var(--gf-txt); }
+.treg-row { border: 2px solid var(--gf-rub); border-left: 6px solid var(--tc, #4ade80); background: var(--gf-kar); padding: 12px; }
+.treg-row .treg-name { font-size: 16.5px; font-weight: 800; color: var(--gf-txt); }
+.treg-meta { font-size: 13px; color: var(--gf-dim); }
+.treg-chip { font-size: 13px; padding: 3px 10px; border-width: 2px; }
+.treg-km b { font-size: 24px; }
+.treg-km small { font-size: 13px; color: var(--gf-dim); }
+.treg-btns { gap: 8px; }
+.treg-btns button { min-height: 56px; border-radius: 12px; border: 2px solid #3d5a4b; background: var(--gf-kar-2); color: var(--gf-txt); }
+.treg-btns button span { font-size: 13px; font-weight: 800; }
+.treg-btns button.del-btn { border-color: #f87171; background: #3b0f0f; color: #fecaca; }
+.treg-vise summary { min-height: 44px; display: grid; place-items: center; font-size: 14px; color: var(--gf-dim); }
+.treg-sum b { font-size: 22px; } .treg-sum span { font-size: 13.5px; color: var(--gf-dim); }
+.treg-empty { font-size: 15px; color: var(--gf-dim); }
+
+/* ── Moja lokacija ── */
+#ab-loc-popup { padding: 22px 14px 14px; }
+#ab-loc-popup .loc-hdr { padding-bottom: 10px; margin-bottom: 12px; border-bottom: 2px solid var(--gf-rub); }
+#ab-loc-popup .loc-title { font-size: 18px; font-weight: 900; color: var(--gf-txt); }
+#ab-loc-popup .loc-gps-info { font-size: 13px; font-weight: 800; padding: 4px 10px; border-radius: 999px; border: 2px solid currentColor; color: var(--gf-siva); }
+#ab-loc-popup .loc-toggles { gap: 8px; margin-bottom: 12px; }
+#ab-loc-popup .loc-toggle-item { min-height: 86px; justify-content: center; gap: 10px; border-radius: 14px; border: 2px solid #3d5a4b; background: var(--gf-kar-2); }
+#ab-loc-popup .loc-toggle-item span { font-size: 14.5px; font-weight: 800; color: var(--gf-txt); }
+.loc-switch { width: 56px; height: 32px; border-radius: 16px; background: #334155; border: 2px solid #64748b; box-sizing: border-box; }
+.loc-switch::after { top: 3px; left: 3px; width: 22px; height: 22px; }
+.loc-switch.on { background: var(--gf-zel-jak); border-color: #86efac; }
+.loc-switch.on::after { transform: translateX(24px); }
+#ab-loc-popup .loc-btn-row { gap: 8px; }
+#ab-loc-popup .loc-btn { min-height: var(--gf-tap); border-radius: 14px; border: 2px solid #3d5a4b; background: var(--gf-kar-2); color: var(--gf-txt); font-size: 15px; font-weight: 800; touch-action: manipulation; }
+#ab-loc-popup .loc-btn-primary { background: var(--gf-zel-jak); border-color: #86efac; color: var(--gf-zel-tamna); }
+#ab-loc-popup .loc-btn.recording { background: #b91c1c; border-color: #fca5a5; color: #fff; }
+
+/* ── Traka snimanja traga ── */
+#rec-bar .rb-lbl { font-size: 13px; }
+#rec-bar #rb-vrijeme { font-size: 26px; }
+#rec-bar #rb-go, #rec-bar #rb-tacka { width: 48px; height: 48px; border-radius: 14px; }
+#rec-bar .rb-stat { gap: 8px; }
+#rec-bar .rb-stat div { border: 2px solid #3d5a4b; background: var(--gf-kar-2); padding: 8px 4px; border-radius: 12px; }
+#rec-bar .rb-stat b { font-size: 19px; color: var(--gf-txt); }
+#rec-bar .rb-stat span { font-size: 11.5px; color: var(--gf-dim); }
+#rec-bar .rb-akc button { min-height: 56px; border-radius: 14px; font-size: 16px; border-width: 2px; }
+#rec-bar #rb-pauza { background: #4a2a06; border-color: #f59e0b; color: #fde68a; }
+#rec-bar #rb-kraj { background: #b91c1c; border-color: #fca5a5; color: #fff; }
+
+/* ── Dijalozi (potvrda, unos, izbor) ── */
+#dlg-overlay { background: rgba(3,10,7,.7); }
+#dlg-sheet { border-radius: 24px 24px 0 0; padding: 14px 18px calc(env(safe-area-inset-bottom, 0px) + 18px); border-bottom: 0; }
+#dlg-title { font-size: 19px; font-weight: 900; color: var(--gf-txt); margin-bottom: 8px; }
+#dlg-msg { font-size: 15.5px; color: var(--gf-dim); line-height: 1.5; margin-bottom: 16px; }
+#dlg-input { min-height: var(--gf-tap); font-size: 17px; border: 2px solid #3d5a4b; border-radius: 14px; background: #0e1d16; color: var(--gf-txt); padding: 0 14px; }
+#dlg-input:focus { border-color: #86efac; box-shadow: 0 0 0 3px rgba(74,222,128,.25); }
+#dlg-btns { gap: 10px; }
+.dlg-btn-ok, .dlg-btn-cancel, .dlg-action-btn { min-height: 56px; border-radius: 14px; font-size: 16.5px; font-weight: 900; border-width: 2px; touch-action: manipulation; }
+.dlg-btn-ok { background: var(--gf-zel-jak); border: 2px solid #86efac; color: var(--gf-zel-tamna); box-shadow: none; }
+.dlg-btn-ok.danger { background: #b91c1c; border-color: #fca5a5; color: #fff; box-shadow: none; }
+.dlg-btn-cancel { background: var(--gf-kar-2); border: 2px solid #3d5a4b; color: var(--gf-txt); }
+.dlg-action-btn { background: var(--gf-kar-2); border: 2px solid #3d5a4b; color: var(--gf-txt); text-align: left; padding: 0 16px; }
+.dlg-action-btn.danger { background: #3b0f0f; border-color: #f87171; color: #fecaca; }
+#dlg-actions-list { gap: 10px; }
+
+/* ── Kartica objekta (popup na karti): trag, KML, mjerenje, nagib ── */
+.pk-pop .leaflet-popup-content-wrapper { border: 2px solid var(--gf-rub); border-radius: 20px; background: #0a140f; box-shadow: 0 10px 30px rgba(0,0,0,.55); }
+.pk-pop .leaflet-popup-tip { background: #0a140f; }
+.pk-pop a.leaflet-popup-close-button { width: 44px !important; height: 44px !important; top: 6px !important; right: 6px !important; display: grid !important; place-items: center; border-radius: 14px; background: var(--gf-kar-2) !important; border: 2px solid #3d5a4b; color: var(--gf-txt) !important; font-size: 22px !important; }
+.pk-pop .leaflet-popup-content { padding: 16px 14px 14px; }
+.pk-hdr { padding-right: 52px; }
+.pk-nasl b { font-size: 18px; font-weight: 900; color: var(--gf-txt); }
+.pk-nasl small { font-size: 13px; color: var(--gf-dim); }
+.pk-tip { font-size: 12px; }
+.pk-redovi { border: 2px solid var(--gf-rub); background: var(--gf-kar); }
+.pk-red { font-size: 15px; padding: 8px 0; }
+.pk-red span { font-size: 14px; color: var(--gf-dim); }
+.pk-redovi .pk-red:first-child b { font-size: 22px; }
+.pk-opis { font-size: 14.5px; }
+.pk-klizac { font-size: 14px; color: var(--gf-dim); border-width: 2px; }
+.pk-klizac input { height: 36px; accent-color: var(--gf-zel-jak); }
+.pk-akc { gap: 8px; }
+.pk-akc button { min-height: var(--gf-tap); border-radius: 14px; border: 2px solid #3d5a4b; background: var(--gf-kar-2); color: var(--gf-txt); font-size: 15px; font-weight: 800; touch-action: manipulation; }
+.pk-akc button.glavno { min-height: 56px; background: var(--gf-zel-jak); border-color: #86efac; color: var(--gf-zel-tamna); font-size: 16px; box-shadow: none; }
+.pk-akc button.opasno { border-color: #f87171; background: #3b0f0f; color: #fecaca; }
+
+/* ── Nova terenska tačka (list) ── */
+#tk-sheet .tk-list { background: #0a140f; border: 2px solid var(--gf-rub); border-bottom: 0; border-radius: 24px 24px 0 0; }
+#tk-sheet .tk-hdr { padding: 16px 14px 12px 18px; border-bottom: 2px solid var(--gf-rub); }
+#tk-sheet .tk-hdr b { font-size: 19px; font-weight: 900; color: var(--gf-txt); }
+#tk-sheet .tk-hdr button { width: 48px; height: 48px; border-radius: 14px; border: 2px solid #3d5a4b; background: var(--gf-kar-2); color: var(--gf-txt); font-size: 20px; }
+#tk-sheet .tk-pol { font-size: 14px; font-weight: 800; color: var(--gf-dim); }
+#tk-sheet input:not([type=file]), #tk-sheet textarea { min-height: var(--gf-tap); font-size: 16.5px; border: 2px solid #3d5a4b; border-radius: 14px; background: #0e1d16; color: var(--gf-txt); padding: 10px 14px; }
+#tk-sheet input:focus, #tk-sheet textarea:focus { border-color: #86efac; box-shadow: 0 0 0 3px rgba(74,222,128,.25); }
+#tk-sheet .tk-kat { gap: 8px; }
+#tk-sheet .tk-kat button { min-height: 48px; padding: 8px 14px; border-radius: 24px; border: 2px solid #3d5a4b; font-size: 14.5px; font-weight: 800; color: var(--gf-txt); }
+#tk-sheet .tk-kat button.on { border-color: var(--c); box-shadow: 0 0 0 2px color-mix(in srgb, var(--c) 40%, transparent); }
+#tk-sheet .tk-btn { min-height: 56px; border-radius: 14px; border: 2px solid #3d5a4b; background: var(--gf-kar-2); color: var(--gf-txt); font-size: 16px; font-weight: 800; touch-action: manipulation; }
+#tk-sheet .tk-btn.glavno { background: var(--gf-zel-jak); border-color: #86efac; color: var(--gf-zel-tamna); }
+#tk-sheet .tk-btn.opasno { border-color: #f87171; background: #3b0f0f; color: #fecaca; }
+#tk-sheet .tk-poz span { font-size: 14px; color: var(--gf-dim); }
+#tk-sheet .tk-f button { width: 36px; height: 36px; }
+.pk-pop .leaflet-popup-content { width: min(330px, calc(100vw - 56px)) !important; min-width: 270px; }
+.pk-akc button { white-space: nowrap; font-size: 14.5px; padding: 6px 4px; }
+#tk-sheet .tk-dno { display: flex; gap: 8px; padding: 12px 16px calc(env(safe-area-inset-bottom, 0px) + 12px); border-top: 2px solid var(--gf-rub); background: #0a140f; }
+#tk-sheet .tk-dno .tk-btn { flex: 1 1 0; min-width: 0; padding: 0 10px; }
+#tk-sheet .tk-dno .tk-btn.glavno { flex: 2 1 0; }
+#tk-sheet .tk-dno #tk-obrisi { flex: 0 0 60px; }
+#tk-sheet .tk-dno [hidden], #tk-sheet #tk-obrisi[hidden] { display: none !important; }
+#msr-panel .msr-hint small, #msr-panel .msr-hint span { display: block; font-size: 13.5px !important; color: var(--gf-dim) !important; margin-top: 3px; }

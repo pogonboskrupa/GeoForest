@@ -141,4 +141,15 @@ t('donji bar je niži (50 px), --dock-b 66 px', () => {
   assert.ok(HTML.includes('--dock-b: calc(66px + env(safe-area-inset-bottom, 0px));'));
 });
 
+t('modali i plutajući prozori: ručica, tap >= 52 px, tekst >= 14 px (Mjerenja, Tragovi, Lokacija, snimanje, dijalozi, kartica, tačka)', () => {
+  const css = R('static/css/geoforest.css');
+  const blok = css.slice(css.indexOf('Modali i plutajući prozori (v1.0.5)'));
+  for (const sel of ['#msr-panel .msr-btns button', '.treg-btns button', '#ab-loc-popup .loc-btn', '.dlg-btn-ok, .dlg-btn-cancel, .dlg-action-btn', '.pk-akc button', '#tk-sheet .tk-btn', '#rec-bar .rb-akc button'])
+    assert.ok(blok.includes(sel), sel);
+  assert.ok(/#msr-panel::before, #ab-loc-popup::before, #tragovi-panel::before/.test(blok), 'ručica');
+  assert.ok(/\.dlg-btn-ok, \.dlg-btn-cancel, \.dlg-action-btn \{ min-height: 56px/.test(blok));
+  assert.ok(/#msr-panel \.msr-modes button \{ min-height: 66px/.test(blok) && /\.treg-btns button \{ min-height: 56px/.test(blok));
+  assert.ok(/\.loc-switch \{ width: 56px; height: 32px/.test(blok), 'prekidači za rukavice');
+});
+
 console.log('\n' + pass + ' prošlo, ' + (process.exitCode ? 'IMA PALIH' : '0 palo') + ' — karte tab');

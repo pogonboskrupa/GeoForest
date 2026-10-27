@@ -64,6 +64,9 @@ drugi package, drugi podaci, drugi update kanal.
   Čvrsto / Kontrast / Akcent / Minimal. Stil u `geoforest.css` samo lokalno prepisuje `--ui-*` varijable teme na `.map-ctl, #layer-btn,
   #zoom-grp, #ab-loc:not(.active)`; šablon uz stil postavlja i `btnA/btnZ/btnOblik/btnIk`. Pregled u Postavkama (`.bs-pr`, klase `.bs-btn/.bs-pill`,
   NE `.map-ctl`) koristi iste vrijednosti. Šabloni interfejsa nose i `btnStil`.
+- **Modali i plutajući prozori** (blok „Modali i plutajući prozori (v1.0.5)” u `geoforest.css`): Mjerenja `#msr-panel`, Tragovi `#tragovi-panel`,
+  Moja lokacija `#ab-loc-popup`, traka snimanja `#rec-bar`, dijalozi `#dlg-sheet`, kartica objekta `.pk-pop`, nova tačka `#tk-sheet` — čvrsta tamna
+  ljuska (2 px okvir), ručica `::before`, naslov 18 px, dugmad ≥ 52 px (primarna puna zelena, opasna crvena), prekidači 56×32. Samo CSS; ID-ovi i JS isti.
 - **Donji bar** (`#main-tabs`, nav): SVG ikone, tab 50 px, aktivna stavka puna zelena; `--dock-b` = 66 px (+ safe-area).
 - Dizajn za sunce i rukavice (`static/css/geoforest.css`, učitava se POSLIJE inline stilova): tabovi 64 px,
   dugmad ≥ `--gf-tap` (52 px), tekst ≥ 14 px, stanje = ikona + tekst. Test `tests/js/karte-tab.test.js`.
