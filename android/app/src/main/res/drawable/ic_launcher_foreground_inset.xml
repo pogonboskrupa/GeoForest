@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Xiaomi/Android adaptive mask reže rubove izvornog 432×432 artworka.
+     Foreground je neprovidan do ruba, sadržaj skaliran u PNG-u na ~83 % vidljivih 72dp — umetak 0. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@mipmap/ic_launcher_foreground"
+    android:insetLeft="0dp"
+    android:insetTop="0dp"
+    android:insetRight="0dp"
+    android:insetBottom="0dp" />

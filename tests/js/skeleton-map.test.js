@@ -1,0 +1,243 @@
+'use strict';
+const assert = require('node:assert');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const HTML = fs.readFileSync(path.join(__dirname, '../../index.html'), 'utf8');
+
+function extractFn(name) {
+  let start = HTML.indexOf('async function ' + name + '(');
+  if (start < 0) start = HTML.indexOf('function ' + name + '(');
+  assert.ok(start >= 0, 'nije nađena funkcija ' + name);
+  let i = HTML.indexOf('{', start), depth = 0;
+  for (; i < HTML.length; i++) {
+    if (HTML[i] === '{') depth++;
+    else if (HTML[i] === '}' && --depth === 0) return HTML.slice(start, i + 1);
+  }
+  throw new Error('nezatvorena funkcija ' + name);
+}
+
+let pass = 0;
+function t(name, fn) {
+  try { fn(); pass++; console.log('  ✔ ' + name); }
+  catch (e) { console.error('  ✘ ' + name + '\n      ' + e.message); process.exitCode = 1; }
+}
+
+console.log('Kostur karte — MGI projekcija i podrazumijevani prikaz:');
+
+t('mgiToWgs vraća [lat, lon] za poznatu MGI Zone 6 tačku', () => {
+  const proj4 = require(path.join(__dirname, '../../static/libs/proj4.js'));
+  proj4.defs('MGI-ZONE6', '+proj=tmerc +lat_0=0 +lon_0=18 +k=0.9999 +x_0=6500000 +y_0=0 +ellps=bessel +towgs84=682,-203,480,0,0,0,0 +units=m +no_defs');
+  const src = extractFn('mgiToWgs') + '\nreturn mgiToWgs;';
+  const mgiToWgs = new Function('proj4', src)(proj4);
+  const [lat, lon] = mgiToWgs(6354662, 4972300);
+  // Una-Sana kanton (Bosanska Krupa okolina) — grubo sanity opseg, ne tačna
+  // vrijednost (izbjegava lomljiv test na sedmu decimalu projekcije).
+  assert.ok(lat > 44 && lat < 45.5, 'lat van očekivanog opsega: ' + lat);
+  assert.ok(lon > 15.5 && lon < 17, 'lon van očekivanog opsega: ' + lon);
+});
+
+t('wgsToMGI5 je inverz mgiToWgs (Zone 5, zaseban prikaz od podrazumijevane Zone 6)', () => {
+  const proj4 = require(path.join(__dirname, '../../static/libs/proj4.js'));
+  proj4.defs('MGI-ZONE5', '+proj=tmerc +lat_0=0 +lon_0=15 +k=0.9999 +x_0=5500000 +y_0=0 +ellps=bessel +towgs84=682,-203,480,0,0,0,0 +units=m +no_defs');
+  const src = extractFn('wgsToMGI5') + '\nreturn wgsToMGI5;';
+  const wgsToMGI5 = new Function('proj4', src)(proj4);
+  // Bihać (u Zone 5 teritoriji, ~15.87°E) — Zone 5 lako pokriva ovu oblast
+  // (13.5–16.5°E), za razliku od Zone 6 (16.5–19.5°E) koja je i dalje
+  // podrazumijevana za centar aplikacije (korisnička odluka, netaknuto).
+  const mgi = wgsToMGI5(44.8167, 15.8700);
+  assert.ok(mgi.y > 5400000 && mgi.y < 5600000, 'Y van očekivanog Zone 5 opsega: ' + mgi.y);
+  assert.ok(mgi.x > 4900000 && mgi.x < 5000000, 'X van očekivanog opsega: ' + mgi.x);
+});
+
+t('zoomForScale vraća veći zoom za manju razmjeru (bliži prikaz)', () => {
+  const src = extractFn('zoomForScale') + '\nreturn zoomForScale;';
+  const zoomForScale = new Function(src)();
+  const zFar = zoomForScale(100000, 44.8);
+  const zNear = zoomForScale(10000, 44.8);
+  assert.ok(zNear > zFar, 'manja razmjera mora dati veći zoom');
+});
+
+t('APP_VER je definisan i prati v-prefiksovanu shemu', () => {
+  assert.match(HTML, /const APP_VER = 'v[0-9]+\.[0-9]+\.[0-9]+'/);
+});
+
+t('verzija je v1.0.0 i rollover koristi jednocifreni patch/minor', () => {
+  assert.ok(HTML.includes("const APP_VER = 'v1.0.0'"));
+  const src = extractFn('_sljedecaVerzija') + '\nreturn _sljedecaVerzija;';
+  const next = new Function(src)();
+  assert.strictEqual(next('v1.2.0'), 'v1.2.1');
+  assert.strictEqual(next('v1.2.9'), 'v1.3.0');
+  assert.strictEqual(next('v1.9.9'), 'v2.0.0');
+});
+
+t('bottom bar ostaje iznad punih radnih panela', () => {
+  const tabs = HTML.match(/#main-tabs\s*\{[^}]+\}/s)?.[0] || '';
+  const panel = HTML.match(/\.usf-panel\s*\{[^}]+\}/s)?.[0] || '';
+  const z = s => Number(s.match(/z-index\s*:\s*(\d+)/)?.[1] || 0);
+  assert.ok(z(tabs) > z(panel), 'bottom bar mora imati viši z-index od .usf-panel');
+  assert.ok(/min-height\s*:\s*52px/.test(HTML), 'dugmad bottom bara moraju imati veću dodirnu površinu');
+});
+
+t('radni modali završavaju iznad bottom bara i skrolaju sadržaj', () => {
+  const css = HTML.match(/#profil-modal, #tem-table-modal, #poz-sim-modal\s*\{[^}]+\}/s)?.[0] || '';
+  assert.ok(css.includes('calc(74px + env(safe-area-inset-bottom,0px))'));
+  assert.ok(/z-index\s*:\s*900/.test(css));
+  assert.ok(/overflow\s*:\s*auto/.test(css));
+});
+
+t('bazni slojevi su ograničeni na osnovne četiri (bez Wayback/Sentinel/WorldCover/Konture)', () => {
+  const twStart = HTML.indexOf('const TL = {');
+  assert.ok(twStart >= 0, 'TL objekat nije nađen');
+  const twEnd = HTML.indexOf('};', twStart);
+  const twSrc = HTML.slice(twStart, twEnd);
+  assert.match(twSrc, /Topo/);
+  assert.match(twSrc, /Satelit/);
+  assert.match(twSrc, /Karta/);
+  assert.match(twSrc, /Google/);
+  assert.ok(!/Wayback|Sentinel|WorldCover|Kontur/.test(twSrc),
+    'napredni satelitski slojevi ne smiju biti u skeletonu (korisnička odluka)');
+});
+
+t('paneovi za buduće Požari/Mjerenja slojeve postoje od prvog dana', () => {
+  assert.match(HTML, /createPane\('tragMsrLines'\)/);
+  assert.match(HTML, /createPane\('pozariPane'\)/);
+  assert.match(HTML, /createPane\('pozariDetectionsPane'\)/);
+});
+
+// Regresioni test za bug "Cannot read properties of undefined (reading
+// 'appendChild')" — svaki L.layer koji navodi { pane: 'xxx' } MORA imati
+// odgovarajući map.createPane('xxx'), inače map.getPane() vrati undefined i
+// .appendChild na njemu puca čim se taj sloj doda na kartu (desilo se sa
+// _PoziHeat/demOverlay — pane je korišten a nikad kreiran).
+t('svaki korišteni Leaflet pane je stvarno kreiran (map.createPane)', () => {
+  const LEAFLET_BUILTIN = new Set(['tilePane', 'overlayPane', 'shadowPane', 'markerPane', 'tooltipPane', 'popupPane', 'mapPane']);
+  const created = new Set();
+  for (const m of HTML.matchAll(/createPane\('([^']+)'\)/g)) created.add(m[1]);
+  const used = new Set();
+  for (const m of HTML.matchAll(/pane\s*:\s*['"]([^'"]+)['"]/g)) used.add(m[1]);
+  const missing = [...used].filter(p => !LEAFLET_BUILTIN.has(p) && !created.has(p));
+  assert.deepStrictEqual(missing, [], 'pane(ovi) korišteni ali nikad kreirani: ' + missing.join(', '));
+});
+
+t('SQLite/MBTiles je bazna karta, teren i požari su slojevi iznad nje', () => {
+  assert.ok(HTML.includes("pane: 'offlineBasePane'"));
+  assert.ok(HTML.includes('Object.values(TL).forEach(layer =>'));
+  assert.ok(HTML.includes("pane:'pozariHeatPane'"));
+});
+t('Protomaps API ključ nalazi se u Postavkama, ne u kartama', () => {
+  const karte = HTML.match(/<div id="karte-panel"[\s\S]*?<div id="postavke-panel"/)?.[0] || '';
+  const postavke = HTML.match(/<div id="postavke-panel"[\s\S]*?<div id="pozari-panel"/)?.[0] || '';
+  assert.ok(!karte.includes('id="protomaps-key"'));
+  assert.ok(postavke.includes('id="protomaps-key"'));
+});
+t('legenda ima checkbox, zatvaranje i pomjeranje dodirom', () => {
+  assert.ok(HTML.includes('id="poz-legend-check"'));
+  assert.ok(HTML.includes('onclick="_poziLegendaToggle(false)"'));
+  assert.ok(HTML.includes("handle.setPointerCapture(e.pointerId)"));
+  assert.ok(HTML.includes("usf_poz_legenda_pos"));
+});
+
+// CSS `color` ne boji emoji — sa emoji ikonama aktivno stanje (GPS uključen,
+// snimanje u toku) se na dugmetu uopšte ne vidi.
+t('dugmad na karti imaju SVG ikone (ne emoji) i vidljivo aktivno stanje', () => {
+  ['ab-loc', 'ab-msr', 'ab-tragovi'].forEach(id => {
+    const m = HTML.match(new RegExp('<button id="' + id + '"[^>]*>([\\s\\S]*?)</button>'));
+    assert.ok(m, 'nema dugmeta ' + id);
+    assert.ok(m[1].includes('<svg'), id + ' mora imati SVG ikonu');
+    assert.ok(!/[\u{1F300}-\u{1FAFF}]/u.test(m[1]), id + ' ne smije imati emoji ikonu');
+  });
+  assert.match(HTML, /#ab-loc\.active\s*\{/);
+  assert.match(HTML, /#ab-tragovi\.recording::after\s*\{/);
+});
+
+t('indikator snimanja na dugmetu Tragovi se osvježi i kad snimanje stane', () => {
+  const i = HTML.indexOf('function _updRecBarUI()');
+  const body = HTML.slice(i, HTML.indexOf('}', HTML.indexOf("if (!_tragOn)", i)));
+  const poziv = body.indexOf('_updTragFab()'), rani = body.indexOf('if (!_tragOn)');
+  assert.ok(poziv > 0 && poziv < rani, '_updTragFab() mora biti prije ranog return-a');
+});
+t('traka snimanja traga je iznad navigacije; dugmad i prozori idu iznad nje', () => {
+  const v2 = HTML.slice(HTML.indexOf('<style id="ui-v2">'), HTML.indexOf('</style>', HTML.indexOf('<style id="ui-v2">')));
+  assert.ok(/--dock-b:\s*calc\(76px \+ env\(safe-area-inset-bottom/.test(v2), 'sidro poštuje sistemsku traku');
+  const rb = v2.slice(v2.indexOf('#rec-bar {'), v2.indexOf('}', v2.indexOf('#rec-bar {')));
+  assert.ok(/bottom:\s*var\(--dock-b\)/.test(rb) && /z-index:\s*905/.test(rb), 'traka iznad #main-tabs (z 920 je nav, traka je iznad nje po položaju)');
+  assert.ok(/#map-fabs, #zoom-grp \{ bottom: calc\(var\(--dock-b\) \+ var\(--rec-h\)\)/.test(v2), 'dugmad na karti se podignu');
+  assert.ok(HTML.includes("setProperty('--rec-h', (bar.offsetHeight + 10) + 'px')"), 'stvarna visina trake');
+  ['rb-vrijeme', 'rb-duz', 'rb-acc', 'rb-pauza', 'rb-kraj'].forEach(id => assert.ok(HTML.includes('id="' + id + '"'), id));
+  assert.ok(/^var _recSat/m.test(HTML), 'var: _updRecBarUI se zove i prije deklaracije (TDZ)');
+});
+t('dijalozi i modali su tamni, u istom stilu', () => {
+  const v2 = HTML.slice(HTML.indexOf('<style id="ui-v2">'));
+  assert.ok(/#dlg-sheet \{[^}]*\}/.test(v2) && /#dlg-input \{ background: var\(--pn-bg-2\)/.test(v2));
+  assert.ok(v2.includes('#profil-box, #tem-table-box, #poz-sim-box { background: var(--pn-bg)'));
+  assert.ok(HTML.includes('<div id="gstab-card"'), 'GPS stabilizacija bez inline stilova');
+});
+t('meni kartice nemaju oznake "Osnovno spremno"/"Spremno"', () => {
+  assert.ok(!/mc-badge/.test(HTML), 'oznake statusa su uklonjene iz menija');
+});
+
+t('✕ ispod 🗂 gasi slojeve Šumarstva i Sušenja-potkornjaka i vraća offline kartu', () => {
+  const i = HTML.indexOf('id="layer-btn"'), j = HTML.indexOf('id="tem-x"');
+  assert.ok(i > 0 && j > i && /<button id="tem-x" class="map-ctl" hidden onclick="_tematskiIskljuci\(\)"/.test(HTML));
+  assert.ok(/#tem-x \{ position:fixed; top:calc\(60px/.test(HTML), 'odmah ispod dugmeta za kartu');
+  const f = HTML.slice(HTML.indexOf('function _tematskiUkljuceni'), HTML.indexOf('function _sumToggle'));
+  ["_sumOn(k)", "USKSlojevi.stanje()", "USFVeg.stanje().on", "_sqlmapSelect(r.id, 'tiho')", "map.on('layeradd layerremove'"].forEach(x => assert.ok(f.includes(x), x));
+});
+
+t('meni: grupe, SVG ikone (bez emoji) i status po kartici', () => {
+  const a = HTML.indexOf('<div id="meni-panel"'), b = HTML.indexOf('id="meni-ver-badge"', a);
+  const meni = HTML.slice(a, b);
+  assert.ok((meni.match(/class="meni-grp"/g) || []).length >= 4);
+  const kartice = meni.match(/<button type="button" class="meni-card"[\s\S]*?<\/button>/g) || [];
+  assert.strictEqual(kartice.length, 13, 'Sječa i vjetroizvale uklonjena (pokriva Šumarstvo); Tačke i fotografije, Sjekačke linije, Sušenje-potkornjak, Primka, Inventura šuma dodane');
+  const red = ['mc-sumarstvo', 'mc-susenje', 'mc-pozari'].map(id => meni.indexOf('id="' + id + '"'));
+  assert.ok(red[0] > 0 && red[0] < red[1] && red[1] < red[2], 'Šumarstvo prvo, pa Sušenje-potkornjak, pa Požari');
+  const sus = HTML.slice(HTML.indexOf('<div id="susenje-panel"'), HTML.indexOf('<!-- Projektovanje šumskog puta -->'));
+  ['id="tp-osvjezi"', 'id="tp-rez"', 'id="sum-susenje-switch"', 'id="sum-susenje-god"', 'id="sum-sus-proj-chk"'].forEach(x => assert.ok(sus.includes(x), 'Sušenje-potkornjak sadrži ' + x));
+  const sum = HTML.slice(HTML.indexOf('<div id="sumarstvo-panel"'), HTML.indexOf('<div id="susenje-panel"'));
+  assert.ok(!sum.includes('id="tp-rez"') && !sum.includes('id="sum-susenje-switch"') && !sum.includes('id="uk-veg-switch"'), 'tlo/potkornjak, NDVI i sušenje više nisu u Šumarstvu');
+  assert.ok(sus.indexOf('id="tp-rez"') < sus.indexOf('id="uk-veg-switch"') && sus.indexOf('id="uk-veg-switch"') < sus.indexOf('id="sum-susenje-switch"'), 'redoslijed: tlo, vitalnost, sušenje');
+  for (const k of kartice) {
+    assert.ok(/<span class="mc-ico"><svg/.test(k), 'ikona mora biti SVG');
+    assert.ok(!/\p{Extended_Pictographic}/u.test(k), 'bez emoji u kartici');
+  }
+  assert.ok(HTML.includes("tab === 'meni') { document.getElementById('meni-panel').classList.add('show'); _meniStatusRender(); }"));
+});
+
+t('_meniStatusi: statusi i bosanska množina', () => {
+  const src = extractFn('_meniStatusi') + '\nreturn _meniStatusi;';
+  const f = new Function(src)();
+  const prazno = f({ poziOn: false, sumSlojeva: 0, tragova: 0, mjerenja: 0 });
+  assert.ok(Object.values(prazno).every(x => x.t === '' && !x.on));
+  const r = f({ poziOn: true, sumSlojeva: 2, tragova: 1, mjerenja: 5 });
+  assert.deepStrictEqual(r.pozari, { t: 'Uključeno', on: true });
+  assert.strictEqual(r.sumarstvo.t, '2 sloja');
+  assert.strictEqual(r.tragovi.t, '1 trag');
+  assert.strictEqual(r.mjerenja.t, '5 mjerenja');
+  const m = k => f({ tragova: k }).tragovi.t;
+  assert.strictEqual(m(3), '3 traga'); assert.strictEqual(m(5), '5 tragova');
+  assert.strictEqual(m(11), '11 tragova'); assert.strictEqual(m(12), '12 tragova');
+  assert.strictEqual(m(21), '21 trag'); assert.strictEqual(m(22), '22 traga');
+});
+
+t('Postavke: grupisane kartice, stanje veze uvijek vidljivo, memorija, baterija, rezervna kopija', () => {
+  const postavke = HTML.match(/<div id="postavke-panel"[\s\S]*?<div id="pozari-panel"/)?.[0] || '';
+  ['id="set-ver-txt"', 'id="set-mreza-txt"', 'id="set-update-card"', 'id="set-mem-txt"', 'onclick="_setOcistiTeren()"', 'onclick="_setBaterija()"', 'id="set-podaci"', 'onclick="_setBackup()"', 'id="set-restore-input"', 'id="set-uid-txt"'].forEach(x => assert.ok(postavke.includes(x), x));
+  const fn = HTML.slice(HTML.indexOf('function _updOfflineBanner()'), HTML.indexOf("window.addEventListener('online', _updOfflineBanner)"));
+  assert.ok(fn.includes("'● Online'") && !fn.includes("display = 'none'"), 'stanje veze se uvijek prikazuje');
+  const bat = HTML.slice(HTML.indexOf('function _setBaterija()'), HTML.indexOf('function _setPodaci()'));
+  assert.ok(bat.includes('requestBatteryOptExemption') && !bat.includes('_BATT_HINT_KEY'), 'dugme uvijek otvara sistemske postavke');
+  const bk = HTML.slice(HTML.indexOf('const _SET_BACKUP_BEZ'), HTML.indexOf('function _setRestore('));
+  assert.ok(bk.includes("/^(usf_|tvlake_)/") && bk.includes('usf_pozari_kes'), 'kopija: samo ključevi aplikacije, bez keševa');
+  const rs = HTML.slice(HTML.indexOf('const _KOPIJA_APP'), HTML.indexOf('const _KOPIJA_APP') + 1700);
+  assert.ok(rs.includes("_KOPIJA_APP = ['geoforest', 'grmec-navigator']") && rs.includes('!_KOPIJA_APP.includes(j.app)') && rs.includes('/^(usf_|tvlake_)/.test(k)'), 'vraćanje samo provjerenih ključeva');
+});
+
+t('Meni → Tragovi: plutajući panel se otvara preko karte (ne ostaje iza Menija)', () => {
+  const f = HTML.slice(HTML.indexOf('function openTragoviPanel('), HTML.indexOf('function closeTragoviPanel('));
+  assert.ok(f.includes("if (document.querySelector('.usf-panel.show')) switchMainTab('karta');"));
+  assert.ok(HTML.includes('id="mc-tragovi" onclick="openTragoviPanel()"'));
+});
+
+console.log('\n' + pass + ' prošlo, 0 palo — kostur karte');

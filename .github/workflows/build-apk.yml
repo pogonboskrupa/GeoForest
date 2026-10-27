@@ -1,0 +1,95 @@
+name: Build APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, 'claude/**']
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: JavaScript testovi
+        run: for f in tests/js/*.test.js; do node "$f"; done
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Java testovi (offline karte, bez Androida)
+        run: |
+          javac -encoding UTF-8 -d /tmp/jt android/app/src/main/java/ba/spd/geoforest/SqliteTileMath.java android/test-java/SqliteTileMathTest.java
+          java -ea -cp /tmp/jt ba.spd.geoforest.SqliteTileMathTest
+          javac -encoding UTF-8 -d /tmp/jt android/app/src/main/java/ba/spd/geoforest/IzborFajla.java android/test-java/IzborFajlaTest.java
+          java -ea -cp /tmp/jt ba.spd.geoforest.IzborFajlaTest
+          javac -encoding UTF-8 -d /tmp/jt android/app/src/main/java/ba/spd/geoforest/NativeGpsBuffer.java android/test-java/NativeGpsBufferTest.java
+          java -ea -cp /tmp/jt ba.spd.geoforest.NativeGpsBufferTest
+          javac -encoding UTF-8 -d /tmp/jt android/app/src/main/java/ba/spd/geoforest/KopijaKarte.java android/test-java/KopijaKarteTest.java
+          java -ea -cp /tmp/jt ba.spd.geoforest.KopijaKarteTest
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.4'
+      - name: Pripremi verziju i assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          # APK_RELEASE_VERSION=1.0.0
+          # Verzija mora biti ista u index.html (APP_VER), sw.js i terrain-layers.js — inače CI pada.
+          WEB_VERSION="$(sed -n "s/^const APP_VER = 'v\([^']*\)';/\1/p" index.html)"
+          APP_VERSION="$(sed -n 's/^[[:space:]]*# APK_RELEASE_VERSION=//p' .github/workflows/build-apk.yml)"
+          test -n "$WEB_VERSION" && test -n "$APP_VERSION"
+          test "$WEB_VERSION" = "$APP_VERSION" || { echo "APP_VER v$WEB_VERSION != APK v$APP_VERSION" >&2; exit 1; }
+          grep -q "const APP_VERSION = '${APP_VERSION}';" sw.js || { echo "sw.js APP_VERSION nije $APP_VERSION" >&2; exit 1; }
+          IFS=. read -r MAJOR MINOR PATCH <<< "$APP_VERSION"
+          # 1.0.0 → 1; poredak isti kao x·10000 + y·100 + z
+          VERSION_CODE=$(((MAJOR - 1) * 10000 + MINOR * 100 + PATCH + 1))
+          sed -i -E "s/versionCode [0-9]+/versionCode ${VERSION_CODE}/" android/app/build.gradle
+          sed -i -E "s/versionName \"[^\"]+\"/versionName \"${APP_VERSION}\"/" android/app/build.gradle
+          echo "APP_VERSION=$APP_VERSION" >> "$GITHUB_ENV"
+          bash android/copy-assets.sh
+          grep -q "versionName \"${APP_VERSION}\"" android/app/build.gradle
+      - name: Potpisni ključ (GitHub Secrets)
+        shell: bash
+        env:
+          GEOFOREST_KEYSTORE_B64: ${{ secrets.GEOFOREST_KEYSTORE_B64 }}
+        run: |
+          set -euo pipefail
+          # Bez stalnog ključa CI bi potpisao nasumičnim debug ključem i update preko instalirane app bi pao.
+          if [ -z "$GEOFOREST_KEYSTORE_B64" ]; then
+            # Feature grana: samo provjera da APK builda (nasumičan debug ključ, bez release-a).
+            [ "$GITHUB_REF" != "refs/heads/main" ] || { echo "Nedostaje secret GEOFOREST_KEYSTORE_B64 (vidi android/generate-keystore.sh)" >&2; exit 1; }
+            echo "::warning::Bez GEOFOREST_KEYSTORE_B64 — APK potpisan privremenim debug ključem, samo za provjeru builda"
+            exit 0
+          fi
+          echo "$GEOFOREST_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/geoforest.keystore"
+          echo "GEOFOREST_KEYSTORE=$RUNNER_TEMP/geoforest.keystore" >> "$GITHUB_ENV"
+      - name: Izgradi APK
+        env:
+          GEOFOREST_STORE_PASSWORD: ${{ secrets.GEOFOREST_STORE_PASSWORD }}
+          GEOFOREST_KEY_ALIAS: ${{ secrets.GEOFOREST_KEY_ALIAS }}
+          GEOFOREST_KEY_PASSWORD: ${{ secrets.GEOFOREST_KEY_PASSWORD }}
+        run: gradle -p android --no-daemon assembleDebug
+      - name: Provjeri APK
+        run: test -s android/app/build/outputs/apk/debug/app-debug.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GeoForest-v${{ env.APP_VERSION }}
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+      - if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.APP_VERSION }}
+          name: GeoForest v${{ env.APP_VERSION }}
+          prerelease: true
+          files: android/app/build/outputs/apk/debug/*.apk
+          fail_on_unmatched_files: true

@@ -1,0 +1,46 @@
+[
+ {
+  "id": "kmuy8pcsq",
+  "naziv": "Granice taksacije 2021",
+  "opis": "odjeli i odsjeci (KML)",
+  "mb": 13.5,
+  "vrsta": "kml",
+  "encm": {
+   "m2026-10": "IB9fjXpoKZkqd+1Fz82uy12V2x7l3KxcHyYWbqrhL5S6wJGHhrXDeRWobQaTHpWZwsS+/FFHKBJWplIxH4oEpxDbfFa/PYaHtto=",
+   "m2026-11": "ZX0B2VtCm9l95VqZfanIsKqWUqK7PEW+74I4tD+zFBYuQb85NLUY6HRu8/dUA2P6mLYdHS1vi6Yf2QsOpaFOlnoEOcxSZx6E2B0=",
+   "m2026-12": "9u0d2DSDBduiuXPNmPV0a9WcyjWWEthH0a5U3sP/viZRZcPjtAdt/AnBL2N1uNFD5Fcn0ZjENws8hq4VClZjk0rA9qZjamMBMqw=",
+   "m2027-01": "mh3VG+egi0yvyDLKJkTaGkwXSS5xD42ssOapFWEHfa8sSkQCZiCNF0Ga26/ApBY6NiglPAQecgvqUE1uPPqgoZ1UYeeLzyL2gws=",
+   "m2027-02": "qPOgb9b0d5yHrjECGdNqv61xmqPbcsoefasegley2Tda9HGnGNKLLaeXEq1W8NjlyCvM2mWmHY0IqRYB8j+trGV5OiaZvZaOmlE=",
+   "m2027-03": "OPSsEq9X6E4u9u57MS1wAasGwr26IdCVoyVX4wdkF/Rfmt85InWT7DGU2R2BcZ4mOw9tvFAKcMJEd6Sm1zTcbRGTe0B77X8WYqc=",
+   "m2027-04": "erK6aFw4AhvIrIwu3JUbZS0BHd6Uzm9ktyktCSXLaWYoiKtm15HT7Ej4msLIPkP5wfoBKMxwAHtKORpSmx1FBpequCw+okAlJSA=",
+   "m2027-05": "1nLh0Xq4sorkt9rns1b5XK/VVQVeK/Iu5ZEWQKZVeLWUxd3axcVQO/WkJ/+8hL8ou4/Bjo7v46sqRQKgKcSBxWwHiEpSDND3nd8=",
+   "m2027-06": "I5/zX1UvC+VstzQadTpdUqb28xlsElU762eAlEOkpl49BDGW96z7b2sM7DL3kC6e8Vwibl6S8rn11wWkcFZVnqp4ORNYpJIjtdw=",
+   "m2027-07": "kuLblba3SEOhJb8f6pWy5NkX/t098CSStio527YTPV1bpKHLVChKEqiV158BKBSV6zpeECayQQW1PHlgZuJ7nvaaGJpMIzTka5I=",
+   "m2027-08": "H4tBERX7e8mRDNOVgVOwIe14FIfaNcVaCLnkgcKlDr5WRGS90x7DgFWfnxBLGoecf7rQTm2Pr+NUtVOjX6IrQ4mgHg3kXUbkJSg=",
+   "m2027-09": "zMPM7DmYrF0OzdAQPKsgfzpU3+oupKLBKiv1KkWuGinR6uHH/hvHVrQ8vaIQbOrG3XqWtb9wUH4ksEEStoQBizbDRVIzrgc23+4=",
+   "m2027-10": "EGgsLOE1IafwJTXWQjOD8vhdcc5llSkEuFKsJRFAPBoHit+8aW6z1+jTho0FdRNYsiMfaLTxuqj79367m5pqUKfp+22ZyQnenFo="
+  }
+ },
+ {
+  "id": "kmuyi4q4p",
+  "naziv": "Kamionski putevi",
+  "opis": "šumski kamionski putevi — ŠKP (KML)",
+  "mb": 0.4,
+  "vrsta": "kml",
+  "encm": {
+   "m2026-10": "1t+/3PyP1J7Ufl9D/lvNRZGt4c37wKwaTjX817LglyI4ysjVFzVxH+s6d2ATC3pllldPRGgZ1+r1SNNcU3WlZIOrrqq463U0GNc=",
+   "m2026-11": "rbuV8SIh2LMhxqWecbUmP01FHHdaCTOVR9FAJbrjSsWH6YjN4DrL6bJ7az1rypzgC6/P/vjBP4N6+wXWSATaycluQN7SMUCylCA=",
+   "m2026-12": "Q8g0dC08ifEPG0dSRWizKEywCBYdOM203RuQDQuhsGIt95iw/0zbaKezFCwPOzc3vgqBqVznv6gHm/cx6bbsRRIjiSGqLiqMPyo=",
+   "m2027-01": "mFc2N0H7RHW9OqeljIMNzQgEgk8YXqKLhL6gbHHufHlOfhgziY15joqNUwKKmuMobefUm7YxyRVl3rpP0mOALYDmHBtY1JBN8Qo=",
+   "m2027-02": "/vut+OGm50UVgqK1SD7YsDj3iDDcNty2OJshOLPTAJShCldlAvGozCs0jdZ6vqbqE5f9f9Yc5ObGJP7cmuSGJvjXzOPZHxOQHHY=",
+   "m2027-03": "V83I98Jbifjw6sTTZ0TejJmQwjUEhLEZpqw7vDD8q/96MuVOf6p4ztm34D7n+1793N5zHH7i89pUURc4J7PjG+b4vvzdfEt1g+I=",
+   "m2027-04": "V68Mxb2IPS1DXYsObf1gFSBLD5xqrNFOFU/EnAxvc0YblHsorpZgn1lbGnFKlNMA3iwAmgiVRAPN+/owB8ygEZcgJxTbQGJpUXk=",
+   "m2027-05": "et5zL8wDNhkftv+HPjpgf+Vr9RBH1N7GW7XVDVUHQt6wxNvudRgT96mbKinq806s+Lkv3ciPsOSZDGbn043kmZZVVQHAX4jjvHQ=",
+   "m2027-06": "RK7BluQ3aVqhMxzPG/clpFm4nzo3oSncNn4GaxdPOWt8TKbq9ieH0ozB04lQ02yF7PErFgv1kKpNZqXy7chTwLaO8mmwWCV8nok=",
+   "m2027-07": "pvckSKTB0M1HVM3LS3imBZ7yVyuqogNMlfHUkZr4r7oE2W+BzvM1MQn6hM+eRc0kehdLfx16ENAy9zbZxoARDZNYj8w/d5uw+os=",
+   "m2027-08": "VKNluwoess/d/PFcJG1ufrXTVNkGvT2SfxZPzGZBwwU29friIUytk72J/zG9TriOQ49GNESZmdRf+aBK4nWv3vhFoQTibSf90fk=",
+   "m2027-09": "rZ9pSZ1JYLmZFfoh+zFxxEGH98RV0GGxb9mRxW3BR4422y+5kzljNJ4ArOdaf8AhCAQ1TwiMlKMxxveqD+kJFWcwup0ln5sMvXw=",
+   "m2027-10": "OT0zoHxDpCgQOtlfjud6mqFPeRiylQbeKAmjkvri32W+E91gmdmcEQ29O8b76q23SE0qrNDDMZu/gYHUS7v3gMMQF597U6AWuV0="
+  }
+ }
+]

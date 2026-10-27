@@ -1,0 +1,177 @@
+'use strict';
+const assert = require('node:assert');
+const path = require('node:path');
+
+const {
+  RD_DEFAULT_PARAMS, rdHaversine, rdAzimuth, rdDestPoint, rdSestarKorak,
+  rdPreview, rdFindRoute, rdValidateRoute
+} = require(path.join(__dirname, '../../static/js/road-design.js'));
+
+let pass = 0;
+function t(name, fn) {
+  try { fn(); pass++; console.log('  ✔ ' + name); }
+  catch (e) { console.error('  ✘ ' + name + '\n      ' + e.message); process.exitCode = 1; }
+}
+
+console.log('Projektovanje šumskog puta — geodezija, šestarski korak, pathfinding:');
+
+t('rdHaversine mjeri poznatu udaljenost (~111.2km po stepenu geografske širine)', () => {
+  const d = rdHaversine(44.0, 16.0, 45.0, 16.0);
+  assert.ok(Math.abs(d - 111195) < 500, 'dobio ' + d);
+});
+
+t('rdAzimuth: sjever=0°, istok=90°, jug=180°, zapad=270°', () => {
+  assert.ok(Math.abs(rdAzimuth(44, 16, 44.01, 16) - 0) < 1);
+  assert.ok(Math.abs(rdAzimuth(44, 16, 44, 16.02) - 90) < 1);
+  assert.ok(Math.abs(rdAzimuth(44, 16, 43.99, 16) - 180) < 1);
+  assert.ok(Math.abs(rdAzimuth(44, 16, 44, 15.98) - 270) < 1);
+});
+
+t('rdDestPoint je inverz rdAzimuth/rdHaversine (kreni pa se vrati na istu tačku)', () => {
+  const p = rdDestPoint(44.8, 16.0, 37, 500);
+  const backDist = rdHaversine(44.8, 16.0, p.lat, p.lon);
+  const backAz = rdAzimuth(44.8, 16.0, p.lat, p.lon);
+  assert.ok(Math.abs(backDist - 500) < 1);
+  assert.ok(Math.abs(backAz - 37) < 0.5);
+});
+
+t('rdSestarKorak: L = ΔH/nagib (npr. 60m visinske razlike uz 6% nagib = 1000m)', () => {
+  assert.ok(Math.abs(rdSestarKorak(60, 6) - 1000) < 0.01);
+  assert.ok(Math.abs(rdSestarKorak(-60, 6) - 1000) < 0.01, 'apsolutna vrijednost, smjer ne bitan');
+});
+
+t('rdPreview računa direktan nagib i predznak visinske razlike', () => {
+  const prev = rdPreview(44.80, 16.00, 500, 44.80, 16.01, 540);
+  assert.strictEqual(prev.deltaH, 40);
+  assert.ok(prev.directSlopePct > 0);
+  assert.ok(Math.abs(prev.distM - prev.deltaH / (prev.directSlopePct / 100)) < 1);
+});
+
+// Ravan teren (elevacija svuda 500m) — direktna linija zadovoljava svaki nagib,
+// pretraga treba naći skoro pravolinijsku trasu bez ikakvog cik-caka.
+function flatElev() { return 500; }
+
+t('rdFindRoute na ravnom terenu nalazi kratku trasu (blizu prave linije)', () => {
+  const startLat = 44.80, startLon = 16.00, endLat = 44.805, endLon = 16.00;
+  const straight = rdHaversine(startLat, startLon, endLat, endLon);
+  const res = rdFindRoute({
+    startLat, startLon, endLat, endLon,
+    sampleElev: flatElev,
+    params: RD_DEFAULT_PARAMS
+  });
+  assert.strictEqual(res.ok, true);
+  assert.ok(res.path.length >= 2);
+  let total = 0;
+  for (let i = 1; i < res.path.length; i++) {
+    total += rdHaversine(res.path[i-1].lat, res.path[i-1].lon, res.path[i].lat, res.path[i].lon);
+  }
+  assert.ok(total < straight * 1.15, 'trasa na ravnom terenu treba biti blizu prave linije, dobio ' + total + ' vs ' + straight);
+});
+
+// Strm teren: konstantan nagib terena veći od dozvoljenog max nagiba u pravcu
+// direktne linije — pretraga MORA napraviti cik-cak (dužu trasu) da bi
+// zadovoljila hard cutoff, ili prijaviti NO_ROUTE ako je nemoguće.
+t('rdFindRoute nikad ne prelazi nagibMax na terenu koji to zahtijeva (cik-cak umjesto pravca)', () => {
+  const startLat = 44.80, startLon = 16.00, endLat = 44.803, endLon = 16.00;
+  // Elevacija raste linearno sa geografskom širinom — veoma strmo (bilo bi ~30%+
+  // direktnim putem), tjera pretragu da napravi duži put uz manji efektivni nagib.
+  const steepElev = (lat, lon) => 500 + (lat - startLat) * 111320 * 0.30;
+  const params = Object.assign({}, RD_DEFAULT_PARAMS, { nagibMax: 8, nagibPreporuceni: 6 });
+  const res = rdFindRoute({ startLat, startLon, endLat, endLon, sampleElev: steepElev, params });
+  assert.strictEqual(res.ok, true);
+  for (let i = 1; i < res.path.length; i++) {
+    const a = res.path[i-1], b = res.path[i];
+    const d = rdHaversine(a.lat, a.lon, b.lat, b.lon);
+    if (d < 0.5) continue;
+    const slopePct = Math.abs(b.elev - a.elev) / d * 100;
+    assert.ok(slopePct <= params.nagibMax + 0.01, 'segment ' + i + ' prelazi max nagib: ' + slopePct.toFixed(1) + '%');
+  }
+});
+
+t('rdFindRoute vraća DEM_MISSING kad sampleElev ne pokriva start/kraj', () => {
+  const res = rdFindRoute({
+    startLat: 44.8, startLon: 16.0, endLat: 44.81, endLon: 16.0,
+    sampleElev: () => null,
+    params: RD_DEFAULT_PARAMS
+  });
+  assert.strictEqual(res.ok, false);
+  assert.strictEqual(res.reason, 'DEM_MISSING');
+});
+
+t('rdValidateRoute klasifikuje segmente po pragovima (ok/warn/bad)', () => {
+  const params = Object.assign({}, RD_DEFAULT_PARAMS, { nagibMax: 10, nagibPreporuceni: 5 });
+  const path = [
+    { lat: 44.80, lon: 16.00, elev: 500 },       // start
+    { lat: 44.80045, lon: 16.00, elev: 502 },    // ~50m, ~4% -> ok
+    { lat: 44.80090, lon: 16.00, elev: 510 },    // ~50m, ~16% -> preko max (vještački, ne bi trebalo nastati iz rdFindRoute)
+  ];
+  const v = rdValidateRoute(path, params);
+  assert.strictEqual(v.segments.length, 2);
+  assert.strictEqual(v.segments[0].level, 'ok');
+  assert.strictEqual(v.segments[1].level, 'bad');
+  assert.strictEqual(v.anyExceedsMax, true);
+});
+
+t('rdStacionaze: tačke svakih 100 m + kraj, oznaka km+m', () => {
+  const R = require('../../static/js/road-design.js');
+  const path = [{ lat: 44.7, lon: 16.3, elev: 1000 }, { lat: 44.7, lon: 16.305, elev: 1020 }, { lat: 44.702, lon: 16.305, elev: 1030 }];
+  const st = R.rdStacionaze(path, 100);
+  assert.deepStrictEqual(st.map(x => R.rdStacionazaTxt(x.dist)), ['0+000', '0+100', '0+200', '0+300', '0+400', '0+500', '0+600', '0+618']);
+  assert.ok(st[st.length - 1].kraj && Math.abs(st[1].elev - (1000 + 20 * 100 / R.rdHaversine(44.7, 16.3, 44.7, 16.305))) < 0.01, 'visina interpolirana');
+  assert.strictEqual(R.rdStacionazaTxt(1250), '1+250');
+});
+
+t('rdPoprecniNagib: okomito na trasu, klase po dužini', () => {
+  const R = require('../../static/js/road-design.js');
+  const path = [{ lat: 44.7, lon: 16.3, elev: 1000 }, { lat: 44.7, lon: 16.305, elev: 1000 }, { lat: 44.702, lon: 16.305, elev: 1000 }];
+  // teren raste prema sjeveru 40 %: trasa istok–zapad siječe padinu (40 %), sjever–jug ide niz nju (0 %)
+  const pn = R.rdPoprecniNagib(path, (la) => 1000 + (la - 44.7) * 111320 * 0.4, 20);
+  assert.ok(Math.abs(pn.seg[0].q - 40) < 0.5 && pn.seg[1].q < 0.5);
+  assert.strictEqual(pn.seg[0].klasa, 1, '40 % → 30–50 % (usjek i nasip)');
+  assert.ok(Math.abs(pn.max - 40) < 0.5 && pn.poKlasi[0].m > 0 && pn.poKlasi[1].m > 0);
+});
+
+t('rdGpx / rdKml: validni XML sa visinama i stacionažama', () => {
+  const R = require('../../static/js/road-design.js');
+  const path = [{ lat: 44.7, lon: 16.3, elev: 1000 }, { lat: 44.7, lon: 16.305, elev: 1020 }];
+  const gpx = R.rdGpx(path, 'Put <A&B>');
+  assert.ok(gpx.includes('<trkpt lat="44.7000000" lon="16.3000000"><ele>1000.0</ele></trkpt>') && gpx.includes('Put &lt;A&amp;B&gt;'));
+  const kml = R.rdKml(path, 'Put', R.rdStacionaze(path, 100), '#a78bfa');
+  assert.ok(kml.includes('<LineString>') && kml.includes('<name>0+100</name>') && kml.includes('<color>fffa8ba7</color>'));
+});
+
+t('zemljani radovi: mješoviti profil do 50 %, puni usjek 50–70 %, zid preko 70 %', () => {
+  const R = require('../../static/js/road-design.js');
+  const B = 4.5;
+  const m = R.rdPresjek(0.3, B);
+  assert.strictEqual(m.tip, 'mjesoviti');
+  assert.ok(Math.abs(m.iskop - B * B * 0.3 * 1.5 / (8 * 1.2)) < 1e-9 && m.nasip > 0);
+  assert.strictEqual(R.rdPresjek(0.6, B).tip, 'usjek');
+  assert.ok(Math.abs(R.rdPresjek(0.6, B).iskop - 10.125) < 1e-9);
+  assert.strictEqual(R.rdPresjek(0.75, B).tip, 'zid');
+  const zr = R.rdZemljaniRadovi([{ q: 30, distM: 100 }, { q: 60, distM: 50 }, { q: 80, distM: 20 }], B);
+  assert.ok(Math.abs(zr.iskop - (m.iskop * 100 + 10.125 * 50)) < 1e-6);
+  assert.strictEqual(zr.zidM, 20); assert.strictEqual(zr.usjekM, 50);
+});
+
+t('kritične dionice spajaju uzastopne segmente; rdNaTrasi daje stacionažu dodira', () => {
+  const R = require('../../static/js/road-design.js');
+  const path = [0, 1, 2, 3, 4].map(i => ({ lat: 44.7, lon: 16.3 + i * 0.00127, elev: 1000 + [0, 5, 20, 35, 36][i] }));
+  const val = R.rdValidateRoute(path, R.RD_DEFAULT_PARAMS);
+  const krit = R.rdKriticneDionice(path, val, { seg: [{ i: 4, q: 55 }] }, R.RD_DEFAULT_PARAMS);
+  assert.strictEqual(krit.length, 1, 'segmenti 2–4 su jedna dionica');
+  assert.ok(krit[0].uzd && krit[0].pop && krit[0].i0 === 1 && krit[0].i1 === 4);
+  const t0 = R.rdNaTrasi(path, 44.7001, 16.3 + 0.00127 * 1.5);
+  assert.strictEqual(t0.i, 2);
+  assert.ok(Math.abs(t0.dist - 1.5 * R.rdHaversine(44.7, 16.3, 44.7, 16.30127)) < 1);
+});
+
+t('UI: stacionaže crne s bijelim obrubom, crtice, dodir na trasu, zemljani radovi, kritične dionice', () => {
+  const html = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../index.html'), 'utf8');
+  const css = html.slice(html.indexOf('.rd-st {'), html.indexOf('.rd-krit {'));
+  assert.ok(css.includes('color:#000') && css.includes('2px 2px 0 #fff'), 'crni broj, bijeli obrub');
+  assert.ok(css.includes('.rd-tick') && css.includes('background:#000') && css.includes('border:1.5px solid #fff'));
+  assert.ok(html.includes('_rdPopupNaTrasi(path, e.latlng)') && html.includes('rdZemljaniRadovi(pn.seg') && html.includes('_rdPokaziDionicu('));
+});
+
+console.log('\n' + pass + ' prošlo, 0 palo — projektovanje šumskog puta');

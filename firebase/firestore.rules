@@ -1,0 +1,86 @@
+rules_version = '2';
+
+// =====================================================================
+// GeoForest — Firestore Security Rules
+// ---------------------------------------------------------------------
+// Bez login ekrana: svaki uređaj se prijavljuje ANONIMNO (Firebase
+// Anonymous Auth, vidi static/js/firebase-init.js) i dobija stabilan UID.
+// Čitanje je otvoreno svakom prijavljenom (i anonimnom) korisniku — isti
+// pristup kao "otvoren svakom sa APK-om" (korisnička odluka, nema
+// odobravanja naloga). Upis admin-only podataka (FIRMS/GFW/CDSE ključevi)
+// je ograničen na UID-ove upisane u usf_admins kolekciju.
+//
+// Dodavanje admina (ručno, u Firebase Console → Firestore → usf_admins):
+//   1. Korisnik otvori Postavke u app-i, kopira svoj "Uređaj ID".
+//   2. Ti u Firestore-u napraviš dokument usf_admins/{taj_uid} sa poljem
+//      { active: true }.
+//   3. Taj uređaj sad može pozvati write na usf_pozari_kljucevi.
+//
+// Sve kolekcije ove app-e nose prefiks "usf_" da se ne miješaju sa
+// podacima druge aplikacije u istom Firebase projektu.
+//
+// NAPOMENA — dijeljeni projekat: druga aplikacija u ovom istom Firebase
+// projektu je imala pravilo "allow read, write: if true" za BAŠ SVE
+// (/{document=**}). To pravilo je ovdje zadržano NETAKNUTO za nju (nijedna
+// njena kolekcija se ne dira, ne zna se čak ni kako se zovu), ali je
+// suženo da NE pokriva usf_ kolekcije — inače bi "OR" semantika Firestore
+// pravila (bilo koje poklapajuće pravilo koje dozvoljava = dozvoljeno)
+// potpuno poništila admin-only zaštitu ključeva ispod. Provjera je čisto
+// po nazivu prve putanje (prefiks "usf_"), ne zna niti treba znati stvarne
+// nazive kolekcija druge app-e.
+// =====================================================================
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Druga aplikacija u istom projektu — netaknuto ponašanje (potpuno
+    // otvoreno), samo isključujući naše usf_ kolekcije (vidi napomenu gore).
+    match /{coll}/{rest=**} {
+      allow read, write: if !coll.matches('^usf_.*');
+    }
+
+    function jeAdmin() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/usf_admins/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/usf_admins/$(request.auth.uid)).data.active == true;
+    }
+    function jePrijavljen() {
+      return request.auth != null;
+    }
+
+    // Admin allowlist — niko klijentski ne smije pisati (samo ti ručno u Console-u).
+    match /usf_admins/{uid} {
+      allow read: if jePrijavljen();
+      allow write: if false;
+    }
+
+    // Dijeljeni FIRMS/GFW/CDSE ključevi za cijelu firmu — čita svako
+    // prijavljeno (i anonimno), piše samo admin.
+    match /usf_pozari_kljucevi/{doc} {
+      allow read: if jePrijavljen();
+      allow write: if jeAdmin();
+    }
+
+    // Sačuvani tragovi — vlastiti upis (uzorno vezan uz uid), čitanje
+    // dijeljeno (kolege na terenu vide tragove jedni drugih).
+    match /usf_tragovi/{doc} {
+      allow read: if jePrijavljen();
+      allow create: if jePrijavljen() && request.resource.data.ownerUid == request.auth.uid;
+      allow update, delete: if jePrijavljen() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // Dijeljeni server-side keš detekcija požara (FIRMS/GFW/EFFIS agregacija) —
+    // čita svako prijavljeno, piše samo admin/Cloud Function.
+    match /usf_pozari_kes/{doc} {
+      allow read: if jePrijavljen();
+      allow write: if jeAdmin();
+    }
+
+    // Sigurnosna mreža (namjerno redundantno sa suženim pravilom druge app-e
+    // gore — OR semantika Firestore pravila znači da "false" ovdje nikad ne
+    // može ništa otvoriti, samo dodatno osigurava da nešto neočekivano ne
+    // ostane bez ijednog pravila).
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
