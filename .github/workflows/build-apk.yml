@@ -42,7 +42,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # APK_RELEASE_VERSION=1.1.3
+          # APK_RELEASE_VERSION=1.1.4
           # Verzija mora biti ista u index.html (APP_VER), sw.js i terrain-layers.js — inače CI pada.
           WEB_VERSION="$(sed -n "s/^const APP_VER = 'v\([^']*\)';/\1/p" index.html)"
           APP_VERSION="$(sed -n 's/^[[:space:]]*# APK_RELEASE_VERSION=//p' .github/workflows/build-apk.yml)"

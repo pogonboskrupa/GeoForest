@@ -503,3 +503,7 @@ html[data-btn-stil="akcent"] #ab-loc:not(.active) { box-shadow: 0 0 0 1px rgba(7
 #doz-bar .db-dug button[data-a="kraj"] { flex: 2; background: var(--gf-zel-jak, #22c55e); border-color: #86efac; color: #06140d; }
 @keyframes dzPuls { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
 @media (prefers-reduced-motion: reduce) { #doz-bar .db-top i { animation: none; } }
+#doz-bar .db-izb { margin-top: 8px; font-size: 15px; color: var(--gf-txt, #e2e8f0); }
+#doz-bar .db-izb small { display: block; color: var(--gf-dim, #94a3b8); font-size: 14px; }
+#doz-bar .db-dug button:disabled { opacity: .4; }
+#doz-bar .db-dug button[data-a="izb-ok"] { flex: 2; background: var(--gf-zel-jak, #22c55e); border-color: #86efac; color: #06140d; }

@@ -199,6 +199,7 @@
       snimaSloj.setLatLngs(snima.pts); snimaSloj.setStyle({ color: snima.boja });
     }
     const bar = document.getElementById('doz-bar'); if (!bar) return;
+    if (izbor) return;
     bar.classList.toggle('show', !!snima);
     if (!snima) return;
     const gps = typeof lastP !== 'undefined' && lastP && Number.isFinite(lastP.la) ? lastP : null;
@@ -251,7 +252,8 @@
   const panelOtvoren = () => { const el = typeof document !== 'undefined' && document.getElementById('doznaka-panel'); return !!(el && el.classList.contains('show')); };
   function _otvoriPanel() { if (typeof _openStubPanel === 'function') _openStubPanel('doznaka-panel', 'meni'); render(); }
   const el = () => document.getElementById('doz-body');
-  let izbor = null; // { q, naziv } dok se bira poligon odjela
+  let izbor = null; // { naziv, lista: [{ ring, ime, sloj, bb, ha }], sel } dok se poligon odjela bira dodirom na karti
+  let izbSloj = null;
 
   function izvoriPoligona() {
     const out = [], vidjen = new Set();
@@ -283,19 +285,10 @@
       ${tr ? `<h4 class="dz-h">Pojasevi</h4>${tr}` : '<p class="uk-izvor">Još nema pojaseva. Pokreni snimanje i kreći se onuda kuda doznačuješ stabla, ili uvezi KML trag.</p>'}
       <p class="uk-izvor">Prostor odjela se dijeli po najbližem pojasu: sredina između susjednih pojaseva je isprekidana linija, svaka polovina dobija boju svog projektanta, a prvi pojas boji sve do granice odjela.</p></section>`;
   }
-  function izborHtml() {
-    const q = (izbor.q || '').toLowerCase().trim(), izv = izvoriPoligona();
-    const l = izv.filter(o => !q || (o.ime + ' ' + o.sloj).toLowerCase().includes(q)).slice(0, 80);
-    return `<section class="ng-card dz-kar"><h3>Odaberi odjel za „${esc(izbor.naziv)}”</h3>
-      <input id="doz-trazi" class="kh-trazi" type="search" placeholder="🔎 Traži odjel…" value="${esc(izbor.q || '')}">
-      <div class="dz-izb">${l.length ? l.map(o => `<button data-a="izaberi" data-k="${izv.indexOf(o)}"><b>${esc(o.ime)}</b><small>${esc(o.sloj)} · ${fmt(povrsinaLL(o.ring) / 10000, 2)} ha</small></button>`).join('') : '<p class="uk-izvor">Nema poligona. Učitaj sloj „Granice taksacije” (Karte → Server) ili svoj KML s poligonima.</p>'}</div>
-      <div class="sl-dug"><button data-a="izbor-x">Odustani</button></div></section>`;
-  }
   function render() {
     const e = typeof document !== 'undefined' && el(); if (!e) return;
     const st = document.getElementById('mc-stat-doznaka'); if (st) st.textContent = S.projekti.length ? String(S.projekti.length) : '';
     if (!panelOtvoren()) return;
-    if (izbor) { e.innerHTML = izborHtml(); const t = document.getElementById('doz-trazi'); if (t) { t.focus(); t.setSelectionRange(t.value.length, t.value.length); } return; }
     const lista = S.projekti.map(p => `<div class="dz-pr${p.id === S.akt ? ' akt' : ''}" data-id="${esc(p.id)}"><button class="dz-pr-i" data-a="otvori"><b>${esc(p.naziv)}</b><small>${esc(p.odjel || '')} · ${fmt(p.ha, 2)} ha · ${p.tragovi.length} ${p.tragovi.length === 1 ? 'pojas' : 'pojasa'}</small></button>
       <button data-a="zoom" aria-label="Na karti">🔍</button><button data-a="vid" aria-label="Prikaži/sakrij">${p.vis === false ? '🙈' : '👁'}</button><button data-a="bris" aria-label="Izbriši">🗑</button></div>`).join('');
     const p = aktivni();
@@ -304,15 +297,67 @@
     if (p && !p._pod && !p._racuna && p.tragovi.length) preracunaj(p);
   }
 
+  const bbox = r => r.reduce((b, q) => [Math.min(b[0], q[0]), Math.min(b[1], q[1]), Math.max(b[2], q[0]), Math.max(b[3], q[1])], [90, 180, -90, -180]);
+  function unutar(la, lo, r) {
+    let in_ = false;
+    for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
+      if ((r[i][1] > lo) !== (r[j][1] > lo) && la < (r[j][0] - r[i][0]) * (lo - r[i][1]) / (r[j][1] - r[i][1]) + r[i][0]) in_ = !in_;
+    }
+    return in_;
+  }
+  // Izbor odjela DODIROM NA KARTI: konture poligona u pogledu (zumirano ≥ 11), dodir bira najmanji poligon pod prstom.
+  function izbCrtaj() {
+    if (izbSloj && imaKartu()) { try { map.removeLayer(izbSloj); } catch (e) {} } izbSloj = null;
+    if (!izbor || !imaKartu()) return;
+    const g = izbSloj = L.layerGroup().addTo(map), v = map.getBounds(), rend = L.canvas({ pane: pane(), padding: 0.3 });
+    const vidi = x => x.bb[2] >= v.getSouth() && x.bb[0] <= v.getNorth() && x.bb[3] >= v.getWest() && x.bb[1] <= v.getEast();
+    izbor.lista.filter(x => x === izbor.sel || (map.getZoom() >= 11 && vidi(x))).slice(0, 900).forEach(x => {
+      const sel = x === izbor.sel;
+      L.polygon(x.ring, { pane: pane(), renderer: rend, color: sel ? '#fb7185' : '#fde68a', weight: sel ? 3 : 1.3, fillColor: '#fb7185', fillOpacity: sel ? 0.4 : 0.04, interactive: false }).addTo(g);
+    });
+  }
+  function izbBar() {
+    const bar = document.getElementById('doz-bar'); if (!bar) return;
+    bar.classList.toggle('show', !!izbor || !!snima);
+    if (!izbor) return;
+    const s = izbor.sel;
+    bar.style.setProperty('--c', '#fb7185');
+    bar.innerHTML = `<div class="db-top"><b>🗺 Dodirni odjel na karti</b><span>${map.getZoom() < 11 ? 'zumiraj bliže da se vide poligoni' : esc(izbor.naziv)}</span></div>
+      <div class="db-izb">${s ? `<b>${esc(s.ime)}</b> · ${fmt(s.ha, 2)} ha <small>${esc(s.sloj)}</small>` : 'Dodirom izaberi poligon koji predstavlja odjel.'}</div>
+      <div class="db-dug"><button data-a="izb-ok" ${s ? '' : 'disabled'}>✓ Napravi projekat</button><button data-a="izb-x">✕ Odustani</button></div>`;
+  }
+  function izbKlik(e) {
+    if (!izbor) return;
+    let naj = null;
+    izbor.lista.forEach(x => { if (e.latlng.lat >= x.bb[0] && e.latlng.lat <= x.bb[2] && e.latlng.lng >= x.bb[1] && e.latlng.lng <= x.bb[3] && unutar(e.latlng.lat, e.latlng.lng, x.ring) && (!naj || x.ha < naj.ha)) naj = x; });
+    if (!naj) return;
+    izbor.sel = naj; izbCrtaj(); izbBar();
+  }
+  function izbKraj() {
+    if (!izbor) return;
+    izbor = null; window._npHvataKlik = false;
+    if (imaKartu()) { map.off('click', izbKlik); map.off('moveend', izbCrtaj); }
+    izbCrtaj(); izbBar(); render();
+  }
   async function novi() {
+    if (snima) { toast('⏺ Prvo završi snimanje pojasa'); return; }
     const v = typeof _dlgPrompt === 'function' ? await _dlgPrompt('Naziv projekta doznake', 'Doznaka ' + (S.projekti.length + 1), { title: '🌲 Novi projekat', okLabel: 'Dalje' }) : prompt('Naziv projekta', 'Doznaka');
     if (v == null || !String(v).trim()) return;
-    izbor = { q: '', naziv: String(v).trim() }; render();
+    const lista = izvoriPoligona().map(o => ({ ...o, bb: bbox(o.ring), ha: povrsinaLL(o.ring) / 10000 }));
+    if (!lista.length) { toast('⚠ Nema poligona — učitaj sloj „Granice taksacije” (Karte → Server) ili svoj KML'); return; }
+    izbor = { naziv: String(v).trim(), lista, sel: null };
+    window._npHvataKlik = true; map.on('click', izbKlik); map.on('moveend', izbCrtaj);
+    if (typeof switchMainTab === 'function') switchMainTab('karta');
+    if (typeof map.closePopup === 'function') map.closePopup();
+    if (map.getZoom() < 11) { try { map.fitBounds(L.latLngBounds(lista.flatMap(x => x.ring)), { padding: [30, 30], maxZoom: 12 }); } catch (e) {} if (map.getZoom() < 11) map.setZoom(11); }
+    izbCrtaj(); izbBar();
   }
-  function izaberiOdjel(idx) {
-    const o = izvoriPoligona()[idx]; if (!o || !izbor) return;
-    const p = { id: uid(), naziv: izbor.naziv, odjel: o.ime, ring: o.ring, ha: povrsinaLL(o.ring) / 10000, vis: true, projektanti: {}, tragovi: [], t: Date.now() };
-    S.projekti.unshift(p); S.akt = p.id; izbor = null; pisi(); crtaj(); render(); zoom(p.id);
+  function izbGotovo() {
+    const o = izbor && izbor.sel; if (!o) return;
+    const naziv = izbor.naziv;
+    izbKraj();
+    const p = { id: uid(), naziv, odjel: o.ime, ring: o.ring, ha: o.ha, vis: true, projektanti: {}, tragovi: [], t: Date.now() };
+    S.projekti.unshift(p); S.akt = p.id; pisi(); crtaj(); render(); zoom(p.id); _otvoriPanel();
     toast('🌲 Projekat „' + p.naziv + '” · ' + fmt(p.ha, 2) + ' ha');
   }
   function zoom(id) { const p = nadji(id); if (p && p.ring && imaKartu()) { if (typeof switchMainTab === 'function') switchMainTab('karta'); map.fitBounds(L.latLngBounds(p.ring).pad(0.15), { maxZoom: 18 }); } }
@@ -354,8 +399,6 @@
   async function akcija(a, cvor) {
     const pr = cvor.closest('.dz-pr'), tr = cvor.closest('.dz-trag'), p = pr ? nadji(pr.dataset.id) : aktivni();
     if (a === 'novi') return novi();
-    if (a === 'izbor-x') { izbor = null; return render(); }
-    if (a === 'izaberi') return izaberiOdjel(+cvor.dataset.k);
     if (!p) return;
     if (a === 'otvori') { S.akt = p.id; pisi(); render(); return; }
     if (a === 'zoom') return zoom(p.id);
@@ -387,7 +430,6 @@
   function veze() {
     const tijelo = el(); if (!tijelo) return;
     tijelo.addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (b && !b.disabled) akcija(b.dataset.a, b); });
-    tijelo.addEventListener('input', e => { if (e.target.id === 'doz-trazi' && izbor) { izbor.q = e.target.value; render(); } });
     tijelo.addEventListener('change', async e => {
       if (e.target.id !== 'doz-fajl' || !e.target.files[0]) return;
       const f = e.target.files[0]; e.target.value = '';
@@ -395,7 +437,7 @@
       catch (er) { toast('⚠ KML nije učitan: ' + er.message); }
     });
     const bar = document.createElement('div'); bar.id = 'doz-bar'; bar.setAttribute('role', 'status'); document.body.appendChild(bar);
-    bar.addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (!b) return; if (b.dataset.a === 'kraj') snimaKraj(); else snimaOdbaci(); });
+    bar.addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (!b) return; if (b.disabled) return; const a = b.dataset.a; if (a === 'kraj') snimaKraj(); else if (a === 'odbaci') snimaOdbaci(); else if (a === 'izb-ok') izbGotovo(); else if (a === 'izb-x') izbKraj(); });
   }
   function nastavi() { // snimanje prekinuto ubijanjem aplikacije: nastavi s onim što je sačuvano
     let z; try { z = JSON.parse(localStorage.getItem(KLJUC_SNIMA) || 'null'); } catch (e) { z = null; }

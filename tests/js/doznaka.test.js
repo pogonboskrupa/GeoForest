@@ -49,4 +49,10 @@ t('povezano: meni, panel, skripta, offline lista, KML hook', () => {
   assert.ok(H.includes('USFDoz.izKml'), 'uvoz iz KML-a kroz Učitaj KML / primljeni fajl');
   assert.ok(R('sw.js').includes('static/js/doznaka.js') && R('android/copy-assets.sh').includes('static/js/doznaka.js'));
 });
+t('odjel se bira dodirom na karti (ne listom)', () => {
+  const J = R('static/js/doznaka.js');
+  assert.ok(J.includes("map.on('click', izbKlik)") && J.includes('window._npHvataKlik = true') && J.includes('izbGotovo'));
+  assert.ok(!J.includes('doz-trazi') && !J.includes('izborHtml'), 'nema liste za izbor');
+});
+
 console.log('\n' + pass + ' prošlo, ' + (process.exitCode ? 'IMA PALIH' : '0 palo') + ' — doznaka');
