@@ -29,7 +29,7 @@ t('veliki ekran: zaglavlje panela i donja navigacija poravnati s već centrirani
   assert.ok(blok.includes('.usf-panel .up-hdr') && blok.includes('#main-tabs') && blok.includes('calc((100% - 680px) / 2)') && !blok.includes('.up-body'), 'tijelo se ne dira (već ima width:min(680px…))');
   assert.ok(i > H.indexOf('#main-tabs {') && i > H.indexOf('.usf-panel .up-hdr {'), 'poslije osnovnih pravila (inače ih ona nadjačaju)');
   assert.ok(H.includes('.usf-panel .up-body { width:min(680px,calc(100% - 32px)); margin:0 auto; box-sizing:border-box; }'), 'postojeće centriranje tijela ostaje');
-  assert.ok(H.includes('.usf-panel .up-body { flex:1; overflow-y:auto; padding:14px 14px calc(86px'), 'osnovni (mobilni) padding isti');
+  assert.ok(H.includes('.usf-panel .up-body { flex:1; overflow-y:auto; padding:14px 14px calc(76px'), 'osnovni (mobilni) padding isti');
 });
 
 t('Drive preuzimanje: APK most ima prednost, na računaru direktan link u novom tabu', () => {

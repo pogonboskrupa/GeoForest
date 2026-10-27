@@ -99,7 +99,7 @@ t('donji bar: SVG ikone, 60 px, natpis uvijek vidljiv, aktivna stavka puna zelen
 t('šabloni interfejsa: 4 šablona, primjena mijenja samo izgled (ne koordinatni sistem), prepoznaje aktivni', () => {
   const P = require('../../static/js/postavke.js');
   assert.deepStrictEqual(P.SABLONI.map(s => s.id), ['standard', 'teren', 'noc', 'kompakt']);
-  const zad = { tema: 'tamna', bdgA: 55, bdgFs: 11, bdgOut: 'tanak', blur: 0, btnA: 86, btnZ: 100, btnOblik: 'zaobljeno', btnIk: 'normalne', koord: 'wgs', bdgElev: false };
+  const zad = { tema: 'tamna', bdgA: 55, bdgFs: 11, bdgOut: 'tanak', blur: 0, btnA: 86, btnZ: 100, btnOblik: 'zaobljeno', btnIk: 'normalne', btnStil: 'staklo', koord: 'wgs', bdgElev: false };
   assert.strictEqual(P.aktivniSablon(zad).id, 'standard');
   assert.strictEqual(P.aktivniSablon({ ...zad, bdgA: 60 }), null, 'ručna izmjena = prilagođeno');
   const teren = P.SABLONI.find(s => s.id === 'teren').v;
