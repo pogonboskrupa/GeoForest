@@ -11,7 +11,7 @@ const HTML = fs.readFileSync(path.join(__dirname, '../../index.html'), 'utf8');
 
 let pass = 0;
 const t = (name, fn) => { fn(); pass++; console.log('  ✔ ' + name); };
-console.log('Odjeli — izvještaj, praćenje, izvoz, lokalni DEM:');
+console.log('Odjeli — izvještaj, izvoz, lokalni DEM:');
 
 t('KML izvoz: poligon sa rupom, tačka, ExtendedData i stil; interna svojstva se ne izvoze', () => {
   const fc = { type: 'FeatureCollection', features: [
@@ -33,24 +33,6 @@ t('CSV izvoz: BOM za Excel, navodnici za zarez i navodnike', () => {
   assert.ok(c.startsWith('﻿a,b\n'));
   assert.ok(c.includes('"x,y","rekao ""da"""'));
   assert.ok(c.endsWith('\n1,'));
-});
-
-t('praćenje: prva provjera postavlja početno stanje, kasnije se javljaju samo noviji alarmi', () => {
-  const kes = {};
-  const a = (dt, lo) => ({ la: 44.88, lo, dt, conf: 'high' });
-  assert.strictEqual(O._odjeliNoviAlarmi(kes, 'k', [a('2026-09-10T00:00:00Z', 16.1)]).length, 0, 'bez obavijesti za stare alarme');
-  assert.strictEqual(kes.k.vidjeno, '2026-09-10T00:00:00Z');
-  const novi = O._odjeliNoviAlarmi(kes, 'k', [a('2026-09-10T00:00:00Z', 16.1), a('2026-09-20T00:00:00Z', 16.2)]);
-  assert.deepStrictEqual(novi.map(x => x.dt), ['2026-09-20T00:00:00Z']);
-  assert.strictEqual(O._odjeliNoviAlarmi(kes, 'k', [a('2026-09-20T00:00:00Z', 16.2)]).length, 0, 'isti alarm se ne javlja dvaput');
-  assert.strictEqual(kes.k.pts.length, 2);
-});
-
-t('praćenje: GFW upit je ograničen na obuhvat praćenih odjela', () => {
-  const u = decodeURIComponent(O._odjeliAlarmUrl([16.14, 44.878, 16.17, 44.892], '2026-08-27'));
-  assert.ok(u.includes('gfw_integrated_alerts'));
-  assert.ok(u.includes("gfw_integrated_alerts__date >= '2026-08-27'"));
-  assert.ok(u.includes('latitude >= 44.8780 AND latitude <= 44.8920 AND longitude >= 16.1400 AND longitude <= 16.1700'));
 });
 
 t('lokalni DEM: bilinearna visina, nodata, Terrarium kodiranje i nagib/ekspozicija', () => {
@@ -78,7 +60,8 @@ t('integracija: DEM rezerva u Terrarium dohvatu, dugme izvještaja, izvoz u pane
   const terr = HTML.slice(HTML.indexOf('async function _getTerrariumTile'), HTML.indexOf('function _terrariumDecodeTile'));
   assert.ok(terr.includes('USFDem.terrariumPlocica') && terr.includes('if (!blob) return lokalno();'));
   assert.ok(HTML.includes('📊 Izvještaj odjela') && HTML.includes('_odjelIzvjestaj(${id})') && HTML.includes('id = L.stamp(layer)'));
-  ["_izvoz('pozari','kml')", "_izvoz('poremecaji','geojson')", "_izvozDugmad('susenje')"].forEach(x => assert.ok(HTML.includes(x), x));
+  const js = fs.readFileSync(path.join(__dirname, '../../static/js/odjeli.js'), 'utf8');
+  assert.ok(js.includes("_izvozDugmad('odjel', ['kml', 'csv'])") && !/USFEfda|USFDeadtrees|_pozi|GFW|alarm/i.test(js), 'izvještaj samo teren, bez uklonjenih modula');
   const sw = fs.readFileSync(path.join(__dirname, '../../sw.js'), 'utf8');
   const kop = fs.readFileSync(path.join(__dirname, '../../android/copy-assets.sh'), 'utf8');
   ['static/js/dem-local.js', 'static/js/odjeli.js', 'static/data/dem_opcine.tif'].forEach(f => {
@@ -88,21 +71,10 @@ t('integracija: DEM rezerva u Terrarium dohvatu, dugme izvještaja, izvoz u pane
   assert.ok(sw.includes("'./geo/odjeli.kml'"), 'ugrađeni odjeli se keširaju ako postoje');
 });
 
-t('GFW alarmi za praćenje odjela: parser bez sekcije Sječa', () => {
-  const pts = O._gfwAlarmParse(JSON.stringify({ data: [
-    { latitude: '44.88', longitude: '16.15', gfw_integrated_alerts__date: '2026-09-20', gfw_integrated_alerts__confidence: 'high' },
-    { latitude: 'x', longitude: '16.1' }
-  ] }));
-  assert.deepStrictEqual(pts, [{ la: 44.88, lo: 16.15, dt: '2026-09-20T00:00:00Z', conf: 'high' }]);
-  assert.deepStrictEqual(O._gfwAlarmParse('nije json'), []);
-  assert.ok(!HTML.includes('sjeca-panel') && !HTML.includes('mc-sjeca') && !HTML.includes('_sje'), 'Sječa sekcija uklonjena');
-  assert.ok(!HTML.includes('id="odjeli-pracenje"'), 'bez okvira praćenih odjela u Šumarstvu');
-});
-
-t('Karte: Podloga (bazna) → Offline → Sa servera → Moji podaci (KML preglednik, tematska) → Teren', () => {
+t('Karte: Podloga (bazna) → Offline → Sa servera → Moji podaci (KML preglednik) → Teren', () => {
   const grid = HTML.slice(HTML.indexOf('<div class="karta-hub-grid">'), HTML.indexOf('<!-- Postavke panel -->'));
   const idx = s => grid.indexOf(s);
-  const red = ['Podloga</div>', 'Bazna karta</h3>', 'Offline karte</div>', 'Sa servera</div>', 'Moji podaci</div>', 'KML — preglednik poligona <span', 'Tematska GeoPackage karta</h3>', 'Teren</div>', 'Nagib terena</h3>', 'Ekspozicija i sjenčenje</h3>'].map(idx);
+  const red = ['Podloga</div>', 'Bazna karta</h3>', 'Offline karte</div>', 'Sa servera</div>', 'Moji podaci</div>', 'KML — preglednik poligona <span', 'Teren</div>', 'Nagib terena</h3>', 'Ekspozicija i sjenčenje</h3>'].map(idx);
   assert.ok(red.every((v, i) => v > 0 && (i === 0 || v > red[i - 1])), red.join(','));
   assert.ok(HTML.includes("_renderKartaBaseList(); _khStat(); }") && HTML.includes('id="kml-trazi"') && HTML.includes('function _kmlTraziHtml('));
   assert.ok(!HTML.includes('Učitaj velike lokalne karte u formatima'));

@@ -1,17 +1,33 @@
 // Lokalni DEM (Copernicus GLO-30, 5 općina, static/data/dem_opcine.tif) —
 // iz njega se prave Terrarium pločice kad nema interneta, pa nagib,
-// ekspozicija, sjenčenje, profil i projektovanje puta rade i offline.
+// ekspozicija, sjenčenje, profil i sjekačke linije rade i offline.
 (function (root) {
   'use strict';
 
   const FAJL = 'static/data/dem_opcine.tif';
   const NODATA = -32768;
+  const LIB = 'static/libs/geotiff.js';
+
+  // geotiff.js se učitava tek kad zatreba (≈ 300 KB) — ne usporava pokretanje.
+  let _libPromise = null;
+  function ucitajLib() {
+    if (root.GeoTIFF) return Promise.resolve(root.GeoTIFF);
+    if (_libPromise) return _libPromise;
+    _libPromise = new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = LIB;
+      s.onload = () => root.GeoTIFF ? res(root.GeoTIFF) : rej(new Error('geotiff.js nije učitan'));
+      s.onerror = () => { _libPromise = null; rej(new Error('geotiff.js nije dostupan')); };
+      document.head.appendChild(s);
+    });
+    return _libPromise;
+  }
 
   let _dem = null;
   function ucitaj() {
     if (_dem) return _dem;
     _dem = (async () => {
-      const G = await root.USFDeadtrees.ucitajLib();
+      const G = await ucitajLib();
       const r = await fetch(FAJL);
       if (!r.ok) throw new Error('nema lokalnog DEM-a (' + r.status + ')');
       const img = await (await G.fromArrayBuffer(await r.arrayBuffer())).getImage(0);
@@ -107,5 +123,5 @@
     return ix >= 0 && iy >= 0 && ix < d.W && iy < d.H ? { ix, iy } : null;
   }
 
-  root.USFDem = { FAJL, NODATA, ucitaj, visina, uObuhvatu, terrariumRGBA, terrariumPlocica, nagibEkspozicija, celija };
+  root.USFDem = { FAJL, NODATA, ucitajLib, ucitaj, visina, uObuhvatu, terrariumRGBA, terrariumPlocica, nagibEkspozicija, celija };
 })(typeof window !== 'undefined' ? window : globalThis);

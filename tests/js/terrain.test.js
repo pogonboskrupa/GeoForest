@@ -42,5 +42,4 @@ assert.ok(tjs.includes("mapLegend.id='terrain-map-legend'") && tjs.includes("map
 assert.notEqual(terrainColor('shade',1,1),terrainColor('shade',-1,-1));
 assert.ok(html.includes('await cache.put(url, resp.clone())'), 'DEM tile mora biti sigurno upisan za offline rad');
 assert.ok(html.includes('URL.revokeObjectURL(objectUrl)'), 'Image fallback ne smije curiti object URL memoriju');
-assert.ok(html.includes("pane:'pozariPane', radius: 5"), 'simulacijske tačke moraju biti iznad projekcije plohe');
 console.log('Terrain: cardinal aspects, 6 slope classes, map legend, neutral threshold and hillshade passed');

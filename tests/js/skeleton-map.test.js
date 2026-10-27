@@ -79,13 +79,6 @@ t('bottom bar ostaje iznad punih radnih panela', () => {
   assert.ok(/min-height\s*:\s*52px/.test(HTML), 'dugmad bottom bara moraju imati veću dodirnu površinu');
 });
 
-t('radni modali završavaju iznad bottom bara i skrolaju sadržaj', () => {
-  const css = HTML.match(/#profil-modal, #tem-table-modal, #poz-sim-modal\s*\{[^}]+\}/s)?.[0] || '';
-  assert.ok(css.includes('calc(74px + env(safe-area-inset-bottom,0px))'));
-  assert.ok(/z-index\s*:\s*900/.test(css));
-  assert.ok(/overflow\s*:\s*auto/.test(css));
-});
-
 t('bazni slojevi su ograničeni na osnovne četiri (bez Wayback/Sentinel/WorldCover/Konture)', () => {
   const twStart = HTML.indexOf('const TL = {');
   assert.ok(twStart >= 0, 'TL objekat nije nađen');
@@ -99,10 +92,10 @@ t('bazni slojevi su ograničeni na osnovne četiri (bez Wayback/Sentinel/WorldCo
     'napredni satelitski slojevi ne smiju biti u skeletonu (korisnička odluka)');
 });
 
-t('paneovi za buduće Požari/Mjerenja slojeve postoje od prvog dana', () => {
+t('paneovi za mjerenja/trag i offline podlogu postoje; paneovi uklonjenih modula ne', () => {
   assert.match(HTML, /createPane\('tragMsrLines'\)/);
-  assert.match(HTML, /createPane\('pozariPane'\)/);
-  assert.match(HTML, /createPane\('pozariDetectionsPane'\)/);
+  assert.match(HTML, /createPane\('offlineBasePane'\)/);
+  assert.ok(!/createPane\('(pozari|sumarstvo)/.test(HTML));
 });
 
 // Regresioni test za bug "Cannot read properties of undefined (reading
@@ -120,24 +113,16 @@ t('svaki korišteni Leaflet pane je stvarno kreiran (map.createPane)', () => {
   assert.deepStrictEqual(missing, [], 'pane(ovi) korišteni ali nikad kreirani: ' + missing.join(', '));
 });
 
-t('SQLite/MBTiles je bazna karta, teren i požari su slojevi iznad nje', () => {
+t('SQLite/MBTiles je bazna karta, slojevi su iznad nje', () => {
   assert.ok(HTML.includes("pane: 'offlineBasePane'"));
   assert.ok(HTML.includes('Object.values(TL).forEach(layer =>'));
-  assert.ok(HTML.includes("pane:'pozariHeatPane'"));
 });
 t('Protomaps API ključ nalazi se u Postavkama, ne u kartama', () => {
   const karte = HTML.match(/<div id="karte-panel"[\s\S]*?<div id="postavke-panel"/)?.[0] || '';
-  const postavke = HTML.match(/<div id="postavke-panel"[\s\S]*?<div id="pozari-panel"/)?.[0] || '';
+  const postavke = HTML.match(/<div id="postavke-panel"[\s\S]*?<div id="inventura-panel"/)?.[0] || '';
   assert.ok(!karte.includes('id="protomaps-key"'));
   assert.ok(postavke.includes('id="protomaps-key"'));
 });
-t('legenda ima checkbox, zatvaranje i pomjeranje dodirom', () => {
-  assert.ok(HTML.includes('id="poz-legend-check"'));
-  assert.ok(HTML.includes('onclick="_poziLegendaToggle(false)"'));
-  assert.ok(HTML.includes("handle.setPointerCapture(e.pointerId)"));
-  assert.ok(HTML.includes("usf_poz_legenda_pos"));
-});
-
 // CSS `color` ne boji emoji — sa emoji ikonama aktivno stanje (GPS uključen,
 // snimanje u toku) se na dugmetu uopšte ne vidi.
 t('dugmad na karti imaju SVG ikone (ne emoji) i vidljivo aktivno stanje', () => {
@@ -170,34 +155,24 @@ t('traka snimanja traga je iznad navigacije; dugmad i prozori idu iznad nje', ()
 t('dijalozi i modali su tamni, u istom stilu', () => {
   const v2 = HTML.slice(HTML.indexOf('<style id="ui-v2">'));
   assert.ok(/#dlg-sheet \{[^}]*\}/.test(v2) && /#dlg-input \{ background: var\(--pn-bg-2\)/.test(v2));
-  assert.ok(v2.includes('#profil-box, #tem-table-box, #poz-sim-box { background: var(--pn-bg)'));
   assert.ok(HTML.includes('<div id="gstab-card"'), 'GPS stabilizacija bez inline stilova');
 });
 t('meni kartice nemaju oznake "Osnovno spremno"/"Spremno"', () => {
   assert.ok(!/mc-badge/.test(HTML), 'oznake statusa su uklonjene iz menija');
 });
 
-t('✕ ispod 🗂 gasi slojeve Šumarstva i Sušenja-potkornjaka i vraća offline kartu', () => {
-  const i = HTML.indexOf('id="layer-btn"'), j = HTML.indexOf('id="tem-x"');
-  assert.ok(i > 0 && j > i && /<button id="tem-x" class="map-ctl" hidden onclick="_tematskiIskljuci\(\)"/.test(HTML));
-  assert.ok(/#tem-x \{ position:fixed; top:calc\(60px/.test(HTML), 'odmah ispod dugmeta za kartu');
-  const f = HTML.slice(HTML.indexOf('function _tematskiUkljuceni'), HTML.indexOf('function _sumToggle'));
-  ["_sumOn(k)", "USKSlojevi.stanje()", "USFVeg.stanje().on", "_sqlmapSelect(r.id, 'tiho')", "map.on('layeradd layerremove'"].forEach(x => assert.ok(f.includes(x), x));
+t('uklonjeni moduli: nema ✕ za tematske slojeve, panela ni skripti', () => {
+  assert.ok(!HTML.includes('id="tem-x"') && !HTML.includes('_tematski'));
+  for (const id of ['pozari-panel', 'sumarstvo-panel', 'susenje-panel', 'put-panel', 'tematska-panel', 'profil-modal', 'poz-sim-modal', 'tem-table-modal']) assert.ok(!HTML.includes('id="' + id + '"'), id);
+  for (const f of ['road-design', 'zima', 'usk-slojevi', 'efda-layer', 'deadtrees-layer', 'tlo-potkornjak', 'vegetacija', 'otvorenost']) assert.ok(!HTML.includes('static/js/' + f + '.js'), f);
 });
 
 t('meni: grupe, SVG ikone (bez emoji) i status po kartici', () => {
   const a = HTML.indexOf('<div id="meni-panel"'), b = HTML.indexOf('id="meni-ver-badge"', a);
   const meni = HTML.slice(a, b);
-  assert.ok((meni.match(/class="meni-grp"/g) || []).length >= 4);
+  assert.strictEqual((meni.match(/class="meni-grp"/g) || []).length, 3);
   const kartice = meni.match(/<button type="button" class="meni-card"[\s\S]*?<\/button>/g) || [];
-  assert.strictEqual(kartice.length, 13, 'Sječa i vjetroizvale uklonjena (pokriva Šumarstvo); Tačke i fotografije, Sjekačke linije, Sušenje-potkornjak, Primka, Inventura šuma dodane');
-  const red = ['mc-sumarstvo', 'mc-susenje', 'mc-pozari'].map(id => meni.indexOf('id="' + id + '"'));
-  assert.ok(red[0] > 0 && red[0] < red[1] && red[1] < red[2], 'Šumarstvo prvo, pa Sušenje-potkornjak, pa Požari');
-  const sus = HTML.slice(HTML.indexOf('<div id="susenje-panel"'), HTML.indexOf('<!-- Projektovanje šumskog puta -->'));
-  ['id="tp-osvjezi"', 'id="tp-rez"', 'id="sum-susenje-switch"', 'id="sum-susenje-god"', 'id="sum-sus-proj-chk"'].forEach(x => assert.ok(sus.includes(x), 'Sušenje-potkornjak sadrži ' + x));
-  const sum = HTML.slice(HTML.indexOf('<div id="sumarstvo-panel"'), HTML.indexOf('<div id="susenje-panel"'));
-  assert.ok(!sum.includes('id="tp-rez"') && !sum.includes('id="sum-susenje-switch"') && !sum.includes('id="uk-veg-switch"'), 'tlo/potkornjak, NDVI i sušenje više nisu u Šumarstvu');
-  assert.ok(sus.indexOf('id="tp-rez"') < sus.indexOf('id="uk-veg-switch"') && sus.indexOf('id="uk-veg-switch"') < sus.indexOf('id="sum-susenje-switch"'), 'redoslijed: tlo, vitalnost, sušenje');
+  assert.strictEqual(kartice.length, 8, 'Primka, Sjekačke, Inventura, Učitaj kartu, Učitaj KML, Tragovi, Mjerenja, Tačke');
   for (const k of kartice) {
     assert.ok(/<span class="mc-ico"><svg/.test(k), 'ikona mora biti SVG');
     assert.ok(!/\p{Extended_Pictographic}/u.test(k), 'bez emoji u kartici');
@@ -208,11 +183,10 @@ t('meni: grupe, SVG ikone (bez emoji) i status po kartici', () => {
 t('_meniStatusi: statusi i bosanska množina', () => {
   const src = extractFn('_meniStatusi') + '\nreturn _meniStatusi;';
   const f = new Function(src)();
-  const prazno = f({ poziOn: false, sumSlojeva: 0, tragova: 0, mjerenja: 0 });
+  const prazno = f({ tragova: 0, mjerenja: 0 });
   assert.ok(Object.values(prazno).every(x => x.t === '' && !x.on));
-  const r = f({ poziOn: true, sumSlojeva: 2, tragova: 1, mjerenja: 5 });
-  assert.deepStrictEqual(r.pozari, { t: 'Uključeno', on: true });
-  assert.strictEqual(r.sumarstvo.t, '2 sloja');
+  assert.deepStrictEqual(Object.keys(prazno), ['tragovi', 'mjerenja']);
+  const r = f({ tragova: 1, mjerenja: 5 });
   assert.strictEqual(r.tragovi.t, '1 trag');
   assert.strictEqual(r.mjerenja.t, '5 mjerenja');
   const m = k => f({ tragova: k }).tragovi.t;
@@ -222,7 +196,7 @@ t('_meniStatusi: statusi i bosanska množina', () => {
 });
 
 t('Postavke: grupisane kartice, stanje veze uvijek vidljivo, memorija, baterija, rezervna kopija', () => {
-  const postavke = HTML.match(/<div id="postavke-panel"[\s\S]*?<div id="pozari-panel"/)?.[0] || '';
+  const postavke = HTML.match(/<div id="postavke-panel"[\s\S]*?<div id="inventura-panel"/)?.[0] || '';
   ['id="set-ver-txt"', 'id="set-mreza-txt"', 'id="set-update-card"', 'id="set-mem-txt"', 'onclick="_setOcistiTeren()"', 'onclick="_setBaterija()"', 'id="set-podaci"', 'onclick="_setBackup()"', 'id="set-restore-input"', 'id="set-uid-txt"'].forEach(x => assert.ok(postavke.includes(x), x));
   const fn = HTML.slice(HTML.indexOf('function _updOfflineBanner()'), HTML.indexOf("window.addEventListener('online', _updOfflineBanner)"));
   assert.ok(fn.includes("'● Online'") && !fn.includes("display = 'none'"), 'stanje veze se uvijek prikazuje');

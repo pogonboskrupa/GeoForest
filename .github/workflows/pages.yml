@@ -5,7 +5,7 @@ name: Pages (desktop)
 
 on:
   push:
-    branches: [main]
+    branches: [claude/serene-tesla-piw1y5]
   workflow_dispatch:
 
 permissions:

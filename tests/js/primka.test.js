@@ -18,12 +18,14 @@ console.log('Primka (realizacija izvedbenih projekata):');
 
 const kv = (la, lo, d) => [[la, lo], [la, lo + d], [la + d, lo + d], [la + d, lo]];
 
-t('Meni: sektor „Realizacija izvedbenih projekata” odmah ispod Praćenja šume, s Primkom i Sjekačkim linijama', () => {
-  const grupe = [...HTML.matchAll(/<section class="meni-grp">\s*<h3>([^<]+)<\/h3>([\s\S]*?)<\/section>/g)].map(m => ({ h: m[1], ids: [...m[2].matchAll(/id="(mc-[a-z]+)"/g)].map(x => x[1]) }));
-  const i = grupe.findIndex(g => g.h === 'Realizacija izvedbenih projekata');
-  assert.ok(i > 0 && grupe[i - 1].h === 'Praćenje šume');
-  assert.deepStrictEqual(grupe[i].ids, ['mc-primka', 'mc-sjekacke']);
-  assert.ok(!grupe.find(g => g.h === 'Planiranje').ids.includes('mc-sjekacke'), 'Sjekačke više nisu u Planiranju');
+t('Meni GeoForest: 8 sekcija u 3 grupe, ovim redom (Primka prva)', () => {
+  const grupe = [...HTML.matchAll(/<section class="meni-grp">\s*<h3>([^<]+)<\/h3>([\s\S]*?)<\/section>/g)].map(m => ({ h: m[1], ids: [...m[2].matchAll(/class="meni-card" id="(mc-[a-z]+)"/g)].map(x => x[1]) }));
+  assert.deepStrictEqual(grupe, [
+    { h: 'Rad na terenu', ids: ['mc-primka', 'mc-sjekacke', 'mc-inventura'] },
+    { h: 'Karte', ids: ['mc-karta', 'mc-kml'] },
+    { h: 'Alati', ids: ['mc-tragovi', 'mc-mjerenja', 'mc-tacke'] }
+  ]);
+  for (const x of ['mc-sumarstvo', 'mc-susenje', 'mc-pozari', 'mc-put', 'mc-tematska']) assert.ok(!HTML.includes(x), x + ' uklonjen');
   assert.ok(HTML.includes("'primka-panel'") && HTML.includes('<script src="static/js/primka.js">'));
   assert.ok(R('sw.js').includes("'./static/js/primka.js'") && R('android/copy-assets.sh').includes('static/js/primka.js'));
 });

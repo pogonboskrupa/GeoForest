@@ -15,12 +15,9 @@ const insetIcon = fs.readFileSync(path.join(root, 'android/app/src/main/res/draw
 assert.match(workflow, /APP_VERSION=.*sed/);
 assert.match(workflow, /tag_name: v\$\{\{ env\.APP_VERSION \}\}/);
 assert.doesNotMatch(workflow, /v1\.2\.4/);
-assert.match(builder, /\[string\]\$Branch\s*=\s*"main"/);
-assert.match(builder, /ValidateSet\("main"\)/);
-assert.match(index, /_rdResultLayer = _rdCrtajTrasu\(/);
-{ const crt = index.slice(index.indexOf('function _rdCrtajTrasu('), index.indexOf('function _rdDiscardResult()'));
-  assert.ok((crt.match(/pane: 'tragMsrLines'/g) || []).length >= 2, 'obojena trasa mora biti iznad offline podloge'); }
-assert.match(index, /const poly = L\.polyline\([^\n]+pane:\s*'tragMsrLines'/);
+assert.match(builder, /\[string\]\$Branch\s*=\s*"claude\/serene-tesla-piw1y5"/);
+assert.match(builder, /ValidateSet\("claude\/serene-tesla-piw1y5"\)/);
+assert.ok(workflow.includes("if: github.ref == 'refs/heads/claude/serene-tesla-piw1y5' && env.GEOFOREST_KEYSTORE != ''"), 'release samo s glavne grane');
 assert.match(index, /id="set-update-progress"/);
 assert.match(index, /function _azurirajStatus\(msg, pct, phase, downloaded, total\)/);
 assert.match(activity, /\.apk\.part|apk\.getName\(\) \+ "\.part"/);
@@ -30,4 +27,4 @@ assert.match(adaptiveIcon, /@drawable\/ic_launcher_foreground_inset/);
 assert.match(roundAdaptiveIcon, /@drawable\/ic_launcher_foreground_inset/);
 assert.match(insetIcon, /android:insetLeft="0dp"/);
 
-console.log('Release/build provjere: 14 prošlo, 0 palo');
+console.log('Release/build provjere: 11 prošlo, 0 palo');

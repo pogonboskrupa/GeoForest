@@ -3,7 +3,7 @@ name: Build APK
 on:
   workflow_dispatch:
   push:
-    branches: [main, 'claude/**']
+    branches: ['claude/**']
 
 permissions:
   contents: write
@@ -65,9 +65,8 @@ jobs:
           set -euo pipefail
           # Bez stalnog ključa CI bi potpisao nasumičnim debug ključem i update preko instalirane app bi pao.
           if [ -z "$GEOFOREST_KEYSTORE_B64" ]; then
-            # Feature grana: samo provjera da APK builda (nasumičan debug ključ, bez release-a).
-            [ "$GITHUB_REF" != "refs/heads/main" ] || { echo "Nedostaje secret GEOFOREST_KEYSTORE_B64 (vidi android/generate-keystore.sh)" >&2; exit 1; }
-            echo "::warning::Bez GEOFOREST_KEYSTORE_B64 — APK potpisan privremenim debug ključem, samo za provjeru builda"
+            # Bez stalnog ključa nema release-a (update preko instalirane app bi pao) — samo provjera builda.
+            echo "::warning::Nema secreta GEOFOREST_KEYSTORE_B64 (android/generate-keystore.sh) — APK bez stalnog potpisa, release se preskače"
             exit 0
           fi
           echo "$GEOFOREST_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/geoforest.keystore"
@@ -85,7 +84,7 @@ jobs:
           name: GeoForest-v${{ env.APP_VERSION }}
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
-      - if: github.ref == 'refs/heads/main'
+      - if: github.ref == 'refs/heads/claude/serene-tesla-piw1y5' && env.GEOFOREST_KEYSTORE != ''
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.APP_VERSION }}

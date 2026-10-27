@@ -33,7 +33,7 @@ t('sjekačke linije: nema više sjekire ni emoji dugmadi, ikone iz ikone.js; ost
     assert.ok(sj.includes("ik('" + n + "'"), 'koristi ' + n);
   assert.ok(H.includes('<span data-ik="pila" data-ikv="22"></span> Sjekačke linije') && !H.includes('<h2>🪓 Sjekačke linije</h2>'));
   // izvan sekcije sjekira ostaje (dugmad u karticama poligona, terenske tačke, obavijesti)
-  assert.ok(H.includes("t: '🪓 Sjekačke linije', on: `USFSjek.izKljuca('k:${id}')`") && R('static/js/tacke.js').includes("ik: '🪓'") && R('static/js/odjeli.js').includes('🪓 Nova promjena šume'));
+  assert.ok(H.includes("t: '🪓 Sjekačke linije', on: `USFSjek.izKljuca('k:${id}')`") && R('static/js/tacke.js').includes("ik: '🪓'"));
   const sjP = H.slice(H.indexOf('<div id="sjekacke-panel"'), H.indexOf('<div id="sl-lista"'));
   assert.ok(sjP.includes('<span data-ik="poligon" data-ikv="19"></span> Nacrtaj granicu odjela') && !sjP.includes('✏ Nacrtaj granicu'), 'samo panel Sjekačkih linija (Primka ima svoj)');
   assert.ok(H.includes('<script src="static/js/ikone.js"></script>\n<script src="static/js/sjekacke.js"></script>'), 'ikone.js prije sjekacke.js');

@@ -1,7 +1,7 @@
 # GeoForest — napomene za agente
 
 > **GeoForest** je zasebna app nastala iz Grmeč Navigatora (`pogonboskrupa/FOREST-UNA-SANA`, `codex-forest`, v3.0.0).
-> Package `ba.spd.geoforest`, glavna grana `main`, verzija od v1.0.0 (versionCode = (x−1)·10000 + y·100 + z + 1).
+> Package `ba.spd.geoforest`, glavna grana `claude/serene-tesla-piw1y5`, verzija od v1.0.0 (versionCode = (x−1)·10000 + y·100 + z + 1).
 > Potpis: `android/generate-keystore.sh` → GitHub Secrets `GEOFOREST_KEYSTORE_B64`, `GEOFOREST_STORE_PASSWORD`,
 > `GEOFOREST_KEY_ALIAS`, `GEOFOREST_KEY_PASSWORD` (keystore i lozinke NIKAD u repo). Bilješke ispod su naslijeđene
 > i biće prečišćene kad se uklone moduli koji ne idu u GeoForest.

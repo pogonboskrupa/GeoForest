@@ -10,7 +10,7 @@ console.log('Desktop verzija (GitHub Pages / PWA):');
 
 t('pages.yml: isti paket kao APK (copy-assets.sh), objavljuje taj folder, build-apk.yml netaknut', () => {
   const y = R('.github/workflows/pages.yml');
-  assert.ok(y.includes('branches: [main]') && y.includes('bash android/copy-assets.sh'));
+  assert.ok(y.includes('branches: [claude/serene-tesla-piw1y5]') && y.includes('bash android/copy-assets.sh'));
   assert.ok(y.includes('path: android/app/src/main/assets') && y.includes('actions/deploy-pages@v4') && y.includes('pages: write') && y.includes('id-token: write'));
   assert.ok(y.includes('.nojekyll'));
   assert.ok(!R('.github/workflows/build-apk.yml').includes('deploy-pages'), 'APK workflow ne objavljuje Pages');
