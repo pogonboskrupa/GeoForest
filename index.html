@@ -2066,6 +2066,10 @@ body.sl-uredi #sl-ured { display: block; }
       <div class="set-acc-body">
       <p class="set-nap">Izgled zoom dugmadi, lokacije, mjerenja, tragova i izbora karte. Pregled je tačan prikaz; finu providnost, veličinu i oblik možeš dalje mijenjati u „Koordinate i dugmad”.</p>
       <div id="set-dugmad-sab" class="bsab-lista" role="radiogroup" aria-label="Šablon dugmadi na mapi"></div>
+      <h4 class="poz-nasl">📍 Položaj dugmadi na mapi</h4>
+      <p class="set-nap">Rasporedi dugmad prema ruci kojom držiš telefon. „Podignuto” ih diže iznad donjeg ruba, gdje ih palac lakše dohvata.</p>
+      <div id="set-dugmad-poz" class="poz-mreza" role="radiogroup" aria-label="Položaj dugmadi"></div>
+      <div id="set-dugmad-vis" class="rz-chips" role="group" aria-label="Visina dugmadi"></div>
       </div>
     </section>
     <section class="ng-card set-kar" id="set-s-razmjera" style="--acc:#38bdf8">
@@ -2285,7 +2289,7 @@ body.sl-uredi #sl-ured { display: block; }
 // android/app/build.gradle versionCode+versionName. Sva tri MORAJU biti
 // usklađena prije svakog commita.
 // =====================================================================
-const APP_VER = 'v1.0.5';
+const APP_VER = 'v1.0.6';
 document.getElementById('meni-ver-badge').textContent = 'GeoForest ' + APP_VER;
 
 // Verzije koriste tri jednocifrena segmenta: patch i minor idu 0–9.
@@ -2687,7 +2691,7 @@ function _prPrimijeni(sve) {
   });
 }
 // Izgled koordinata i dugmadi na karti (Postavke → 🎛 Koordinate i dugmad, pamti se): providnost podloge, obris teksta, veličina, dijelovi
-const _UI_KEY = 'usf_ui_prikaz', _UI_ZAD = { bdgA: 55, bdgFs: 11, bdgOut: 'tanak', bdgElev: true, bdgMgi: true, koord: 'mgi5', bdgRz: true, btnA: 86, btnZ: 100, tema: 'tamna', blur: 0, btnOblik: 'zaobljeno', btnIk: 'normalne', btnStil: 'staklo' };
+const _UI_KEY = 'usf_ui_prikaz', _UI_ZAD = { bdgA: 55, bdgFs: 11, bdgOut: 'tanak', bdgElev: true, bdgMgi: true, koord: 'mgi5', bdgRz: true, btnA: 86, btnZ: 100, tema: 'tamna', blur: 0, btnOblik: 'zaobljeno', btnIk: 'normalne', btnStil: 'staklo', btnPoz: 'zadano', btnVis: 'nisko' };
 const _UI_OBLIK = { okruglo: '26px', zaobljeno: '16px', ostro: '7px' }, _UI_IK = { tanke: '1.5', normalne: '2', podebljane: '2.7' };
 const _UI_TEME = { tamna: { bg: '10,24,18', fg: '#e8f3ec', bd: 'rgba(134,239,172,.22)', sep: 'rgba(134,239,172,.16)', out: '#000', a1: '#4ade80', a2: '#fde68a' }, svijetla: { bg: '255,255,255', fg: '#0f172a', bd: 'rgba(15,23,42,.2)', sep: 'rgba(15,23,42,.16)', out: '#fff', a1: '#15803d', a2: '#b45309' } };
 let _uiPrikaz = { ..._UI_ZAD };
@@ -2700,6 +2704,7 @@ function _uiPrimijeni() {
   r.setProperty('--bdg-a', (u.bdgA / 100).toFixed(2)); r.setProperty('--bdg-fs', u.bdgFs + 'px'); r.setProperty('--bdg-ts', _uiObris(u.bdgOut, t.out));
   r.setProperty('--btn-r', _UI_OBLIK[u.btnOblik] || '16px'); r.setProperty('--btn-sw', _UI_IK[u.btnIk] || '2');
   r.setProperty('--btn-a', (u.btnA / 100).toFixed(2)); r.setProperty('--btn-z', (u.btnZ / 100).toFixed(2));
+  document.documentElement.dataset.btnPoz = u.btnPoz || 'zadano'; document.documentElement.dataset.btnVis = u.btnVis || 'nisko';
   document.documentElement.dataset.btnStil = u.btnStil || 'staklo'; // Postavke → Šablon dugmadi (static/js/postavke.js)
   _geoBadgeRender();
 }

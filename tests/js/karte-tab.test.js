@@ -152,4 +152,17 @@ t('modali i plutajući prozori: ručica, tap >= 52 px, tekst >= 14 px (Mjerenja,
   assert.ok(/\.loc-switch \{ width: 56px; height: 32px/.test(blok), 'prekidači za rukavice');
 });
 
+t('položaj dugmadi na mapi: 4 rasporeda + 3 visine, atributi na <html>, CSS za svaki, pregled u Postavkama', () => {
+  const P = require('../../static/js/postavke.js');
+  assert.deepStrictEqual(P.POZ.map(p => p.id), ['zadano', 'desno', 'lijevo', 'zamjena']);
+  assert.deepStrictEqual(P.VIS.map(v => v.id), ['nisko', 'srednje', 'visoko']);
+  assert.ok(HTML.includes("btnPoz: 'zadano', btnVis: 'nisko'") && HTML.includes('dataset.btnPoz = u.btnPoz') && HTML.includes('dataset.btnVis = u.btnVis'));
+  assert.ok(HTML.includes('id="set-dugmad-poz"') && HTML.includes('id="set-dugmad-vis"'));
+  const css = R('static/css/geoforest.css');
+  for (const x of ['desno', 'lijevo', 'zamjena']) assert.ok(css.includes('html[data-btn-poz="' + x + '"] #zoom-grp'), x);
+  for (const x of ['srednje', 'visoko']) assert.ok(css.includes('html[data-btn-vis="' + x + '"] { --poz-lift'), x);
+  assert.ok(/#zoom-grp \{ bottom: calc\(var\(--dock-b\) \+ var\(--rec-h\) \+ var\(--poz-lift\)\)/.test(css), 'podizanje uz traku snimanja');
+  assert.ok(R('static/js/postavke.js').includes('_setBtnPozUi'));
+});
+
 console.log('\n' + pass + ' prošlo, ' + (process.exitCode ? 'IMA PALIH' : '0 palo') + ' — karte tab');

@@ -33,7 +33,7 @@
     el.innerHTML = SABLONI.map(s => `<button type="button" role="radio" aria-checked="${akt === s}" class="sab${akt === s ? ' on' : ''}" onclick="_setSablon('${s.id}')">
       <i>${s.ik}</i><b>${s.naziv}</b><small>${s.opis}</small>${akt === s ? '<em>✓ Aktivan</em>' : ''}</button>`).join('')
       + (akt ? '' : '<p class="sab-vl">✎ Prilagođeno: ručno si mijenjao postavke ispod. Izaberi šablon da se vrate zadane vrijednosti.</p>');
-    _setBtnSablonUi();
+    _setBtnSablonUi(); _setBtnPozUi();
   };
 
   // ── Šabloni dugmadi na mapi: stil (data-btn-stil na <html>, CSS u geoforest.css) + vrijednosti postojećih postavki ──
@@ -83,6 +83,33 @@
     }).join('') + (akt ? '' : '<p class="sab-vl">✎ Prilagođeno: neka postavka dugmadi je ručno promijenjena. Izaberi šablon da se vrate njegove vrijednosti.</p>');
   };
 
+  // ── Položaj dugmadi na mapi: <html data-btn-poz data-btn-vis>, CSS u geoforest.css ──
+  const POZ = [
+    { id: 'zadano', naziv: 'Zadano', opis: 'Zoom lijevo, alati desno' },
+    { id: 'desno', naziv: 'Desna ruka', opis: 'Sve desno, uz palac' },
+    { id: 'lijevo', naziv: 'Lijeva ruka', opis: 'Sve lijevo, uz palac' },
+    { id: 'zamjena', naziv: 'Zamijenjeno', opis: 'Alati lijevo, zoom desno' }
+  ];
+  const VIS = [{ id: 'nisko', naziv: 'Nisko' }, { id: 'srednje', naziv: 'Podignuto' }, { id: 'visoko', naziv: 'Visoko' }];
+  const imaPoz = id => POZ.some(p => p.id === id), imaVis = id => VIS.some(v => v.id === id);
+
+  W._setBtnPoz = function (k, v) {
+    if (k === 'btnPoz' ? !imaPoz(v) : !imaVis(v)) return;
+    _uiPrikaz[k] = v;
+    try { localStorage.setItem(_UI_KEY, JSON.stringify(_uiPrikaz)); } catch (e) {}
+    _uiPrimijeni(); _setUiUi();
+  };
+
+  W._setBtnPozUi = function () {
+    const m = document.getElementById('set-dugmad-poz'), vi = document.getElementById('set-dugmad-vis');
+    if (!m || typeof _uiPrikaz === 'undefined') return;
+    const poz = imaPoz(_uiPrikaz.btnPoz) ? _uiPrikaz.btnPoz : 'zadano', vis = imaVis(_uiPrikaz.btnVis) ? _uiPrikaz.btnVis : 'nisko';
+    m.innerHTML = POZ.map(p => `<button type="button" role="radio" aria-checked="${p.id === poz}" class="poz${p.id === poz ? ' on' : ''}" onclick="_setBtnPoz('btnPoz','${p.id}')">
+      <span class="poz-tel" data-p="${p.id}" data-v="${vis}" aria-hidden="true"><i class="pz"></i><i class="pf"></i></span>
+      <b>${p.naziv}</b><small>${p.opis}</small></button>`).join('');
+    if (vi) vi.innerHTML = VIS.map(v => `<button type="button" class="rz-chip${v.id === vis ? ' on' : ''}" onclick="_setBtnPoz('btnVis','${v.id}')">${v.naziv}</button>`).join('');
+  };
+
   // ── Prikaz po razmjeri ──
   const VRSTE = [['tragovi', '🥾', 'Tragovi'], ['kml', '🗺', 'KML / SHP slojevi'], ['sjek', '🪓', 'Sjekačke linije'], ['slike', '📷', 'Tačke i fotografije'], ['mjerenja', '📏', 'Mjerenja']];
   const PRESETI = [5000, 10000, 25000, 50000, 100000, 250000];
@@ -121,5 +148,5 @@
   // Zumiraj na željeni nivo, otvori Postavke i dodirni „Trenutna razmjera”: granica = razmjera koja je bila na karti.
   W._setRazmjeraTrenutna = function (k) { _setRazmjera(k, zaokruzi(_razmjera()), true); };
 
-  if (typeof module !== 'undefined') module.exports = { SABLONI, BTN_SABLONI, aktivniSablon, aktivniBtn, sablonJe, zaokruzi };
+  if (typeof module !== 'undefined') module.exports = { SABLONI, BTN_SABLONI, POZ, VIS, aktivniSablon, aktivniBtn, sablonJe, zaokruzi };
 })(typeof window !== 'undefined' ? window : {});
