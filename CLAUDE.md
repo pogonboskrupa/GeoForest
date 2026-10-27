@@ -275,10 +275,10 @@
   **Desktop prikaz** (`html.desk`): Postavke → 🖥 Prikaz (`usf_prikaz`: auto | desktop | mobilni; `_prikazPostavi/_prikazPrimijeni`). Auto = `(min-width: 1100px)
   and (pointer: fine)` — tablet s dodirom ostaje mobilni. Klasa se postavlja inline skriptom u `<head>` (bez treptaja; ISTO pravilo kao `_PRIKAZ_MQ`).
   Paneli = stupac DESNO širine `--desk-w` (460, ≥ 1600 px 520), `#main-tabs` ispod stupca, karta lijevo vidljiva; Meni u jednoj koloni; Esc zatvara panel.
-- **Ikona**: izvor `FOREST_IKONA.png` (Grmeč Navigator); iz njega `icon-192/512`,
+- **Ikona**: izvor `FOREST_IKONA.png` (GeoForest logo, 1024 px); iz njega `icon-192/512`,
   `icon-maskable-512` (80 % sigurna zona), `apple-touch-icon`, mipmap `ic_launcher*`. Sve
   NEPROVIDNO do ruba (providni uglovi ⇒ Xiaomi/HyperOS crta bijeli okvir i smanjuje ikonu);
-  adaptivni foreground: sadržaj ~83 % vidljivih 72dp, umetak 0, pozadina `#02341C`;
+  adaptivni foreground: sadržaj ~83 % vidljivih 72dp, umetak 0, pozadina `#184536`;
   splash `drawable-nodpi/splash_logo.png`
   — `<bitmap>` NIKAD na `@mipmap/ic_launcher` (adaptive XML na API 26+ ⇒ pad pri pokretanju).
 - **PIN za Šumarstvo, Sušenje-potkornjak, Požari, Projektovanje puta**: kapija

@@ -26,7 +26,7 @@ t('Android: mipmap po gustini, adaptivna pozadina u boji ikone, splash s ikonom'
   for (const f of ['icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png', 'android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png'])
     assert.strictEqual(fs.readFileSync(R(f))[25], 2, f + ' mora biti RGB (bez alfa kanala)');
   const boje = fs.readFileSync(R('android/app/src/main/res/values/colors.xml'), 'utf8');
-  assert.ok(boje.includes('<color name="ic_launcher_background">#02341C</color>') && boje.includes('<color name="colorSplash">#02341C</color>'));
+  assert.ok(boje.includes('<color name="ic_launcher_background">#184536</color>') && boje.includes('<color name="colorSplash">#184536</color>'));
   // <bitmap> na adaptivnu ikonu (mipmap-anydpi-v26 XML) ruši app pri pokretanju — samo PNG
   const splash = fs.readFileSync(R('android/app/src/main/res/drawable/splash_screen.xml'), 'utf8');
   for (const m of splash.matchAll(/<bitmap[^>]*android:src="@(\w+)\/(\w+)"/g)) {
