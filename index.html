@@ -582,37 +582,37 @@ html,body { margin:0; padding:0; height:100%; overflow:hidden; background:#0f172
 .set-det summary { cursor:pointer; color:var(--text); font-size:13px; font-weight:700; }
 .set-input { width:100%; box-sizing:border-box; padding:11px; border-radius:10px; border:1px solid #334155; background:#0b1220; color:#e2e8f0; font:inherit; margin:6px 0 8px; }
 .set-dugme { width:100%; padding:10px; border-radius:10px; border:1px solid rgba(74,222,128,.3); background:rgba(22,101,52,.3); color:#bbf7d0; font:inherit; font-size:12.5px; font-weight:700; cursor:pointer; }
-.set-grp { display:flex; align-items:baseline; gap:8px; margin:20px 2px 8px; color:#6ee7b7; font-size:11px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; }
-.set-grp small { color:#6b8277; font-size:10.5px; font-weight:500; letter-spacing:0; text-transform:none; }
+
+
 #postavke-panel .ng-card { margin-bottom:10px; }
 /* Postavke — harmonika (v2.7.5): sekcije su sklopive, jedna otvorena odjednom; svaka ima svoju boju */
-#postavke-panel .set-grp { margin:18px 0 8px; padding:7px 12px; border-radius:10px; background:rgba(74,222,128,.09); border:1px solid rgba(74,222,128,.22); color:#86efac; font-size:11.5px; }
-#postavke-panel .set-grp small { margin-left:auto; text-align:right; }
-.set-acc { padding:0 !important; overflow:hidden; border:1px solid #1f3b2d; border-left:4px solid var(--acc,#4ade80); background:#0f1d16; }
-.set-acc > summary { list-style:none; cursor:pointer; display:flex; align-items:center; gap:8px; min-height:52px; padding:0 14px; font-size:15px; font-weight:800; color:#f0fdf4; }
-.set-acc > summary::-webkit-details-marker { display:none; }
-.set-acc > summary::after { content:'›'; margin-left:auto; font-size:24px; font-weight:400; color:var(--acc,#4ade80); transition:transform .2s; }
-.set-acc[open] > summary { background:linear-gradient(90deg, color-mix(in srgb, var(--acc) 18%, transparent), transparent); border-bottom:1px solid #1f3b2d; }
-.set-acc[open] > summary::after { transform:rotate(90deg); }
+
+
+
+
+
+
+
+
 .set-acc-body { padding:12px 14px 14px; }
 
-.set-nav { position:sticky; top:-1px; z-index:5; display:flex; gap:6px; overflow-x:auto; padding:8px 0; margin:0 0 6px; background:linear-gradient(var(--bg,#08140e) 80%, transparent); scrollbar-width:none; }
-.set-nav::-webkit-scrollbar { display:none; }
-.set-nav button { flex:none; padding:7px 12px; border-radius:999px; border:1px solid #1f3b2d; background:#0d1a14; color:#cbd5e1; font:inherit; font-size:12px; font-weight:700; white-space:nowrap; }
+
+
+
 /* Postavke — dizajn (v2.9.4): hero kartica, grupe s linijom, sekcije s bojom/sjajem, bolji redovi i kontrole */
 #postavke-panel .set-app { background:linear-gradient(135deg,#1c3a2b,#12261c 70%); border:1px solid rgba(74,222,128,.28); border-radius:20px; box-shadow:0 8px 22px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.06); }
 #postavke-panel .set-app .set-ikona { border-radius:16px; box-shadow:0 0 0 2px rgba(74,222,128,.35), 0 6px 14px rgba(0,0,0,.35); }
-#postavke-panel .set-nav { padding:10px 0; }
-#postavke-panel .set-nav button { padding:8px 14px; background:linear-gradient(180deg,#14281e,#0d1a14); box-shadow:0 2px 6px rgba(0,0,0,.25); transition:border-color .15s, color .15s; }
-#postavke-panel .set-nav button:active { border-color:#4ade80; color:#86efac; }
-#postavke-panel .set-grp { display:flex; align-items:center; gap:9px; margin:22px 2px 10px; padding:0; background:none; border:0; border-radius:0; color:#86efac; font-size:11px; letter-spacing:.12em; }
-#postavke-panel .set-grp::before { content:''; flex:none; width:9px; height:9px; border-radius:3px; background:#4ade80; box-shadow:0 0 0 3px rgba(74,222,128,.2); }
-#postavke-panel .set-grp::after { content:''; order:1; flex:1; height:1px; min-width:12px; background:linear-gradient(90deg,rgba(74,222,128,.4),transparent); }
-#postavke-panel .set-grp small { order:2; margin-left:0; max-width:48%; font-size:10px; color:#6b8277; text-align:right; }
-#postavke-panel .set-acc { border-radius:18px; border:1px solid color-mix(in srgb,var(--acc) 22%,#1f3b2d); border-left:4px solid var(--acc,#4ade80); background:linear-gradient(135deg,color-mix(in srgb,var(--acc) 7%,#12231a),#0f1d16 65%); box-shadow:0 6px 16px rgba(0,0,0,.2); transition:box-shadow .2s, border-color .2s; }
-#postavke-panel .set-acc[open] { box-shadow:0 10px 26px rgba(0,0,0,.32), 0 0 0 1px color-mix(in srgb,var(--acc) 30%,transparent); }
-#postavke-panel .set-acc > summary { min-height:58px; padding:0 16px; gap:10px; font-size:15.5px; }
-#postavke-panel .set-acc > summary::after { display:grid; place-items:center; width:28px; height:28px; border-radius:50%; background:color-mix(in srgb,var(--acc) 16%,transparent); font-size:20px; line-height:1; }
+
+
+
+
+
+
+
+
+
+
+
 #postavke-panel .set-acc-body { padding:14px 16px 16px; }
 #postavke-panel .set-red { padding:10px 0; border-bottom:1px solid rgba(148,163,184,.1); }
 #postavke-panel .set-red:last-child { border-bottom:0; }
@@ -864,7 +864,7 @@ html,body { margin:0; padding:0; height:100%; overflow:hidden; background:#0f172
 .kh-iskljuci { grid-column:1 / -1; padding:10px; border-radius:12px; border:1px dashed #475569; background:transparent; color:#cbd5e1; font:inherit; font-size:12px; font-weight:700; cursor:pointer; }
 @media (min-width:700px) { .kh-pregled { grid-template-columns:repeat(4,1fr); } }
 .kh-razm .kg-top > i { color:#fde68a; } .kh-razm.sk { border-color:#f59e0b !important; } .kh-razm h3 .rz { color:#fde68a; margin-left:6px; font-variant-numeric:tabular-nums; }
-#karte-panel .set-nav { margin-bottom:10px; }
+
 .kh-gran { border-color:#334155 !important; }
 .kh-gran.on { border-color:#22c55e !important; background:linear-gradient(145deg,#12402a,#0d1a14) !important; }
 .kg-top { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
@@ -1795,6 +1795,7 @@ body.sl-uredi #sl-ured { display: block; }
 #np-card:not([style*="top"]) { bottom: calc(var(--dock-b) + var(--rec-h)); }
 #np-card { border-radius: var(--pn-r); box-shadow: var(--pn-sh); border-color: var(--pn-line); }
 </style>
+<link rel="stylesheet" href="static/css/geoforest.css">
 </head>
 <body>
 
@@ -1986,28 +1987,20 @@ body.sl-uredi #sl-ured { display: block; }
   </div>
 </div>
 
-<!-- Karte — centralno mjesto za podloge i uvoz terenskih podataka -->
+<!-- Karte — tri taba po izvoru: na telefonu / server (PIN) / podloga i teren (static/js/tabovi.js, karte-tab.js) -->
 <div id="karte-panel" class="usf-panel">
-  <div class="up-hdr"><h2>🗺 Karte i slojevi</h2><button class="up-close" onclick="switchMainTab('karta')">✕</button></div>
+  <div class="up-hdr"><h2>🗺 Karte</h2><button class="up-close" onclick="switchMainTab('karta')">✕</button></div>
   <div class="up-body">
-    <nav class="set-nav" aria-label="Skok na sekciju">
-      <button onclick="_khSkok('kh-gran')">▱ Granice</button><button onclick="_khSkok('kh-g-podloga')">🌍 Podloga</button><button onclick="_khSkok('kh-g-offline')">🗂 Offline</button><button onclick="_khSkok('kh-g-server')">☁ Server</button><button onclick="_khSkok('kh-g-podaci')">📁 Moji</button><button onclick="_khSkok('kh-g-teren')">⛰ Teren</button>
-    </nav>
+    <div class="gf-tabs" role="tablist" aria-label="Karte po izvoru" data-tabovi="karte">
+      <button role="tab" data-t="tel"><i>📱</i><span>Na telefonu</span><b id="kt-n-tel"></b></button>
+      <button role="tab" data-t="srv"><i>☁</i><span>Server</span><b id="kt-n-srv"></b></button>
+      <button role="tab" data-t="pod"><i>🌍</i><span>Podloga i teren</span><b id="kt-n-pod"></b></button>
+    </div>
     <div class="karta-hub-grid">
+      <div class="gf-tab-sek" data-tab="tel">
       <section class="karta-hub-card kh-gran" id="kh-gran"></section>
-      <section class="karta-hub-card" id="kh-razmjera"></section>
-      <div class="kh-grupa">Pregled</div>
-      <div id="kh-pregled" class="kh-pregled" role="status"></div>
-      <div class="kh-grupa" id="kh-g-podloga">Podloga</div>
-      <section class="karta-hub-card">
-        <h3>🌍 Bazna karta</h3>
-        <div id="karta-base-list"></div>
-        <p id="protomaps-status">Protomaps ključ podešava se u Postavkama.</p>
-      </section>
-      <div class="kh-grupa" id="kh-g-offline">Offline karte</div>
+      <div class="kh-grupa" id="kh-g-offline">🗂 Offline karte</div>
       <section class="karta-hub-card kh-off" id="kh-offline-kartica"></section>
-      <div class="kh-grupa srv" id="kh-g-server">☁ Sa servera</div>
-      <section class="karta-hub-card kh-srv" id="kh-server"></section>
       <div class="kh-grupa moj" id="kh-g-podaci">📁 Moji podaci</div>
       <section class="karta-hub-card kh-lista" id="kh-lista"></section>
       <section class="karta-hub-card">
@@ -2021,7 +2014,25 @@ body.sl-uredi #sl-ured { display: block; }
         <p id="kh-slojevi">Linija, ispuna i natpisi za svaki KML sloj — i za one preuzete sa servera.</p>
         <button class="karta-hub-action" onclick="_kedListaOtvori()">Otvori editor slojeva</button>
       </section>
-      <div class="kh-grupa" id="kh-g-teren">Teren</div>
+      <div class="kh-grupa">📊 Pregled</div>
+      <div id="kh-pregled" class="kh-pregled" role="status"></div>
+      </div>
+      <div class="gf-tab-sek" data-tab="srv">
+      <div id="kt-pin" class="kt-pin" role="status"></div>
+      <div class="kh-grupa srv" id="kh-g-server">☁ Karte sa servera</div>
+      <section class="karta-hub-card kt-srv" id="kt-srv-karte"></section>
+      <div class="kh-grupa srv">☁ Slojevi sa servera (KML)</div>
+      <section class="karta-hub-card kh-srv" id="kh-server"></section>
+      </div>
+      <div class="gf-tab-sek" data-tab="pod">
+      <section class="karta-hub-card" id="kh-razmjera"></section>
+      <div class="kh-grupa" id="kh-g-podloga">🌍 Podloga</div>
+      <section class="karta-hub-card">
+        <h3>🌍 Bazna karta</h3>
+        <div id="karta-base-list"></div>
+        <p id="protomaps-status">Protomaps ključ podešava se u Postavkama.</p>
+      </section>
+      <div class="kh-grupa" id="kh-g-teren">⛰ Teren</div>
       <section class="karta-hub-card ng-hub">
         <h3>📐 Nagib terena</h3>
         <p>Karta nagiba po rasponima i mjerenje nagiba poligona linijama niz padinu.</p>
@@ -2037,6 +2048,7 @@ body.sl-uredi #sl-ured { display: block; }
         <div id="terrain-legend" style="font-size:12px;line-height:1.8;margin-top:12px;"></div>
         <p id="terrain-status" role="status">DEM prikaz; pregledane visinske pločice dostupne su i offline. Nagib do 5 % je ravan teren — bez ekspozicije i bez boje.</p>
       </section>
+      </div>
     </div>
   </div>
 </div>
@@ -2051,10 +2063,13 @@ body.sl-uredi #sl-ured { display: block; }
       <span id="set-mreza-txt" class="set-veza" role="status"></span>
     </section>
     <div id="set-profil"></div>
-    <nav class="set-nav" aria-label="Skok na sekciju">
-      <button onclick="_setSkok('set-update-card')">⇩ Ažuriranje</button><button onclick="_setSkok('set-g-karta')">🔭 Razmjera</button><button onclick="_setSkok('set-s-ui')">🎛 Dugmad</button><button onclick="_setSkok('set-s-trag')">🥾 Trag</button><button onclick="_setSkok('set-s-gps')">📍 GPS</button><button onclick="_setSkok('set-s-podaci')">💾 Podaci</button><button onclick="_setSkok('set-s-karte')">🗂 Memorija</button>
-    </nav>
-    <h4 class="set-grp" id="set-g-app">Aplikacija<small>verzija i ažuriranje</small></h4>
+    <div class="gf-tabs set-tabs" role="tablist" aria-label="Postavke" data-tabovi="postavke">
+      <button role="tab" data-t="app"><i>⇩</i><span>Aplikacija</span></button>
+      <button role="tab" data-t="prikaz"><i>🗺</i><span>Prikaz</span></button>
+      <button role="tab" data-t="gps"><i>📍</i><span>GPS i trag</span></button>
+      <button role="tab" data-t="podaci"><i>💾</i><span>Podaci</span></button>
+    </div>
+    <div class="gf-tab-sek" data-tab="app">
     <section class="update-card" id="set-update-card" data-phase="idle">
       <div class="update-card-head">
         <div class="update-card-icon">⇩</div>
@@ -2067,17 +2082,22 @@ body.sl-uredi #sl-ured { display: block; }
         <div class="update-progress-meta"><span id="set-update-size"></span><span id="set-update-percent"></span></div>
       </div>
     </section>
-    <h4 class="set-grp" id="set-g-karta">Prikaz na karti<small>razmjera, koordinate, dugmad, trag</small></h4>
-    <details class="ng-card set-acc" id="set-s-razmjera" style="--acc:#38bdf8">
-      <summary>🔭 Prikaz po razmjeri</summary>
+    <section class="ng-card" id="set-korisnik-dno" hidden>
+      <h3>👤 Korisnik aplikacije</h3>
+      <div id="set-korisnik-box"></div>
+    </section>
+    </div>
+    <div class="gf-tab-sek" data-tab="prikaz">
+    <section class="ng-card set-kar" id="set-s-razmjera" style="--acc:#38bdf8">
+      <h3 class="set-kar-h">🔭 Prikaz po razmjeri</h3>
       <div class="set-acc-body">
       <p class="set-nap" style="margin-top:0">Sloj se sakrije kad zumiraš dalje od odabrane razmjere (npr. 1:50 000 = sitnija od toga). Izbor se pamti.</p>
       <div id="set-razmjera"></div>
       <div class="set-nap" id="set-razmjera-sad"></div>
       </div>
-    </details>
-    <details class="ng-card set-acc" id="set-s-ui" style="--acc:#a78bfa">
-      <summary>🎛 Koordinate i dugmad</summary>
+    </section>
+    <section class="ng-card set-kar" id="set-s-ui" style="--acc:#a78bfa">
+      <h3 class="set-kar-h">🎛 Koordinate i dugmad</h3>
       <div class="set-acc-body">
       <div class="ui-pregled"><div id="ui-pr-badge" class="ui-bdg"></div><div id="ui-pr-btn" class="map-ctl">🗂</div></div>
       <div class="set-red"><div><b>Tema podloge</b><small>Tamna ili svijetla staklena podloga (tekst i ikone se prilagode).</small></div></div>
@@ -2099,10 +2119,25 @@ body.sl-uredi #sl-ured { display: block; }
       <label class="set-klizac"><span>Veličina dugmadi <b id="ui-btnZ-v"></b></span><input type="range" id="ui-btnZ" min="80" max="140" step="5" oninput="_setUi('btnZ', +this.value)"></label>
       <button class="set-dugme" style="margin-top:10px" onclick="_setUiZadano()">↺ Vrati zadano</button>
       </div>
-    </details>
-
-    <details class="ng-card set-acc" id="set-s-trag" style="--acc:#fb923c">
-      <summary>🥾 Snimanje traga i linije</summary>
+    </section>
+    <section class="ng-card set-kar" id="set-s-prikaz" style="--acc:#22d3ee">
+      <h3 class="set-kar-h">🖥 Prikaz</h3>
+      <div class="set-acc-body">
+      <div class="set-seg" id="set-prikaz"><button data-v="auto" onclick="_prikazPostavi('auto')">Automatski</button><button data-v="desktop" onclick="_prikazPostavi('desktop')">Računar</button><button data-v="mobilni" onclick="_prikazPostavi('mobilni')">Telefon</button></div>
+      <small class="set-nap" id="set-prikaz-txt"></small>
+      </div>
+    </section>
+    </div>
+    <div class="gf-tab-sek" data-tab="gps">
+    <section class="ng-card set-kar" id="set-s-gps" style="--acc:#f472b6">
+      <h3 class="set-kar-h">📍 GPS i baterija</h3>
+      <div class="set-acc-body">
+      <div class="set-red"><div><b>Rad bez ograničenja baterije</b><small id="set-bat-txt">Da poziv ili druga aplikacija ne prekine GPS snimanje u pozadini.</small></div><button id="set-bat-btn" onclick="_setBaterija()">Podesi</button></div>
+      <div class="set-red" id="set-autostart" hidden><div><b>Autostart (Xiaomi/Redmi)</b><small>Uključi Autostart za GeoForest — inače HyperOS može ugasiti snimanje traga dok je ekran zaključan.</small></div><button onclick="AndroidGps.otvoriAutostart()">Otvori</button></div>
+      </div>
+    </section>
+    <section class="ng-card set-kar" id="set-s-trag" style="--acc:#fb923c">
+      <h3 class="set-kar-h">🥾 Snimanje traga i linije</h3>
       <div class="set-acc-body">
       <svg id="set-trag-pregled" class="set-pregled" viewBox="0 0 320 64" aria-hidden="true"><path d="M8 48 C60 8 110 60 160 30 S260 8 312 40" fill="none" stroke-linecap="round"/></svg>
       <label class="set-klizac"><span>Debljina <b id="set-trag-w-v"></b></span><input type="range" id="set-trag-w" min="1" max="10" step="1" oninput="_setTragStil()"></label>
@@ -2112,28 +2147,20 @@ body.sl-uredi #sl-ured { display: block; }
       <div class="set-seg" id="set-trag-ac"><button data-v="20" onclick="_setTragAc(20)">±20 m</button><button data-v="50" onclick="_setTragAc(50)">±50 m · zadano</button><button data-v="100" onclick="_setTragAc(100)">±100 m</button></div>
       <button class="set-dugme" style="margin-top:10px" onclick="_setTragZadano()">↺ Vrati zadano</button>
       </div>
-    </details>
-    <h4 class="set-grp" id="set-g-snimanje">GPS<small>baterija i pozadinski rad</small></h4>
-    <details class="ng-card set-acc" id="set-s-gps" style="--acc:#f472b6">
-      <summary>📍 GPS i baterija</summary>
-      <div class="set-acc-body">
-      <div class="set-red"><div><b>Rad bez ograničenja baterije</b><small id="set-bat-txt">Da poziv ili druga aplikacija ne prekine GPS snimanje u pozadini.</small></div><button id="set-bat-btn" onclick="_setBaterija()">Podesi</button></div>
-      <div class="set-red" id="set-autostart" hidden><div><b>Autostart (Xiaomi/Redmi)</b><small>Uključi Autostart za GeoForest — inače HyperOS može ugasiti snimanje traga dok je ekran zaključan.</small></div><button onclick="AndroidGps.otvoriAutostart()">Otvori</button></div>
-      </div>
-    </details>
-    <h4 class="set-grp" id="set-g-podaci">Podaci<small>rezervna kopija</small></h4>
-    <details class="ng-card set-acc" id="set-s-podaci" style="--acc:#facc15">
-      <summary>💾 Podaci na uređaju</summary>
+    </section>
+    </div>
+    <div class="gf-tab-sek" data-tab="podaci">
+    <section class="ng-card set-kar" id="set-s-podaci" style="--acc:#facc15">
+      <h3 class="set-kar-h">💾 Podaci na uređaju</h3>
       <div class="set-acc-body">
       <div class="set-grid" id="set-podaci"></div>
       <div class="rd-akc"><button class="glavno" onclick="_setBackup()">⤓ Rezervna kopija</button><button onclick="document.getElementById('set-restore-input').click()">⤒ Vrati iz kopije</button></div>
       <input type="file" id="set-restore-input" accept=".json,application/json" style="display:none" onchange="_setRestore(event)">
       <p class="set-nap">Kopija (.json) sadrži tragove, mjerenja, KML slojeve, primku, sjekačke linije, inventuru, tačke, mjerenja nagiba i postavke — ne dijeli je. Offline karte (.mbtiles) nisu u kopiji; to su već fajlovi na telefonu. Korisno pri prelasku na novi telefon.</p>
       </div>
-    </details>
-    <h4 class="set-grp" id="set-g-izgled">Memorija i uređaj<small>keš karata, prikaz, napredno</small></h4>
-    <details class="ng-card set-acc" id="set-s-karte" style="--acc:#4ade80">
-      <summary>🗺 Karte i memorija</summary>
+    </section>
+    <section class="ng-card set-kar" id="set-s-karte" style="--acc:#4ade80">
+      <h3 class="set-kar-h">🗺 Karte i memorija</h3>
       <div class="set-acc-body">
       <div class="set-mem"><div class="set-mem-bar"><i id="set-mem-fill"></i></div><small id="set-mem-txt">Računam zauzeće…</small></div>
       <div class="set-red"><div><b>Pločice karata</b><small id="set-kes-plocice">Topo / Satelit / Karta pregledane online</small></div><button onclick="clearTileCache()">Očisti</button></div>
@@ -2144,24 +2171,14 @@ body.sl-uredi #sl-ured { display: block; }
         <button class="set-dugme" onclick="_terrainProtomapsSave()">Sačuvaj i koristi Protomaps</button>
       </details>
       </div>
-    </details>
-    <details class="ng-card set-acc" id="set-s-prikaz" style="--acc:#22d3ee">
-      <summary>🖥 Prikaz</summary>
-      <div class="set-acc-body">
-      <div class="set-seg" id="set-prikaz"><button data-v="auto" onclick="_prikazPostavi('auto')">Automatski</button><button data-v="desktop" onclick="_prikazPostavi('desktop')">Računar</button><button data-v="mobilni" onclick="_prikazPostavi('mobilni')">Telefon</button></div>
-      <small class="set-nap" id="set-prikaz-txt"></small>
-      </div>
-    </details>
+    </section>
     <section class="ng-card">
       <details class="set-det"><summary>🛠 Napredno</summary>
         <p class="set-nap">Uređaj ID (Firebase) — pošalji administratoru ako zatraži podršku.</p>
         <div class="set-uid"><code id="set-uid-txt">nema interneta / Firebase nije podešen</code><button onclick="_copyUid()">Kopiraj</button></div>
       </details>
     </section>
-    <section class="ng-card" id="set-korisnik-dno" hidden>
-      <h3>👤 Korisnik aplikacije</h3>
-      <div id="set-korisnik-box"></div>
-    </section>
+    </div>
   </div>
 </div>
 
@@ -6265,6 +6282,7 @@ function _khStat() {
     const vidljivi = kmlLs.filter(_kmlNaKarti).length;
     bedz('kh-b-kml', kmlLs.length ? vidljivi + '/' + kmlLs.length + ' na karti' : '');
     _khGranice(); _khRazmjera(); _khOffline(); _khServer(); _khSlojevi(); _khObavijest();
+    if (window.USFKarteTab) USFKarteTab.render();
     bedz('kh-b-ozn', kmlLs.length ? kmlLs.length + (kmlLs.length === 1 ? ' sloj' : ' sloja') : ''); _kedHubRender();
     // Pregled: podloga, offline, KML, uključeni slojevi (teren + praćenje šume) — dodir vodi u odgovarajuću sekciju
     const slojeva = ['terrain-aspect', 'terrain-shade'].filter(id => document.getElementById(id)?.checked).length;
@@ -6287,18 +6305,18 @@ function _khRazmjera() {
   const sk = _PR_VRSTE.filter(([k]) => _razmjeraSkriva(k)).map(([, t]) => t);
   el.className = 'karta-hub-card kh-razm' + (sk.length ? ' sk' : '');
   el.innerHTML = `<div class="kg-top"><i>🔭</i><div><h3>Razmjera <b class="rz">${_razmjeraTxt()}</b></h3><p>${sk.length ? 'Zbog razmjere je sakriveno: ' + sk.join(', ') : 'Svi slojevi su vidljivi pri ovoj razmjeri'}</p></div></div>
-    <button class="karta-hub-action" onclick="switchMainTab('postavke');setTimeout(()=>_setSkok('set-g-karta'),150)">Podesi prikaz po razmjeri</button>`;
+    <button class="karta-hub-action" onclick="switchMainTab('postavke');setTimeout(()=>_setSkok('set-s-razmjera'),150)">Podesi prikaz po razmjeri</button>`;
 }
 // Jednokratna obavijest pri prvom otvaranju taba Karte: karte i granice se mogu preuzeti sa servera
 const _KH_OBAV_KEY = 'usf_kh_obavijest_server';
 function _khObavijest() {
   try { if (localStorage.getItem(_KH_OBAV_KEY) === '1') return; } catch (e) { return; }
   if (!document.getElementById('karte-panel')?.classList.contains('show') || document.getElementById('kh-obavijest')) return;
-  const grid = document.querySelector('#karte-panel .karta-hub-grid'); if (!grid) return;
+  const grid = document.querySelector('#karte-panel .gf-tab-sek[data-tab="tel"]'); if (!grid) return;
   try { localStorage.setItem(_KH_OBAV_KEY, '1'); } catch (e) {} // prikazuje se samo jednom, bez obzira da li je zatvorena
   const el = document.createElement('section'); el.id = 'kh-obavijest'; el.className = 'karta-hub-card kh-obav'; el.setAttribute('role', 'note');
   el.innerHTML = `<div class="kg-top"><i>☁</i><div><h3>Karte sa servera</h3><p>Offline karte i granice odjela možeš preuzeti direktno u aplikaciju — jednom skineš, pa rade i bez interneta. Potreban je PIN karata.</p></div></div>
-    <div class="kg-akc"><button class="glavno" onclick="document.getElementById('kh-obavijest')?.remove();openUcitajKartuSection()">☁ Pogledaj karte</button><button onclick="document.getElementById('kh-obavijest')?.remove()">Razumijem</button></div>`;
+    <div class="kg-akc"><button class="glavno" onclick="document.getElementById('kh-obavijest')?.remove();USFTabovi.izaberi('karte', 'srv')">☁ Pogledaj karte</button><button onclick="document.getElementById('kh-obavijest')?.remove()">Razumijem</button></div>`;
   grid.insertBefore(el, grid.firstChild);
 }
 function _khGranicaZapis() { return _kmlServerLista().find(z => _KML_POLIGONSKI.test(z.naziv)); }
@@ -6334,7 +6352,7 @@ function _khOffline() {
   el.innerHTML = `<div class="kg-top"><i>🗂</i><div><h3>Offline karte ${sql.length ? `<span class="kh-bedz">${sql.length}</span>` : ''}</h3>
       <p>${sql.length ? (akt ? 'Aktivna: ' + _escHtml(akt.name) : 'Nijedna nije aktivna — izaberi jednu') : '.sqlitedb / .mbtiles — rad bez signala. Još nema karata na telefonu.'}</p></div></div>
     ${redovi ? `<div class="ko-kar-lista">${redovi}</div>` : ''}
-    <div class="kg-akc"><button class="glavno" onclick="openUcitajKartuSection()">＋ Dodaj</button><button onclick="openUcitajKartuSection()">☁ Preuzmi sa servera</button><button onclick="openUcitajKartuSection()">⚙ Upravljaj</button></div>`;
+    <div class="kg-akc"><button class="glavno" onclick="document.getElementById('sqlmap-file-input').click()">📂 Dodaj sa telefona</button><button onclick="USFTabovi.izaberi('karte', 'srv')">☁ Sa servera</button><button onclick="openUcitajKartuSection()">⚙ Upravljaj</button></div>`;
 }
 // Serverski KML slojevi: popis iz kml_drive.json + ugrađeni; status, prekidač, preuzmi/osvježi (PIN)
 function _khServer() {
@@ -7221,6 +7239,7 @@ const _dkNaTelefonu = k => (typeof _sqlLayers !== 'undefined') && _sqlLayers.som
 async function _driveKarteRender() {
   const el = document.getElementById('drive-karte'); if (!el || !window.USFDriveKarte) return;
   const l = (_dkLista || await _dkUcitaj()).concat(_dkGhPokusano ? _dkGh : await _dkGhUcitaj());
+  if (window.USFKarteTab) USFKarteTab.render();
   if (!l.length) { el.innerHTML = '<div class="ul-status">Trenutno nema karata za preuzimanje.</div>'; return; }
   const kljuc = _dkKljuc();
   el.innerHTML = l.map(k => {
@@ -7551,19 +7570,13 @@ document.addEventListener('keydown', e => {
   if (document.querySelector('#dlg-overlay.show, .dlg-overlay.show, .leaflet-popup')) return;
   if (_ALL_PANELS.some(id => document.getElementById(id)?.classList.contains('show'))) switchMainTab('karta');
 });
+// Skok na sekciju Postavki: otvori njen tab (USFTabovi), pa skrolaj do nje.
 function _setSkok(id) {
   const el = document.getElementById(id);
   if (!el) return;
-  const acc = el.matches('details.set-acc') ? el : el.nextElementSibling?.matches?.('details.set-acc') ? el.nextElementSibling : null;
-  if (acc) acc.open = true;
+  if (window.USFTabovi) USFTabovi.otvoriZa(el);
   setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 30);
 }
-// samo jedna sekcija Postavki otvorena odjednom — manje skrolanja
-document.addEventListener('toggle', e => {
-  const d = e.target;
-  if (!d.matches || !d.matches('details.set-acc') || !d.open) return;
-  document.querySelectorAll('#postavke-panel details.set-acc[open]').forEach(o => { if (o !== d) o.open = false; });
-}, true);
 const _PR_VRSTE = [['slike', '📷 Slike i tačke'], ['tragovi', '🥾 Tragovi'], ['mjerenja', '📏 Mjerenja'], ['kml', '🗺 KML / SHP slojevi']];
 const _PR_PRESETI = [0, 10000, 25000, 50000, 100000, 250000];
 function _setRazmjeraUi() {
@@ -7806,6 +7819,8 @@ window.addEventListener('load', () => {
 <script src="static/js/terrain-layers.js"></script>
 <script src="static/js/odjeli.js"></script>
 <script src="static/js/drive-karte.js"></script>
+<script src="static/js/tabovi.js"></script>
+<script src="static/js/karte-tab.js"></script>
 <script src="static/js/nagib-poligon.js"></script>
 <script src="static/js/tacke.js"></script>
 <script src="static/js/ikone.js"></script>
