@@ -1913,6 +1913,12 @@ body.sl-uredi #sl-ured { display: block; }
         <span class="mc-stat" id="mc-stat-inventura"></span>
         <svg class="mc-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
       </button>
+      <button type="button" class="meni-card" id="mc-doznaka" onclick="USFDoz.otvori()" style="--mc:#fb7185">
+        <span class="mc-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 7 10h3l-4 6h5v5h2v-5h5l-4-6h3z"/></svg></span>
+        <span class="mc-txt"><b>Doznaka stabala</b><span>Pojasevi projektanata, podjela odjela po bojama</span></span>
+        <span class="mc-stat" id="mc-stat-doznaka"></span>
+        <svg class="mc-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+      </button>
     </section>
     <section class="meni-grp">
       <h3>Karte</h3>
@@ -2164,6 +2170,11 @@ body.sl-uredi #sl-ured { display: block; }
 </div>
 
 <!-- Sjekačke linije -->
+<div id="doznaka-panel" class="usf-panel">
+  <div class="up-hdr"><h2>🌲 Doznaka stabala</h2><button class="up-close" onclick="switchMainTab('meni')">✕</button></div>
+  <div class="up-body" id="doz-body"></div>
+</div>
+
 <div id="inventura-panel" class="usf-panel">
   <div class="up-hdr"><h2>◎ Inventura šuma</h2><button class="up-close" onclick="switchMainTab('meni')">✕</button></div>
   <div class="up-body" id="inv-body"></div>
@@ -2286,7 +2297,7 @@ body.sl-uredi #sl-ured { display: block; }
 // android/app/build.gradle versionCode+versionName. Sva tri MORAJU biti
 // usklađena prije svakog commita.
 // =====================================================================
-const APP_VER = 'v1.1.2';
+const APP_VER = 'v1.1.3';
 document.getElementById('meni-ver-badge').textContent = 'GeoForest ' + APP_VER;
 
 // Verzije koriste tri jednocifrena segmenta: patch i minor idu 0–9.
@@ -5458,6 +5469,7 @@ function _kmlLoadFile(file) {
     }
     // KML s ugrađenim projektom sjekačkih linija (dijeljen s drugog telefona) → živi projekat
     try { if (window.USFSjek && USFSjek.izKml && await USFSjek.izKml(doc)) return; } catch(e) { showToast('⚠ Projekat iz KML-a: ' + e.message); }
+    try { if (window.USFDoz && USFDoz.izKml && await USFDoz.izKml(doc)) return; } catch(e) { showToast('⚠ Doznaka iz KML-a: ' + e.message); }
     try { if (window.USFPrimka && USFPrimka.izKml && await USFPrimka.izKml(doc)) return; } catch(e) { showToast('⚠ Primka iz KML-a: ' + e.message); }
     try {
       const z = _kmlZadrziStil && _kmlZadrziStil.ime === file.name ? _kmlZadrziStil : null; _kmlZadrziStil = null;
@@ -7398,7 +7410,7 @@ function _terrariumDecodeTile(bitmapOrImg) {
 // GLAVNA NAVIGACIJA — Mapa / Karte / Meni / Postavke
 // =====================================================================
 let _activeMainTab = 'karta';
-const _ALL_PANELS = ['nagib-panel','karte-panel','meni-panel','postavke-panel','ucitajkartu-panel','ucitajkml-panel','mjerenja-panel','tacke-panel','sjekacke-panel','primka-panel','inventura-panel'];
+const _ALL_PANELS = ['nagib-panel','karte-panel','meni-panel','postavke-panel','ucitajkartu-panel','ucitajkml-panel','mjerenja-panel','tacke-panel','sjekacke-panel','primka-panel','inventura-panel','doznaka-panel'];
 function switchMainTab(tab) {
   _activeMainTab = tab;
   document.querySelectorAll('#main-tabs .mtab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
@@ -7739,6 +7751,7 @@ window.addEventListener('load', () => {
 <script src="static/js/sjekacke.js"></script>
 <script src="static/js/primka.js"></script>
 <script src="static/js/inventura.js"></script>
+<script src="static/js/doznaka.js"></script>
 <script src="static/js/mjerenja-profil.js"></script>
 <script src="static/js/slika-karte.js"></script>
 <script src="static/js/postavke.js"></script>

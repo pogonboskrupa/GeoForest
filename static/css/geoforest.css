@@ -461,3 +461,45 @@ html[data-btn-stil="akcent"] #ab-loc:not(.active) { box-shadow: 0 0 0 1px rgba(7
 #karte-panel .kh-gran-sve .kgs-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 #karte-panel .kh-gran-sve b { font-size: 17px; font-weight: 900; color: var(--gf-txt); }
 #karte-panel .kh-gran-sve small { font-size: 14px; color: var(--gf-dim); }
+
+/* ═══ Doznaka stabala (v1.1.3) ═══ */
+#doznaka-panel .dz-kar, #doznaka-panel .dz-uvod { border: 2px solid var(--gf-rub); border-left: 6px solid #fb7185; border-radius: 16px; background: var(--gf-kar); padding: 14px 16px; margin: 0 0 12px; }
+#doznaka-panel h3 { font-size: 17px; font-weight: 900; margin: 0 0 8px; color: var(--gf-txt); }
+#doznaka-panel .dz-h { margin: 14px 0 6px; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; color: var(--gf-dim); }
+#doznaka-panel button { min-height: var(--gf-tap); border-radius: 14px; border: 2px solid #3d5a4b; background: var(--gf-kar-2); color: var(--gf-txt); font-size: 15px; font-weight: 800; touch-action: manipulation; }
+#doznaka-panel button:disabled { opacity: .4; }
+#doznaka-panel .zp-glavno { background: var(--gf-zel-jak); border-color: #86efac; color: var(--gf-zel-tamna); width: 100%; font-size: 17px; }
+#doznaka-panel .sl-dug { display: flex; gap: 8px; margin: 10px 0 0; }
+#doznaka-panel .sl-dug button { flex: 1; }
+#doznaka-panel .dz-lista { display: grid; gap: 8px; margin-top: 12px; }
+#doznaka-panel .dz-pr { display: flex; gap: 6px; }
+#doznaka-panel .dz-pr .dz-pr-i { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 14px; text-align: left; }
+#doznaka-panel .dz-pr.akt .dz-pr-i { border-color: #fb7185; background: color-mix(in srgb, #fb7185 14%, var(--gf-kar-2)); }
+#doznaka-panel .dz-pr button:not(.dz-pr-i) { width: var(--gf-tap); padding: 0; }
+#doznaka-panel small { display: block; font-size: 14px; font-weight: 600; color: var(--gf-dim); }
+#doznaka-panel .dz-kpi { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+#doznaka-panel .dz-kpi div { background: #0e2a1b; border: 2px solid #2f7a4d; border-radius: 12px; padding: 8px 6px; text-align: center; }
+#doznaka-panel .dz-kpi b { display: block; font-size: 19px; font-weight: 900; color: #bbf7d0; }
+#doznaka-panel .dz-kpi span { font-size: 13px; color: var(--gf-dim); }
+#doznaka-panel .dz-proj { display: flex; align-items: center; gap: 12px; padding: 6px 0; }
+#doznaka-panel .dz-proj > div { flex: 1; min-width: 0; }
+#doznaka-panel .dz-proj > span { font-weight: 900; font-size: 15px; }
+#doznaka-panel .dz-boja { width: 40px; min-height: 40px; height: 40px; padding: 0; border-radius: 50%; border: 3px solid #fff; background: var(--c); }
+#doznaka-panel .dz-trag { display: flex; align-items: center; gap: 8px; padding: 8px 0 8px 12px; margin-bottom: 6px; border-left: 6px solid var(--c); border-radius: 6px; background: var(--gf-kar-2); }
+#doznaka-panel .dz-t-i { flex: 1; min-width: 0; }
+#doznaka-panel .dz-t-a { display: flex; gap: 4px; }
+#doznaka-panel .dz-t-a button { width: 48px; min-height: 48px; padding: 0; }
+#doznaka-panel .dz-izb { display: grid; gap: 8px; max-height: 52vh; overflow: auto; margin-top: 10px; }
+#doznaka-panel .dz-izb button { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 14px; text-align: left; }
+/* traka dok se snima pojas */
+#doz-bar { position: fixed; left: 8px; right: 8px; bottom: calc(var(--dock-b, 66px) + 8px); z-index: 1200; display: none; padding: 10px; border-radius: 18px; border: 2px solid var(--c, #fb7185); background: #0a140f; box-shadow: 0 8px 26px rgba(0,0,0,.55); }
+#doz-bar.show { display: block; }
+#doz-bar .db-top { display: flex; align-items: center; gap: 10px; color: var(--gf-txt, #e2e8f0); font-size: 15px; }
+#doz-bar .db-top i { width: 14px; height: 14px; border-radius: 50%; background: #ef4444; animation: dzPuls 1.2s ease-in-out infinite; flex: none; }
+#doz-bar .db-top b { font-size: 16px; font-weight: 900; }
+#doz-bar .db-top span { margin-left: auto; font-weight: 700; color: var(--gf-dim, #94a3b8); }
+#doz-bar .db-dug { display: flex; gap: 8px; margin-top: 8px; }
+#doz-bar .db-dug button { flex: 1; min-height: 52px; border-radius: 14px; border: 2px solid #3d5a4b; background: #12261b; color: #e2e8f0; font-size: 16px; font-weight: 800; }
+#doz-bar .db-dug button[data-a="kraj"] { flex: 2; background: var(--gf-zel-jak, #22c55e); border-color: #86efac; color: #06140d; }
+@keyframes dzPuls { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { #doz-bar .db-top i { animation: none; } }

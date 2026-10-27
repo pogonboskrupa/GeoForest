@@ -21,7 +21,7 @@ const kv = (la, lo, d) => [[la, lo], [la, lo + d], [la + d, lo + d], [la + d, lo
 t('Meni GeoForest: 8 sekcija u 3 grupe, ovim redom (Primka prva)', () => {
   const grupe = [...HTML.matchAll(/<section class="meni-grp">\s*<h3>([^<]+)<\/h3>([\s\S]*?)<\/section>/g)].map(m => ({ h: m[1], ids: [...m[2].matchAll(/class="meni-card" id="(mc-[a-z]+)"/g)].map(x => x[1]) }));
   assert.deepStrictEqual(grupe, [
-    { h: 'Rad na terenu', ids: ['mc-primka', 'mc-sjekacke', 'mc-inventura'] },
+    { h: 'Rad na terenu', ids: ['mc-primka', 'mc-sjekacke', 'mc-inventura', 'mc-doznaka'] },
     { h: 'Karte', ids: ['mc-karta', 'mc-kml'] },
     { h: 'Alati', ids: ['mc-tragovi', 'mc-mjerenja', 'mc-tacke'] }
   ]);

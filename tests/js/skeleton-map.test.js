@@ -62,8 +62,8 @@ t('APP_VER je definisan i prati v-prefiksovanu shemu', () => {
   assert.match(HTML, /const APP_VER = 'v[0-9]+\.[0-9]+\.[0-9]+'/);
 });
 
-t('verzija je v1.1.2 i rollover koristi jednocifreni patch/minor', () => {
-  assert.ok(HTML.includes("const APP_VER = 'v1.1.2'"));
+t('verzija je v1.1.3 i rollover koristi jednocifreni patch/minor', () => {
+  assert.ok(HTML.includes("const APP_VER = 'v1.1.3'"));
   const src = extractFn('_sljedecaVerzija') + '\nreturn _sljedecaVerzija;';
   const next = new Function(src)();
   assert.strictEqual(next('v1.2.0'), 'v1.2.1');
@@ -172,7 +172,7 @@ t('meni: grupe, SVG ikone (bez emoji) i status po kartici', () => {
   const meni = HTML.slice(a, b);
   assert.strictEqual((meni.match(/class="meni-grp"/g) || []).length, 3);
   const kartice = meni.match(/<button type="button" class="meni-card"[\s\S]*?<\/button>/g) || [];
-  assert.strictEqual(kartice.length, 8, 'Primka, Sjekačke, Inventura, Učitaj kartu, Učitaj KML, Tragovi, Mjerenja, Tačke');
+  assert.strictEqual(kartice.length, 9, 'Primka, Sjekačke, Inventura, Doznaka, Učitaj kartu, Učitaj KML, Tragovi, Mjerenja, Tačke');
   for (const k of kartice) {
     assert.ok(/<span class="mc-ico"><svg/.test(k), 'ikona mora biti SVG');
     assert.ok(!/\p{Extended_Pictographic}/u.test(k), 'bez emoji u kartici');
