@@ -73,4 +73,11 @@ t('tabovi.js: izbor se pamti po panelu, sekcije drugih tabova su sakrivene', () 
   assert.ok(js.includes("'usf_tab_' + k") && js.includes("s.hidden = s.dataset.tab !== t") && js.includes("aria-selected"));
 });
 
+t('Meni: velike kartice za radne tokove, pločice za ostalo, tap >= 48 px', () => {
+  const css = R('static/css/geoforest.css');
+  assert.ok(/#meni-panel \.meni-card \{[^}]*min-height: 84px/.test(css));
+  assert.ok(css.includes('#meni-panel section.meni-grp:nth-of-type(n+2) { display: grid; grid-template-columns: 1fr 1fr'));
+  assert.ok(/#meni-panel \.meni-set \{[^}]*min-height: var\(--gf-tap\)/.test(css));
+});
+
 console.log('\n' + pass + ' prošlo, ' + (process.exitCode ? 'IMA PALIH' : '0 palo') + ' — karte tab');

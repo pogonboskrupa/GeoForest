@@ -148,3 +148,46 @@
 #karte-panel #karta-base-list button.active { background: var(--gf-zel-jak); border-color: #86efac; color: var(--gf-zel-tamna); }
 #karte-panel .kh-obav { border-color: #38bdf8; }
 #postavke-panel [hidden], #karte-panel [hidden] { display: none !important; }
+
+/* ── Meni (v1.0.1): glavni radni tokovi kao velike kartice, ostalo kao pločice ── */
+#meni-panel .kor-chip { border: 2px solid #2f7a4d; }
+#meni-panel .meni-nedavno small { font-size: 12px; }
+#meni-panel .meni-nedavno button { min-height: 44px; font-size: 14px; border-width: 2px; }
+#meni-panel .meni-grp { margin: 0 0 18px; }
+#meni-panel .meni-grp h3 { font-size: 13.5px; letter-spacing: .1em; margin: 0 2px 10px; color: var(--gc); }
+#meni-panel .meni-card {
+  min-height: 84px; padding: 12px 14px; gap: 14px; margin-bottom: 10px; border-radius: 18px;
+  background: var(--gf-kar); border: 2px solid color-mix(in srgb, var(--mc) 55%, #1f3b2d);
+  box-shadow: 0 4px 14px rgba(0,0,0,.3); touch-action: manipulation;
+}
+#meni-panel .meni-card::before { display: none; }
+#meni-panel .meni-card:active { background: color-mix(in srgb, var(--mc) 14%, var(--gf-kar)); transform: scale(.985); }
+#meni-panel .meni-card .mc-ico {
+  width: 58px; height: 58px; border-radius: 16px; background: var(--mc); border: 0; box-shadow: none; color: #04140c;
+}
+#meni-panel .meni-card .mc-ico svg { width: 32px; height: 32px; stroke-width: 2.1; }
+#meni-panel .meni-card .mc-txt b { font-size: 18px; font-weight: 900; color: var(--gf-txt); letter-spacing: 0; }
+#meni-panel .meni-card .mc-txt span { font-size: 13.5px; color: var(--gf-dim); line-height: 1.35; margin-top: 3px; }
+#meni-panel .meni-card .mc-stat { font-size: 13px; padding: 4px 10px; border-width: 2px; }
+#meni-panel .meni-card .mc-chev { width: 24px; height: 24px; color: var(--mc); stroke-width: 2.6; }
+
+/* druga i treća grupa: pločice u 2 kolone, zadnja neparna preko cijele širine */
+#meni-panel section.meni-grp:nth-of-type(n+2) { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+#meni-panel section.meni-grp:nth-of-type(n+2) h3 { grid-column: 1 / -1; margin-bottom: 0; }
+#meni-panel section.meni-grp:nth-of-type(n+2) .meni-card {
+  position: relative; flex-direction: column; justify-content: center; text-align: center; gap: 8px;
+  min-height: 118px; margin: 0; padding: 12px 8px;
+}
+#meni-panel section.meni-grp:nth-of-type(n+2) .meni-card:last-of-type:nth-of-type(odd) { grid-column: 1 / -1; min-height: 96px; }
+#meni-panel section.meni-grp:nth-of-type(n+2) .mc-txt { flex: none; width: 100%; }
+#meni-panel section.meni-grp:nth-of-type(n+2) .mc-txt span, #meni-panel section.meni-grp:nth-of-type(n+2) .mc-chev { display: none; }
+#meni-panel section.meni-grp:nth-of-type(n+2) .mc-txt b { font-size: 16.5px; }
+#meni-panel section.meni-grp:nth-of-type(n+2) .mc-stat { position: absolute; top: 8px; right: 8px; }
+
+#meni-panel .meni-set {
+  min-height: var(--gf-tap); padding: 14px 16px; border: 2px solid var(--gf-rub); border-radius: 18px; background: var(--gf-kar);
+}
+#meni-panel .meni-set span { font-size: 17px; font-weight: 900; color: var(--gf-txt); }
+#meni-panel .meni-set small { font-size: 13px; color: var(--gf-dim); }
+#meni-panel .meni-set svg { width: 28px; height: 28px; color: var(--gf-zel); }
+#meni-panel #meni-ver-badge { font-size: 13px; color: var(--gf-dim); opacity: 1; }
