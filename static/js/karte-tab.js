@@ -70,7 +70,7 @@
     if (pin) {
       pin.className = 'kt-pin' + (kljuc ? ' ok' : '');
       pin.innerHTML = (kljuc
-        ? '<i>🔓</i><div><b>Karte otključane</b><small>PIN važi do kraja mjeseca.</small></div>'
+        ? '<i>🔓</i><div><b>Karte otključane</b></div>'
         : '<i>🔒</i><div><b>Preuzimanje traži PIN karata</b><small>PIN se mijenja svaki mjesec. Već preuzete karte rade bez PIN-a.</small></div><button class="glavno" onclick="_dkOtkljucaj()">Unesi PIN</button>')
         + (online ? '' : '<p class="kt-off">📵 Nema interneta — prikazana je zadnja sačuvana lista. Preuzimanje kreni kad se vrati signal.</p>');
     }

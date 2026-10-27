@@ -62,7 +62,7 @@ t('app: zaseban PIN karata (provjera dešifrovanjem), nativno preuzimanje, provj
   assert.ok(fn('_dkOtkljucaj').includes("'usf_karte_greske'") && fn('_dkOtkljucaj').includes('_dkProvjeri(k, l)') && R('index.html').includes('USFDriveKarte.encZaMjesec(z)'), 'PIN karata se provjerava dešifrovanjem šifrata tekućeg mjeseca');
   assert.ok(!fn('_pinTrazi').includes('usf_karte') && !fn('_pinTrazi').includes('USFDriveKarte'), 'PIN sekcija ne otključava karte');
   assert.ok(H.includes('const kljuc = _dkKljuc();') && H.includes("localStorage.removeItem('usf_karte_kljuc')"));
-  assert.ok(H.includes('usf_karte_mjesec') && H.includes("localStorage.getItem('usf_karte_mjesec') === v") && H.includes('USFDriveKarte.kljucZa(z)'), 'ključ važi u mjesecu unosa; poslije zadnjeg mjeseca ostaje važeći');
+  assert.ok(H.includes('usf_karte_mjesec') && !H.includes("localStorage.getItem('usf_karte_mjesec') === v") && H.includes('USFDriveKarte.encZaKljuc'), 'ko je jednom otključao ne unosi PIN ponovo (ključ ne ističe s mjesecom)');
   assert.ok(H.includes('AndroidKarta.preuzmi(id, USFDriveKarte.urlPreuzimanja(o.fileId), k.naziv)') && H.includes('id="drive-karte"'));
   assert.ok(J.includes('new KartaBridge(), "AndroidKarta"') && J.includes('equals("SQLite format 3")') && J.includes('"Range", "bytes=" + imam + "-"'));
   assert.ok(J.includes('url.startsWith("https://drive.usercontent.google.com/")'), 'most skida samo s Drive-a');
@@ -81,7 +81,15 @@ t('KML poligoni s Drive-a: ista lista (vrsta kml), KML preglednik, nativno u cac
   assert.ok(R('tools/karta_drive_dodaj.mjs').includes("vrsta: 'kml'"));
 });
 
+t('encZaKljuc: šifrat mjeseca u kojem je ključ sačuvan; bez njega tekući', async () => {
+  const z = { encm: { 'm2026-10': 'a', 'm2026-11': 'b' } };
+  assert.strictEqual(D.encZaKljuc(z, 'm2026-10', new Date(2026, 10, 5)), 'a');
+  assert.strictEqual(D.encZaKljuc(z, null, new Date(2026, 10, 5)), 'b');
+  assert.strictEqual(D.encZaKljuc(z, 'm2025-01', new Date(2026, 10, 5)), 'b');
+});
+
 (async () => {
   for (const [ime, fn] of testovi) { try { await fn(); pass++; console.log('  ✔ ' + ime); } catch (e) { console.error('  ✘ ' + ime + '\n      ' + e.message); process.exitCode = 1; } }
-  console.log('\n' + pass + ' prošlo, ' + (process.exitCode ? 'IMA PALIH' : '0 palo') + ' — Drive karte');
+  
+console.log('\n' + pass + ' prošlo, ' + (process.exitCode ? 'IMA PALIH' : '0 palo') + ' — Drive karte');
 })();

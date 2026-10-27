@@ -270,7 +270,7 @@ drugi package, drugi podaci, drugi update kanal.
   bez APK-a). **PIN karata se mijenja svaki mjesec** (isti za Drive karte, Drive KML i GitHub karte): svaki zapis nosi `encm`
   `{ 'm2026-10': šifrat, … }` (13 mjeseci = tekući + 12; poslije zadnjeg mjeseca ZADNJI PIN ostaje važeći — `kljucZa`), Drive ID šifrovan AES-GCM ključem iz PIN-a tog mjeseca
   (PBKDF2-SHA256, `static/js/drive-karte.js`, isti kod app/alat/test). App uzima šifrat TEKUĆEG mjeseca
-  (`encZaMjesec`); sačuvani ključ `usf_karte_kljuc` važi samo uz `usf_karte_mjesec` = tekući mjesec (`_dkKljuc`). Već preuzete karte
+  (`encZaMjesec`); sačuvani ključ `usf_karte_kljuc` NE ističe: ko je jednom otključao ne unosi PIN ponovo (v1.1.1) — šifrat se uzima za mjesec u kojem je ključ sačuvan (`usf_karte_mjesec`, `encZaKljuc`/`_dkSifrat`); tek ako zapis nema taj mjesec, traži se novi PIN. UI ne piše „važi do kraja mjeseca”. Već preuzete karte
   („✓ Na telefonu”, „✓ Učitan”) NE traže PIN — treba samo za novo preuzimanje. FORMAT PIN-a (pravilo) NIKAD u repo: alati ga uzimaju iz
   `USF_PIN_FORMAT` (tokeni YY/YYYY/MM), kao i sam PIN i link. Dodavanje: `USF_PIN_FORMAT=… node tools/karta_drive_dodaj.mjs "<link>" "Naziv" ["opis"] [MB]`;
   novi niz mjeseci (npr. kad se želi nastaviti rotacija): `USF_PIN_FORMAT=… [USF_PIN_MJESECI=13] node tools/karte_pin_produzi.mjs`. Stariji APK-ovi (< 2.1.6) čitaju `enc` i više ne mogu otključati.

@@ -62,7 +62,10 @@
   }
   const encZaMjesec = (zapis, d = new Date()) => { const k = kljucZa(zapis, d); return k ? zapis.encm[k] : null; };
 
-  const api = { SOL, ITER, KLJUC_LS, mjesecKljuc, pinIzFormata, sifrujMjesecno, kljucZa, encZaMjesec, kljucIzPina, sifruj, desifruj, driveId, urlPreuzimanja, uB64, izB64 };
+  // Ko je jednom otključao ne unosi PIN ponovo: šifrat po mjesecu u kojem je ključ sačuvan (mjesec = `usf_karte_mjesec`); ako ga zapis nema, tekući.
+  const encZaKljuc = (zapis, mjesec, d = new Date()) => (mjesec && zapis && zapis.encm && zapis.encm[mjesec]) || encZaMjesec(zapis, d);
+
+  const api = { SOL, ITER, KLJUC_LS, mjesecKljuc, pinIzFormata, sifrujMjesecno, kljucZa, encZaMjesec, encZaKljuc, kljucIzPina, sifruj, desifruj, driveId, urlPreuzimanja, uB64, izB64 };
   root.USFDriveKarte = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);
