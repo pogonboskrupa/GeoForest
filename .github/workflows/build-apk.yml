@@ -69,7 +69,10 @@ jobs:
             echo "::warning::Nema secreta GEOFOREST_KEYSTORE_B64 (android/generate-keystore.sh) — APK bez stalnog potpisa, release se preskače"
             exit 0
           fi
-          echo "$GEOFOREST_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/geoforest.keystore"
+          # Razmaci, novi redovi i navodnici pri kopiranju secreta ne smiju pokvariti base64.
+          printf '%s' "$GEOFOREST_KEYSTORE_B64" | tr -d '[:space:]"' | base64 -d > "$RUNNER_TEMP/geoforest.keystore" \
+            || { echo "::error::GEOFOREST_KEYSTORE_B64 nije ispravan base64 — ponovo ga napravi (base64 -w0 geoforest-release.keystore) i zalijepi cijeli tekst u jednom redu" >&2; exit 1; }
+          test -s "$RUNNER_TEMP/geoforest.keystore" || { echo "::error::GEOFOREST_KEYSTORE_B64 je prazan" >&2; exit 1; }
           echo "GEOFOREST_KEYSTORE=$RUNNER_TEMP/geoforest.keystore" >> "$GITHUB_ENV"
       - name: Izgradi APK
         env:
