@@ -62,8 +62,8 @@ t('APP_VER je definisan i prati v-prefiksovanu shemu', () => {
   assert.match(HTML, /const APP_VER = 'v[0-9]+\.[0-9]+\.[0-9]+'/);
 });
 
-t('verzija je v1.0.2 i rollover koristi jednocifreni patch/minor', () => {
-  assert.ok(HTML.includes("const APP_VER = 'v1.0.2'"));
+t('verzija je v1.0.3 i rollover koristi jednocifreni patch/minor', () => {
+  assert.ok(HTML.includes("const APP_VER = 'v1.0.3'"));
   const src = extractFn('_sljedecaVerzija') + '\nreturn _sljedecaVerzija;';
   const next = new Function(src)();
   assert.strictEqual(next('v1.2.0'), 'v1.2.1');
@@ -144,7 +144,7 @@ t('indikator snimanja na dugmetu Tragovi se osvježi i kad snimanje stane', () =
 });
 t('traka snimanja traga je iznad navigacije; dugmad i prozori idu iznad nje', () => {
   const v2 = HTML.slice(HTML.indexOf('<style id="ui-v2">'), HTML.indexOf('</style>', HTML.indexOf('<style id="ui-v2">')));
-  assert.ok(/--dock-b:\s*calc\(76px \+ env\(safe-area-inset-bottom/.test(v2), 'sidro poštuje sistemsku traku');
+  assert.ok(/--dock-b:\s*calc\(66px \+ env\(safe-area-inset-bottom/.test(v2), 'sidro poštuje sistemsku traku');
   const rb = v2.slice(v2.indexOf('#rec-bar {'), v2.indexOf('}', v2.indexOf('#rec-bar {')));
   assert.ok(/bottom:\s*var\(--dock-b\)/.test(rb) && /z-index:\s*905/.test(rb), 'traka iznad #main-tabs (z 920 je nav, traka je iznad nje po položaju)');
   assert.ok(/#map-fabs, #zoom-grp \{ bottom: calc\(var\(--dock-b\) \+ var\(--rec-h\)\)/.test(v2), 'dugmad na karti se podignu');

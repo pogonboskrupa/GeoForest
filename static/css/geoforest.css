@@ -236,3 +236,48 @@
 .rz-vl label { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--gf-dim); white-space: nowrap; }
 .rz-vl input { min-width: 0; width: 100%; min-height: var(--gf-tap); padding: 0 10px; border-radius: 12px; border: 2px solid #3d5a4b; background: #0b1611; color: var(--gf-txt); font: inherit; font-size: 15px; }
 .rz-sad-btn { min-height: var(--gf-tap); border-radius: 12px; border: 2px solid #38bdf8; background: #0b2533; color: var(--gf-txt); font: inherit; font-size: 14px; font-weight: 800; }
+
+/* ── Šabloni dugmadi na mapi (v1.0.3): stil na <html data-btn-stil>; 'staklo' = postojeći izgled (bez pravila).
+   Pravila lokalno prepisuju --ui-* varijable teme na dugmadima, pa postojeći CSS (zoom, lokacija, FAB-ovi) ostaje isti. ── */
+html[data-btn-stil="cvrsto"] :is(.map-ctl, #layer-btn, #zoom-grp, #ab-loc:not(.active)) { --ui-bg:14,29,22;--ui-fg:#f4fbf7;--ui-bd:#3d5a4b;--ui-sep:rgba(134,239,172,.3);--ui-a1:#86efac; border-width:2px; border-color:var(--ui-bd); box-shadow:0 6px 16px rgba(0,0,0,.55); background:rgba(var(--ui-bg),var(--btn-a,1)); }
+.bs-pr[data-bs-pr="cvrsto"] { --ui-bg:14,29,22;--ui-fg:#f4fbf7;--ui-bd:#3d5a4b;--ui-sep:rgba(134,239,172,.3);--ui-a1:#86efac; --bw:2px; --bsh:0 6px 16px rgba(0,0,0,.55); }
+html[data-btn-stil="kontrast"] :is(.map-ctl, #layer-btn, #zoom-grp, #ab-loc:not(.active)) { --ui-bg:255,255,255;--ui-fg:#0f172a;--ui-bd:#0f172a;--ui-sep:rgba(15,23,42,.4);--ui-a1:#0f172a; border-width:3px; border-color:var(--ui-bd); box-shadow:0 4px 12px rgba(0,0,0,.5); background:rgba(var(--ui-bg),var(--btn-a,1)); }
+.bs-pr[data-bs-pr="kontrast"] { --ui-bg:255,255,255;--ui-fg:#0f172a;--ui-bd:#0f172a;--ui-sep:rgba(15,23,42,.4);--ui-a1:#0f172a; --bw:3px; --bsh:0 4px 12px rgba(0,0,0,.5); }
+html[data-btn-stil="akcent"] :is(.map-ctl, #layer-btn, #zoom-grp, #ab-loc:not(.active)) { --ui-bg:6,18,12;--ui-fg:#ecfdf5;--ui-bd:#4ade80;--ui-sep:rgba(74,222,128,.35);--ui-a1:#86efac; border-width:2px; border-color:var(--ui-bd); box-shadow:0 0 0 1px rgba(74,222,128,.25), 0 0 18px rgba(74,222,128,.45); background:rgba(var(--ui-bg),var(--btn-a,1)); }
+.bs-pr[data-bs-pr="akcent"] { --ui-bg:6,18,12;--ui-fg:#ecfdf5;--ui-bd:#4ade80;--ui-sep:rgba(74,222,128,.35);--ui-a1:#86efac; --bw:2px; --bsh:0 0 0 1px rgba(74,222,128,.25), 0 0 18px rgba(74,222,128,.45); }
+html[data-btn-stil="minimal"] :is(.map-ctl, #layer-btn, #zoom-grp, #ab-loc:not(.active)) { --ui-bg:6,16,11;--ui-fg:#f1f5f9;--ui-bd:transparent;--ui-sep:transparent;--ui-a1:#f1f5f9; border-width:0; border-color:var(--ui-bd); box-shadow:none; background:rgba(var(--ui-bg),var(--btn-a,1)); }
+.bs-pr[data-bs-pr="minimal"] { --ui-bg:6,16,11;--ui-fg:#f1f5f9;--ui-bd:transparent;--ui-sep:transparent;--ui-a1:#f1f5f9; --bw:0; --bsh:none; }
+html[data-btn-stil="minimal"] :is(.map-ctl, #layer-btn, #zoom-grp, #ab-loc:not(.active)) { -webkit-backdrop-filter: none; backdrop-filter: none; }
+html[data-btn-stil="kontrast"] #zoom-grp button svg, html[data-btn-stil="kontrast"] #ab-loc:not(.active) svg { stroke-width: calc(var(--btn-sw, 2) + .3); }
+html[data-btn-stil="akcent"] #ab-loc:not(.active) { box-shadow: 0 0 0 1px rgba(74,222,128,.3), 0 0 22px rgba(74,222,128,.5); }
+
+/* pregled u Postavkama (nije .map-ctl, da pravila <html> ne dopru do njega) */
+.bsab-lista { display: grid; gap: 10px; margin-top: 8px; }
+.bsab { position: relative; display: grid; gap: 10px; text-align: left; padding: 10px; border-radius: 16px; border: 2px solid var(--gf-rub); background: var(--gf-kar-2); color: var(--gf-txt); font: inherit; cursor: pointer; touch-action: manipulation; }
+.bsab.on { border-color: #86efac; background: color-mix(in srgb, var(--gf-zel-jak) 20%, var(--gf-kar)); box-shadow: 0 4px 14px rgba(34,197,94,.3); }
+.bsab em { position: absolute; top: 14px; right: 14px; font-style: normal; font-size: 12px; font-weight: 900; padding: 2px 8px; border-radius: 999px; background: var(--gf-zel-tamna); color: #bbf7d0; border: 2px solid #86efac; z-index: 2; }
+.bsab-txt { display: grid; gap: 2px; }
+.bsab-txt b { font-size: 16.5px; font-weight: 900; }
+.bsab-txt small { font-size: 13px; line-height: 1.35; color: var(--gf-dim); }
+.bs-pr {
+  --ui-bg: 10,24,18; --ui-fg: #e8f3ec; --ui-bd: rgba(134,239,172,.22); --ui-sep: rgba(134,239,172,.16); --ui-a1: #4ade80; --bw: 1px; --bsh: 0 4px 14px rgba(0,0,0,.25);
+  display: flex; align-items: center; justify-content: space-around; gap: 10px; padding: 14px 12px; border-radius: 12px; min-height: 96px; box-sizing: border-box;
+  background:
+    repeating-radial-gradient(circle at 18% 120%, transparent 0 14px, rgba(255,255,255,.13) 14px 15px),
+    repeating-radial-gradient(circle at 85% -20%, transparent 0 18px, rgba(0,0,0,.12) 18px 19px),
+    linear-gradient(115deg, #355744 0%, #6d8a73 45%, #c5d3bf 100%);
+}
+.bs-btn, .bs-pill { background: rgba(var(--ui-bg), var(--btn-a, .86)); border: var(--bw) solid var(--ui-bd); border-radius: var(--btn-r, 16px); color: var(--ui-fg); box-shadow: var(--bsh); box-sizing: border-box; }
+.bs-btn { width: 44px; height: 44px; display: grid; place-items: center; }
+.bs-pill { display: flex; flex-direction: column; overflow: hidden; }
+.bs-b { width: 42px; height: 38px; display: grid; place-items: center; color: var(--ui-a1); }
+.bs-b + .bs-b { border-top: 1px solid var(--ui-sep); }
+.bs-pr svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: var(--btn-sw, 2); stroke-linecap: round; stroke-linejoin: round; }
+.bs-loc { color: var(--ui-a1); width: 50px; height: 50px; }
+
+/* ── Donji bar: niži (v1.0.3) ── */
+#main-tabs { padding: 4px 8px calc(env(safe-area-inset-bottom, 0px) + 4px); gap: 5px; }
+#main-tabs .mtab { min-height: 50px; padding: 4px 2px; gap: 1px; font-size: 12px; border-radius: 14px; }
+#main-tabs .mtab-ico { width: 26px; height: 24px; }
+#main-tabs .mtab-ico svg { width: 24px; height: 24px; }
+#terrain-map-legend { bottom: var(--dock-b); }

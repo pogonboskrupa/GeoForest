@@ -60,7 +60,11 @@ drugi package, drugi podaci, drugi update kanal.
   ni „šta se prikazuje”; ručna izmjena = „Prilagođeno”. **Prikaz po razmjeri** (isti modul, `_prRazmjera`, `usf_prikaz_razmjera`):
   tragovi, KML/SHP, sjekačke linije (`sjek`, `USFSjek.osvjezi`; uvijek vidljive tokom vodiča/crtanja/uređivanja), tačke, mjerenja;
   čipovi 1:5 000…1:250 000, vlastita vrijednost i „📍 Trenutna razmjera”; status „Sada vidljivo/sakriveno”.
-- **Donji bar** (`#main-tabs`, nav): SVG ikone, 60 px, aktivna stavka puna zelena; `--dock-b` (76 px) se ne mijenja.
+- **Šablon dugmadi na mapi** (`postavke.js`, `_setBtnSablon`, `_uiPrikaz.btnStil` → `<html data-btn-stil>`): Staklo (zadano, postojeći CSS) /
+  Čvrsto / Kontrast / Akcent / Minimal. Stil u `geoforest.css` samo lokalno prepisuje `--ui-*` varijable teme na `.map-ctl, #layer-btn,
+  #zoom-grp, #ab-loc:not(.active)`; šablon uz stil postavlja i `btnA/btnZ/btnOblik/btnIk`. Pregled u Postavkama (`.bs-pr`, klase `.bs-btn/.bs-pill`,
+  NE `.map-ctl`) koristi iste vrijednosti. Šabloni interfejsa nose i `btnStil`.
+- **Donji bar** (`#main-tabs`, nav): SVG ikone, tab 50 px, aktivna stavka puna zelena; `--dock-b` = 66 px (+ safe-area).
 - Dizajn za sunce i rukavice (`static/css/geoforest.css`, učitava se POSLIJE inline stilova): tabovi 64 px,
   dugmad ≥ `--gf-tap` (52 px), tekst ≥ 14 px, stanje = ikona + tekst. Test `tests/js/karte-tab.test.js`.
 - **Liste karata sa servera** (opcija A): app čita `karte_drive.json`, `kml_drive.json`, `karte_github.json` sa

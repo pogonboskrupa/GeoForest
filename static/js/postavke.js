@@ -7,13 +7,13 @@
   // ── Šabloni interfejsa: vrijednosti ključeva _uiPrikaz (koordinatni sistem i „šta se prikazuje” se NE diraju) ──
   const SABLONI = [
     { id: 'standard', ik: '🧭', naziv: 'Standardni', opis: 'Zadani izgled',
-      v: { tema: 'tamna', bdgA: 55, bdgFs: 11, bdgOut: 'tanak', blur: 0, btnA: 86, btnZ: 100, btnOblik: 'zaobljeno', btnIk: 'normalne' } },
+      v: { tema: 'tamna', bdgA: 55, bdgFs: 11, bdgOut: 'tanak', blur: 0, btnA: 86, btnZ: 100, btnOblik: 'zaobljeno', btnIk: 'normalne', btnStil: 'staklo' } },
     { id: 'teren', ik: '☀', naziv: 'Teren', opis: 'Sunce i rukavice: svijetla podloga, krupan tekst, velika dugmad',
-      v: { tema: 'svijetla', bdgA: 90, bdgFs: 14, bdgOut: 'jak', blur: 0, btnA: 100, btnZ: 125, btnOblik: 'zaobljeno', btnIk: 'podebljane' } },
+      v: { tema: 'svijetla', bdgA: 90, bdgFs: 14, bdgOut: 'jak', blur: 0, btnA: 100, btnZ: 125, btnOblik: 'zaobljeno', btnIk: 'podebljane', btnStil: 'kontrast' } },
     { id: 'noc', ik: '🌙', naziv: 'Noć', opis: 'Tamno i prigušeno, manje svjetla na ekranu',
-      v: { tema: 'tamna', bdgA: 40, bdgFs: 12, bdgOut: 'tanak', blur: 0, btnA: 55, btnZ: 100, btnOblik: 'zaobljeno', btnIk: 'tanke' } },
+      v: { tema: 'tamna', bdgA: 40, bdgFs: 12, bdgOut: 'tanak', blur: 0, btnA: 55, btnZ: 100, btnOblik: 'zaobljeno', btnIk: 'tanke', btnStil: 'staklo' } },
     { id: 'kompakt', ik: '🗺', naziv: 'Kompaktni', opis: 'Više karte: sitnija, prozirnija dugmad',
-      v: { tema: 'tamna', bdgA: 35, bdgFs: 10, bdgOut: 'tanak', blur: 0, btnA: 70, btnZ: 85, btnOblik: 'ostro', btnIk: 'normalne' } }
+      v: { tema: 'tamna', bdgA: 35, bdgFs: 10, bdgOut: 'tanak', blur: 0, btnA: 70, btnZ: 85, btnOblik: 'ostro', btnIk: 'normalne', btnStil: 'minimal' } }
   ];
 
   const sablonJe = (s, u) => Object.keys(s.v).every(k => u[k] === s.v[k]);
@@ -33,6 +33,54 @@
     el.innerHTML = SABLONI.map(s => `<button type="button" role="radio" aria-checked="${akt === s}" class="sab${akt === s ? ' on' : ''}" onclick="_setSablon('${s.id}')">
       <i>${s.ik}</i><b>${s.naziv}</b><small>${s.opis}</small>${akt === s ? '<em>✓ Aktivan</em>' : ''}</button>`).join('')
       + (akt ? '' : '<p class="sab-vl">✎ Prilagođeno: ručno si mijenjao postavke ispod. Izaberi šablon da se vrate zadane vrijednosti.</p>');
+    _setBtnSablonUi();
+  };
+
+  // ── Šabloni dugmadi na mapi: stil (data-btn-stil na <html>, CSS u geoforest.css) + vrijednosti postojećih postavki ──
+  const BTN_SABLONI = [
+    { id: 'staklo', ik: '◐', naziv: 'Staklo', opis: 'Prozirna, vidi se karta ispod. Zadano.',
+      v: { btnStil: 'staklo', btnA: 86, btnZ: 100, btnOblik: 'zaobljeno', btnIk: 'normalne' } },
+    { id: 'cvrsto', ik: '■', naziv: 'Čvrsto', opis: 'Neprozirna tamna dugmad s okvirom. Uvijek čitljiva.',
+      v: { btnStil: 'cvrsto', btnA: 100, btnZ: 105, btnOblik: 'zaobljeno', btnIk: 'normalne' } },
+    { id: 'kontrast', ik: '☀', naziv: 'Kontrast', opis: 'Bijela s crnim okvirom i debelim ikonama. Za jako sunce.',
+      v: { btnStil: 'kontrast', btnA: 100, btnZ: 120, btnOblik: 'zaobljeno', btnIk: 'podebljane' } },
+    { id: 'akcent', ik: '✦', naziv: 'Akcent', opis: 'Tamna sa zelenim svjetlećim rubom. Istaknuta na svakoj podlozi.',
+      v: { btnStil: 'akcent', btnA: 100, btnZ: 105, btnOblik: 'okruglo', btnIk: 'podebljane' } },
+    { id: 'minimal', ik: '○', naziv: 'Minimal', opis: 'Tanke ikone, bez okvira, najmanje zaklanja kartu.',
+      v: { btnStil: 'minimal', btnA: 45, btnZ: 92, btnOblik: 'okruglo', btnIk: 'tanke' } }
+  ];
+  const aktivniBtn = u => BTN_SABLONI.find(s => sablonJe(s, u)) || null;
+  const OBLIK_PX = { okruglo: '26px', zaobljeno: '16px', ostro: '7px' }, IK_W = { tanke: '1.5', normalne: '2', podebljane: '2.7' };
+  const SV = {
+    plus: '<path d="M12 5v14M5 12h14"/>', minus: '<path d="M5 12h14"/>',
+    loc: '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
+    sloj: '<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>',
+    mjer: '<path d="M3.5 16.5 16.5 3.5l4 4-13 13z"/><path d="M7.5 12.5l2 2M10.5 9.5l2 2M13.5 6.5l2 2"/>'
+  };
+  const svg = k => `<svg viewBox="0 0 24 24" aria-hidden="true">${SV[k]}</svg>`;
+
+  W._setBtnSablon = function (id) {
+    const s = BTN_SABLONI.find(x => x.id === id); if (!s) return;
+    Object.assign(_uiPrikaz, s.v);
+    try { localStorage.setItem(_UI_KEY, JSON.stringify(_uiPrikaz)); } catch (e) {}
+    _uiPrimijeni(); _setUiUi();
+    if (typeof showToast === 'function') showToast('🎛 Dugmad: ' + s.naziv);
+  };
+
+  W._setBtnSablonUi = function () {
+    const el = document.getElementById('set-dugmad-sab'); if (!el || typeof _uiPrikaz === 'undefined') return;
+    const akt = aktivniBtn(_uiPrikaz);
+    el.innerHTML = BTN_SABLONI.map(s => {
+      const st = `--btn-a:${(s.v.btnA / 100).toFixed(2)};--btn-r:${OBLIK_PX[s.v.btnOblik]};--btn-sw:${IK_W[s.v.btnIk]}`;
+      return `<button type="button" role="radio" aria-checked="${akt === s}" class="bsab${akt === s ? ' on' : ''}" onclick="_setBtnSablon('${s.id}')">
+        <span class="bs-pr" data-bs-pr="${s.id}" style="${st}" aria-hidden="true">
+          <span class="bs-pill"><span class="bs-b">${svg('plus')}</span><span class="bs-b">${svg('minus')}</span></span>
+          <span class="bs-pill"><span class="bs-b">${svg('mjer')}</span></span>
+          <span class="bs-btn bs-loc">${svg('loc')}</span>
+          <span class="bs-btn">${svg('sloj')}</span>
+        </span>
+        <span class="bsab-txt"><b>${s.naziv}</b><small>${s.opis}</small></span>${akt === s ? '<em>✓ Aktivan</em>' : ''}</button>`;
+    }).join('') + (akt ? '' : '<p class="sab-vl">✎ Prilagođeno: neka postavka dugmadi je ručno promijenjena. Izaberi šablon da se vrate njegove vrijednosti.</p>');
   };
 
   // ── Prikaz po razmjeri ──
@@ -73,5 +121,5 @@
   // Zumiraj na željeni nivo, otvori Postavke i dodirni „Trenutna razmjera”: granica = razmjera koja je bila na karti.
   W._setRazmjeraTrenutna = function (k) { _setRazmjera(k, zaokruzi(_razmjera()), true); };
 
-  if (typeof module !== 'undefined') module.exports = { SABLONI, aktivniSablon, sablonJe, zaokruzi };
+  if (typeof module !== 'undefined') module.exports = { SABLONI, BTN_SABLONI, aktivniSablon, aktivniBtn, sablonJe, zaokruzi };
 })(typeof window !== 'undefined' ? window : {});

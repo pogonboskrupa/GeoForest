@@ -122,4 +122,23 @@ t('prikaz po razmjeri: tragovi, KML, sjekačke linije, tačke, mjerenja; sjekač
   for (const f of ['static/js/postavke.js']) { assert.ok(HTML.includes('<script src="' + f + '"></script>')); assert.ok(R('sw.js').includes("'./" + f + "'") && R('android/copy-assets.sh').includes(f)); }
 });
 
+t('šabloni dugmadi na mapi: 5 stilova, pregled = stvarne vrijednosti, CSS za svaki, stil na <html>', () => {
+  const P = require('../../static/js/postavke.js');
+  assert.deepStrictEqual(P.BTN_SABLONI.map(s => s.id), ['staklo', 'cvrsto', 'kontrast', 'akcent', 'minimal']);
+  const zad = { btnStil: 'staklo', btnA: 86, btnZ: 100, btnOblik: 'zaobljeno', btnIk: 'normalne', tema: 'tamna' };
+  assert.strictEqual(P.aktivniBtn(zad).id, 'staklo');
+  assert.strictEqual(P.aktivniBtn({ ...zad, btnZ: 110 }), null);
+  assert.ok(P.BTN_SABLONI.find(s => s.id === 'kontrast').v.btnZ >= 120 && P.BTN_SABLONI.find(s => s.id === 'kontrast').v.btnA === 100);
+  const css = R('static/css/geoforest.css');
+  for (const id of ['cvrsto', 'kontrast', 'akcent', 'minimal']) assert.ok(css.includes('html[data-btn-stil="' + id + '"]') && css.includes('.bs-pr[data-bs-pr="' + id + '"]'), id);
+  assert.ok(!css.includes('html[data-btn-stil="staklo"]'), 'staklo = postojeći izgled');
+  assert.ok(HTML.includes("btnStil: 'staklo'") && HTML.includes("document.documentElement.dataset.btnStil = u.btnStil || 'staklo'") && HTML.includes('id="set-dugmad-sab"'));
+  for (const s of P.SABLONI) assert.ok(P.BTN_SABLONI.some(b => b.id === s.v.btnStil), 'šablon interfejsa ' + s.id + ' ima poznat stil dugmadi');
+});
+
+t('donji bar je niži (50 px), --dock-b 66 px', () => {
+  assert.ok(/#main-tabs \.mtab \{[^}]*min-height: 50px/.test(R('static/css/geoforest.css')));
+  assert.ok(HTML.includes('--dock-b: calc(66px + env(safe-area-inset-bottom, 0px));'));
+});
+
 console.log('\n' + pass + ' prošlo, ' + (process.exitCode ? 'IMA PALIH' : '0 palo') + ' — karte tab');

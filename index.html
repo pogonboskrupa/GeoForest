@@ -471,7 +471,7 @@ html,body { margin:0; padding:0; height:100%; overflow:hidden; background:#0f172
   width:36px; height:36px; display:grid; place-items:center; background:rgba(148,163,184,.09);
   border:1px solid var(--line); border-radius:11px; color:#b8c8c0; font-size:18px; cursor:pointer;
 }
-.usf-panel .up-body { flex:1; overflow-y:auto; padding:14px 14px calc(86px + env(safe-area-inset-bottom, 0px)); }
+.usf-panel .up-body { flex:1; overflow-y:auto; padding:14px 14px calc(76px + env(safe-area-inset-bottom, 0px)); }
 
 /* === Veliki ekran (računar / PWA): tijelo panela je već centrirano (@media 700px dolje, 680 px); ovdje se
    zaglavlje panela i donja navigacija poravnavaju s njim, pozadina ostaje preko cijelog prozora === */
@@ -1066,7 +1066,7 @@ html.desk .usf-panel .up-body::-webkit-scrollbar-thumb { background: #1f3b2d; bo
    zaglavlje, ista dugmad, sidro iznad donje navigacije (+ sistemska traka).
    Dok traje snimanje traga, prozori i dugmad na karti idu iznad trake. */
 :root {
-  --dock-b: calc(76px + env(safe-area-inset-bottom, 0px));
+  --dock-b: calc(66px + env(safe-area-inset-bottom, 0px));
   --rec-h: 0px;
   --pn-bg: rgba(9,20,15,.97);
   --pn-bg-2: #12241b;
@@ -2061,6 +2061,13 @@ body.sl-uredi #sl-ured { display: block; }
       <div id="set-sablon" class="sab-mreza" role="radiogroup" aria-label="Šablon interfejsa"></div>
       </div>
     </section>
+    <section class="ng-card set-kar" id="set-s-dugmad" style="--acc:#a78bfa">
+      <h3 class="set-kar-h">🎛 Šablon dugmadi na mapi</h3>
+      <div class="set-acc-body">
+      <p class="set-nap">Izgled zoom dugmadi, lokacije, mjerenja, tragova i izbora karte. Pregled je tačan prikaz; finu providnost, veličinu i oblik možeš dalje mijenjati u „Koordinate i dugmad”.</p>
+      <div id="set-dugmad-sab" class="bsab-lista" role="radiogroup" aria-label="Šablon dugmadi na mapi"></div>
+      </div>
+    </section>
     <section class="ng-card set-kar" id="set-s-razmjera" style="--acc:#38bdf8">
       <h3 class="set-kar-h">🔭 Prikaz po razmjeri</h3>
       <div class="set-acc-body">
@@ -2278,7 +2285,7 @@ body.sl-uredi #sl-ured { display: block; }
 // android/app/build.gradle versionCode+versionName. Sva tri MORAJU biti
 // usklađena prije svakog commita.
 // =====================================================================
-const APP_VER = 'v1.0.2';
+const APP_VER = 'v1.0.3';
 document.getElementById('meni-ver-badge').textContent = 'GeoForest ' + APP_VER;
 
 // Verzije koriste tri jednocifrena segmenta: patch i minor idu 0–9.
@@ -2680,7 +2687,7 @@ function _prPrimijeni(sve) {
   });
 }
 // Izgled koordinata i dugmadi na karti (Postavke → 🎛 Koordinate i dugmad, pamti se): providnost podloge, obris teksta, veličina, dijelovi
-const _UI_KEY = 'usf_ui_prikaz', _UI_ZAD = { bdgA: 55, bdgFs: 11, bdgOut: 'tanak', bdgElev: true, bdgMgi: true, koord: 'mgi5', bdgRz: true, btnA: 86, btnZ: 100, tema: 'tamna', blur: 0, btnOblik: 'zaobljeno', btnIk: 'normalne' };
+const _UI_KEY = 'usf_ui_prikaz', _UI_ZAD = { bdgA: 55, bdgFs: 11, bdgOut: 'tanak', bdgElev: true, bdgMgi: true, koord: 'mgi5', bdgRz: true, btnA: 86, btnZ: 100, tema: 'tamna', blur: 0, btnOblik: 'zaobljeno', btnIk: 'normalne', btnStil: 'staklo' };
 const _UI_OBLIK = { okruglo: '26px', zaobljeno: '16px', ostro: '7px' }, _UI_IK = { tanke: '1.5', normalne: '2', podebljane: '2.7' };
 const _UI_TEME = { tamna: { bg: '10,24,18', fg: '#e8f3ec', bd: 'rgba(134,239,172,.22)', sep: 'rgba(134,239,172,.16)', out: '#000', a1: '#4ade80', a2: '#fde68a' }, svijetla: { bg: '255,255,255', fg: '#0f172a', bd: 'rgba(15,23,42,.2)', sep: 'rgba(15,23,42,.16)', out: '#fff', a1: '#15803d', a2: '#b45309' } };
 let _uiPrikaz = { ..._UI_ZAD };
@@ -2693,6 +2700,7 @@ function _uiPrimijeni() {
   r.setProperty('--bdg-a', (u.bdgA / 100).toFixed(2)); r.setProperty('--bdg-fs', u.bdgFs + 'px'); r.setProperty('--bdg-ts', _uiObris(u.bdgOut, t.out));
   r.setProperty('--btn-r', _UI_OBLIK[u.btnOblik] || '16px'); r.setProperty('--btn-sw', _UI_IK[u.btnIk] || '2');
   r.setProperty('--btn-a', (u.btnA / 100).toFixed(2)); r.setProperty('--btn-z', (u.btnZ / 100).toFixed(2));
+  document.documentElement.dataset.btnStil = u.btnStil || 'staklo'; // Postavke → Šablon dugmadi (static/js/postavke.js)
   _geoBadgeRender();
 }
 const _geoBadgeLast = { elev: '…', ll: null };
