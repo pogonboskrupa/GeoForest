@@ -517,3 +517,28 @@ html[data-btn-stil="akcent"] #ab-loc:not(.active) { box-shadow: 0 0 0 1px rgba(7
 #doz-bar .db-izb[hidden] { display: none; }
 #doz-bar.gubi { border-color: #f59e0b; }
 #doz-bar.gubi .db-top i { background: #f59e0b; }
+
+/* ═══ Kompaktnije Karte i Meni (v1.1.7): niži redovi, dugmad i kartice ═══ */
+.gf-tabs button { min-height: 52px; gap: 1px; font-size: 13px; }
+.gf-tabs button i { font-size: 18px; }
+.gf-tabs { margin-bottom: 8px; padding: 8px 10px; }
+.gf-tab-sek { gap: 8px; }
+#karte-panel .karta-hub-card { padding: 10px 12px; }
+#karte-panel .karta-hub-card h3 { font-size: 16px; }
+#karte-panel .karta-hub-card p, #karte-panel .kg-top p { font-size: 13.5px; line-height: 1.35; }
+#karte-panel .kh-grupa { margin: 6px 0 -4px; }
+/* prvi red „Prikaži granice odjela” je ispred sticky tabova (oni imaju negativan gornji razmak): razmak ≥ 14 px da ga ne preklapaju */
+#karte-panel .kh-gran-sve { min-height: 52px; padding: 6px 14px; margin-bottom: 28px; }
+#karte-panel .kh-gran-sve b { font-size: 16px; }
+#karte-panel .kh-gran-sve small { font-size: 13px; }
+#meni-panel .meni-grp { margin-bottom: 12px; }
+#meni-panel .meni-grp h3 { margin-bottom: 6px; }
+#meni-panel .meni-card { min-height: 64px; padding: 8px 12px; gap: 12px; margin-bottom: 8px; border-radius: 16px; }
+#meni-panel .meni-card .mc-ico { width: 44px; height: 44px; border-radius: 13px; }
+#meni-panel .meni-card .mc-ico svg { width: 26px; height: 26px; }
+#meni-panel .meni-card .mc-txt b { font-size: 17px; }
+#meni-panel .meni-card .mc-txt span { font-size: 13px; line-height: 1.25; margin-top: 1px; }
+#meni-panel section.meni-grp:nth-of-type(n+2) .meni-card { min-height: 86px; padding: 8px 6px; gap: 5px; }
+#meni-panel section.meni-grp:nth-of-type(n+2) .meni-card:last-of-type:nth-of-type(odd) { min-height: 64px; }
+#meni-panel .meni-set { padding: 8px 14px; }
+#meni-panel .meni-nedavno button { min-height: 44px; }
