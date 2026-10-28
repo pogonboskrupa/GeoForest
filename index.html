@@ -2300,7 +2300,7 @@ body.sl-uredi #sl-ured { display: block; }
 // android/app/build.gradle versionCode+versionName. Sva tri MORAJU biti
 // usklađena prije svakog commita.
 // =====================================================================
-const APP_VER = 'v1.2.7';
+const APP_VER = 'v1.2.8';
 document.getElementById('meni-ver-badge').textContent = 'GeoForest ' + APP_VER;
 
 // Verzije koriste tri jednocifrena segmenta: patch i minor idu 0–9.
@@ -4453,7 +4453,7 @@ function _msrRedraw() {
     _msrLayer.addLayer(L.polyline(drawLL, { color:'#fff', weight:7, opacity:0.85, lineCap:'round', lineJoin:'round', interactive:false, pane:'tragMsrLines' }));
     _msrLayer.addLayer(L.polyline(drawLL, { color:_msrColor, weight:4, opacity:1.0, lineCap:'round', lineJoin:'round', interactive:false, pane:'tragMsrLines' }));
     if (pts.length >= 3 && _msrMode === 'area') {
-      _msrLayer.addLayer(L.polygon(latlngs, { color:'#a78bfa', weight:1.5, dashArray:'4 4', fillColor:'#a78bfa', fillOpacity:0.08, pane:'tragMsrLines' }));
+      _msrLayer.addLayer(L.polygon(latlngs, { stroke:false, fillColor:_msrColor, fillOpacity:0.22, pane:'tragMsrLines', interactive:false }));
     }
   }
   // Natpisi: dužina svakog segmenta + ukupno na kraju (udaljenost); površina u težištu (≤ 30 natpisa)
@@ -4467,8 +4467,9 @@ function _msrRedraw() {
     const z = pts[pts.length - 1];
     _msrLayer.addLayer(L.marker([z.lat, z.lng], { interactive:false, keyboard:false, pane:'tragMsrLines', icon:L.divIcon({ className:'', iconSize:[0,0], iconAnchor:[0,26], html:`<span class="msr-seg uk" style="--c:${_msrColor}">Σ ${_msrFmt(uk)}</span>` }) }));
   } else if (_msrMode === 'area' && pts.length >= 3) {
-    const c = pts.reduce((a, p) => [a[0] + p.lat / pts.length, a[1] + p.lng / pts.length], [0, 0]);
-    _msrLayer.addLayer(L.marker(c, { interactive:false, keyboard:false, pane:'tragMsrLines', icon:L.divIcon({ className:'', iconSize:[0,0], html:`<span class="msr-seg uk" style="--c:#a78bfa">${(_msrPoligonPovrsina(pts)/10000).toFixed(2)} ha</span>` }) }));
+    const c = window.USFPov ? USFPov.centar(pts) : null, ct = c ? [c.lat, c.lng] : pts.reduce((a, p) => [a[0] + p.lat / pts.length, a[1] + p.lng / pts.length], [0, 0]);
+    const aM2 = _msrPoligonPovrsina(pts);
+    _msrLayer.addLayer(L.marker(ct, { interactive:false, keyboard:false, pane:'tragMsrLines', icon:L.divIcon({ className:'', iconSize:[0,0], html: window.USFPov ? USFPov.natpis(aM2, _msrColor) : `<span class="msr-seg uk" style="--c:#a78bfa">${(aM2/10000).toFixed(2)} ha</span>` }) }));
   }
   // Draggable markeri — SAMO van "Crtaj" moda (inače marker po tački zatrpa liniju).
   if (!_msrDrawOn) {
@@ -4524,7 +4525,8 @@ function _msrUpdPanel() {
   for (let i = 0; i < pts.length-1; i++) totalDist += _msrHaversine(pts[i].lat,pts[i].lng,pts[i+1].lat,pts[i+1].lng);
   if (_msrMode === 'area' && pts.length >= 3) {
     const areaM2 = _msrPoligonPovrsina(pts);
-    box.innerHTML = _msrKpi('#a78bfa', 3, [(areaM2/10000).toFixed(2) + ' ha', 'površina'], [[Math.round(areaM2).toLocaleString('bs') + ' m²', 'm²'], [_msrFmt(totalDist), 'obim'], [String(pts.length), 'tačaka']]);
+    const f = window.USFPov ? USFPov.fmt(areaM2) : { g: (areaM2/10000).toFixed(2), j: 'ha', pod: Math.round(areaM2) + ' m²' };
+    box.innerHTML = _msrKpi('#a78bfa', 2, [`${f.g}<i>${f.j}</i><small>${f.pod}</small>`, 'površina'], [[_msrFmt(totalDist + _msrHaversine(pts[pts.length-1].lat, pts[pts.length-1].lng, pts[0].lat, pts[0].lng)), 'obim'], [String(pts.length), 'tačaka']]).replace('class="glavno"', 'class="glavno pov"');
     return;
   }
   box.innerHTML = _msrKpi(_msrColor, 2, [_msrFmt(totalDist), 'ukupna dužina'], [[String(pts.length), 'tačaka'], [_msrFmt(totalDist / (pts.length - 1)), 'prosj. segment']]);
@@ -4681,11 +4683,13 @@ function _msrDrawAllSaved() {
     // Bez vlastitog bindPopup: on zaustavlja dodir (DomEvent.stop) pa ništa nacrtano
     // unutar mjerenja (sjekačke linije, tačke, KML) ne bi bilo dodirljivo —
     // popup otvara zajednički _kartaKlikIzvor.
-    const line = L.polyline(drawLL, { color, weight:3, opacity:0.9, pane:'tragMsrLines', interactive:false });
+    L.polyline(drawLL, { color:'#fff', weight:6, opacity:0.7, lineCap:'round', lineJoin:'round', pane:'tragMsrLines', interactive:false }).addTo(_msrSavedLayer);
+    const line = L.polyline(drawLL, { color, weight:3, opacity:0.95, lineCap:'round', lineJoin:'round', pane:'tragMsrLines', interactive:false });
     line.addTo(_msrSavedLayer);
     _razmjeraTacka(latlngs, color, 'tragMsrLines').addTo(_msrPinLayer);
     if (mode === 'area' && m.pts.length >= 3) {
-      L.polygon(latlngs, { color, weight:1, dashArray:'4 4', fillColor:color, fillOpacity:m.fillOpacity ?? 0.18, pane:'tragMsrLines', interactive:false }).addTo(_msrSavedLayer);
+      L.polygon(latlngs, { stroke:false, fillColor:color, fillOpacity:m.fillOpacity ?? 0.18, pane:'tragMsrLines', interactive:false }).addTo(_msrSavedLayer);
+      if (window.USFPov) { const c = USFPov.centar(m.pts); if (c) L.marker([c.lat, c.lng], { interactive:false, keyboard:false, pane:'tragMsrLines', icon:L.divIcon({ className:'', iconSize:[0,0], html: USFPov.natpis(_msrPoligonPovrsina(m.pts), color, true) }) }).addTo(_msrPinLayer); }
     }
   });
 }
@@ -4701,7 +4705,8 @@ function _msrPopupHtml(m) {
     if (dh != null && dd > 0) redovi.push(['Nagib', (dh > 0 ? '+' : '') + (dh / dd * 100).toFixed(1) + ' %'], ['Visinska razlika', Math.round(dh) + ' m']);
   } else if (mode === 'area' && P.length >= 3) {
     const aM2 = _msrPoligonPovrsina(P);
-    redovi.push(['Površina', (aM2 / 10000).toFixed(2) + ' ha'], ['Površina u m²', Math.round(aM2).toLocaleString('bs') + ' m²'], ['Obim', _msrFmt(d)]);
+    const pf = window.USFPov ? USFPov.fmt(aM2) : { g: (aM2 / 10000).toFixed(2), j: 'ha', pod: Math.round(aM2) + ' m²' };
+    redovi.push(['Površina', pf.g + ' ' + pf.j], ['ha · a · m²', pf.puno || pf.pod], ['Obim', _msrFmt(d + _msrHaversine(P[P.length - 1].lat, P[P.length - 1].lng, P[0].lat, P[0].lng))]);
     const fop = Math.round((m.fillOpacity || 0.18) * 100);
     vise = `<label class="pk-klizac">Ispuna <span id="mfop-lbl-${m.id}">${fop}%</span><input type="range" min="0" max="100" value="${fop}" oninput="_msrSetFillOpacity('${m.id}', this.value/100)"></label>`;
     if (typeof npIzMjerenja === 'function') dugmad.push({ t: '📐 Nagib poligona', on: `npIzMjerenja('${m.id}')`, v: 'glavno' });
@@ -4765,7 +4770,7 @@ const _MSR_TIP = { dist: { n: 'Udaljenost', ik: '📏' }, area: { n: 'Površina'
 // Glavna vrijednost mjerenja (veliko na kartici) + broj za sortiranje + dodatni čipovi.
 function _msrVrijednost(m) {
   const mode = m.mode || 'dist', P = m.pts || [], d = _msrPts2Len(P);
-  if (mode === 'area' && P.length >= 3) { const a = _msrPoligonPovrsina(P); return { mode, g: (a / 10000).toFixed(2), j: 'ha', num: a, cipovi: ['obim ' + _msrFmt(d)] }; }
+  if (mode === 'area' && P.length >= 3) { const a = _msrPoligonPovrsina(P); return { mode, g: window.USFPov ? USFPov.fmt(a).g : (a / 10000).toFixed(2), j: window.USFPov ? USFPov.fmt(a).j : 'ha', num: a, cipovi: [window.USFPov ? USFPov.fmt(a).pod : '', 'obim ' + _msrFmt(d)].filter(Boolean) }; }
   if (mode === 'nagib' && P.length >= 2) {
     const a = P[0], b = P[P.length - 1], dd = _msrHaversine(a.lat, a.lng, b.lat, b.lng);
     const dh = (a.elev != null && b.elev != null) ? b.elev - a.elev : null;
@@ -4841,7 +4846,7 @@ function _msrRegRender() {
   _msrRegistry.forEach(m => { const v = _msrVrijednost(m); br[v.mode] = (br[v.mode] || 0) + 1; if (v.mode === 'dist') duz += v.num; else if (v.mode === 'area') ha += v.num / 10000; });
   const n = _msrRegistry.length, cip = (k, t, b) => `<button class="${_msrFilt === k ? 'on' : ''}" onclick="_msrFiltriraj('${k}')">${t} <i>${b}</i></button>`;
   el.innerHTML = `<div class="treg-kpi">
-      <div><b>${n}</b><span>mjerenja</span></div><div><b>${_msrFmt(duz)}</b><span>dužine</span></div><div><b>${ha.toFixed(2)} ha</b><span>površine</span></div><div><b>${br.nagib || 0}</b><span>nagiba</span></div>
+      <div><b>${n}</b><span>mjerenja</span></div><div><b>${_msrFmt(duz)}</b><span>dužine</span></div><div><b>${window.USFPov ? USFPov.haTekst(ha) : ha.toFixed(2) + ' ha'}</b><span>površine</span></div><div><b>${br.nagib || 0}</b><span>nagiba</span></div>
     </div>
     <div class="treg-alat" style="top:-10px">
       <div class="treg-filt">${cip('sva', 'Sva', n)}${cip('dist', '📏', br.dist)}${cip('area', '◻', br.area)}${cip('nagib', '📐', br.nagib)}</div>
@@ -7785,6 +7790,7 @@ window.addEventListener('load', () => {
 <script src="static/js/korisnik.js"></script>
 <script src="static/js/doznaka-stabla.js"></script>
 <script src="static/js/doznaka.js"></script>
+<script src="static/js/mjerenja-povrsina.js"></script>
 <script src="static/js/mjerenja-profil.js"></script>
 <script src="static/js/slika-karte.js"></script>
 <script src="static/js/postavke.js"></script>

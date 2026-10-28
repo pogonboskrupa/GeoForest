@@ -582,3 +582,14 @@ html[data-btn-stil="akcent"] #ab-loc:not(.active) { box-shadow: 0 0 0 1px rgba(7
 /* Skini aplikaciju na uređaj (v1.2.6) */
 .update-skini { display:block; width:100%; margin-top:10px; min-height:var(--gf-tap, 52px); border-radius:12px; border:1.5px solid rgba(255,255,255,.18); background:rgba(255,255,255,.06); color:inherit; font-size:15px; font-weight:700; }
 .update-skini:disabled { opacity:.55; }
+
+/* Mjerenje površine — natpis na karti i pločica (v1.2.8) */
+.pov-nat { display:inline-flex; flex-direction:column; align-items:center; transform:translate(-50%,-50%); background:rgba(11,18,32,.9); color:#f8fafc; border:2px solid var(--c,#a78bfa); border-radius:14px; padding:4px 12px 5px; box-shadow:0 2px 8px rgba(0,0,0,.55); pointer-events:none; white-space:nowrap; line-height:1.15; }
+.pov-nat b { font:800 20px/1.1 system-ui,sans-serif; font-variant-numeric:tabular-nums; }
+.pov-nat b i { font-style:normal; font-size:12px; font-weight:700; margin-left:4px; color:var(--c,#a78bfa); }
+.pov-nat small { font:600 11px/1.2 system-ui,sans-serif; color:#cbd5e1; margin-top:1px; }
+.pov-nat.mali { flex-direction:row; gap:4px; padding:1px 9px; border-radius:999px; font:700 11px/18px system-ui,sans-serif; }
+.pov-nat.mali b { font-size:12px; }
+.ms-kpi .glavno.pov b { font-size:30px; }
+.ms-kpi .glavno.pov b i { font-style:normal; font-size:15px; margin-left:5px; color:var(--ms-c,#a78bfa); }
+.ms-kpi .glavno.pov small { display:block; margin-top:2px; font-size:12px; color:#cbd5e1; }

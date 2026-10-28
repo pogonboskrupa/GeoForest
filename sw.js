@@ -2,7 +2,7 @@
 // Service Worker — GeoForest
 // Promijeni APP_VERSION pri svakom deploymentu → okida update
 // =====================================================================
-const APP_VERSION = '1.2.7';
+const APP_VERSION = '1.2.8';
 const APP_CACHE   = 'geoforest-app-v' + APP_VERSION;
 const TILE_CACHE  = 'geoforest-tiles-v1';
 const LIB_CACHE   = 'geoforest-lib-v1';
@@ -44,6 +44,7 @@ const APP_SHELL = [
   './static/js/sjekacke.js',
   './static/js/primka.js',
   './static/js/inventura.js',
+  './static/js/mjerenja-povrsina.js',
   './static/js/mjerenja-profil.js',
   './static/js/slika-karte.js',
   './geo/odjeli.kml',
