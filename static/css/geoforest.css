@@ -560,3 +560,11 @@ html[data-btn-stil="akcent"] #ab-loc:not(.active) { box-shadow: 0 0 0 1px rgba(7
 #meni-korisnik.kor-chip[hidden] { display: none; }
 #meni-korisnik.kor-chip i { font-style: normal; font-size: 18px; }
 #meni-korisnik.kor-chip b { font-size: 16px; font-weight: 800; color: #f0fdf4; overflow-wrap: anywhere; }
+
+/* Doznaka → podtabovi (Pojasevi / Stabla), prag razmaka, brojevi stabala na karti */
+#doznaka-panel .gf-tabs.dz-tabs { position: static; margin: 0 0 10px; padding: 0; border: 0; background: none; }
+#doznaka-panel .dz-tabs button { min-height: 52px; flex-direction: row; gap: 8px; font-size: 15px; }
+#doznaka-panel .dz-chips { display: flex; gap: 8px; margin: 10px 0 0; }
+#doznaka-panel .dz-chips button { flex: 1; }
+#doznaka-panel .dz-chips button.on { background: var(--gf-zel-jak); border-color: #86efac; color: var(--gf-zel-tamna); }
+.dz-br { color: #fff; font: 800 11px/14px system-ui, sans-serif; text-shadow: 0 0 3px #000, 0 0 3px #000, 0 0 2px #000; white-space: nowrap; pointer-events: none; }

@@ -134,7 +134,7 @@
     return { akt: null, projekti: [] };
   }
   let S = citaj();
-  const pisi = () => { try { localStorage.setItem(KLJUC, JSON.stringify(S)); return true; } catch (e) { toast('⚠ Nema mjesta za spremanje doznake'); return false; } };
+  const pisi = () => { try { localStorage.setItem(KLJUC, JSON.stringify(S, (k, v) => (k[0] === '_' ? undefined : v))); return true; } catch (e) { toast('⚠ Nema mjesta za spremanje doznake'); return false; } };
   const nadji = id => S.projekti.find(p => p.id === id);
   const aktivni = () => nadji(S.akt);
   const slijedecaBoja = p => PALETA.find(b => !Object.values(p.projektanti || {}).includes(b)) || PALETA[Object.keys(p.projektanti || {}).length % PALETA.length];
@@ -166,8 +166,69 @@
         });
       }
       p.tragovi.forEach(t => L.polyline(t.pts, { pane: pane(), renderer: rend, color: t.boja, weight: 3, opacity: 1, interactive: false }).addTo(slojevi));
+      if (p.stabla && p.stabla.length && p.stabVid !== false) {
+        (p.pojasi || []).forEach(q => L.polyline(q.ids.map(i => [p.stabla[i].la, p.stabla[i].lo]), { pane: pane(), renderer: rend, color: bojaR(p, q.r), weight: 2, opacity: 0.95, interactive: false }).addTo(slojevi));
+        p.stabla.forEach(x => L.circleMarker([x.la, x.lo], { pane: pane(), renderer: rend, radius: 3, color: '#fff', weight: 1, fillColor: bojaR(p, x.r), fillOpacity: 1, interactive: false }).addTo(slojevi));
+      }
     });
     slojevi.addTo(map);
+    stablaOznake();
+  }
+  // ── Doznačena stabla (KML) i pojasi od brojeva ──
+  let tab = 'poj', oznSloj = null;
+  const ST = () => window.USFDozStabla;
+  const bojaR = (p, r) => (r ? ((p.projektanti || {})[r] || PALETA[[...r].reduce((a, c) => a + c.charCodeAt(0), 0) % PALETA.length]) : '#94a3b8');
+  // Brojevi stabala uz tačke (zoom ≥ 17, najviše 150 u pogledu)
+  function stablaOznake() {
+    if (!imaKartu()) return;
+    if (oznSloj) { map.removeLayer(oznSloj); oznSloj = null; }
+    const p = aktivni(); if (!p || p.vis === false || p.stabVid === false || !p.stabla || !p.stabla.length || map.getZoom() < 17) return;
+    const v = map.getBounds(); oznSloj = L.layerGroup();
+    p.stabla.filter(x => v.contains([x.la, x.lo])).slice(0, 150).forEach(x => L.marker([x.la, x.lo], { pane: pane(), interactive: false, icon: L.divIcon({ className: 'dz-br', html: esc(x.t != null && x.t !== '' ? x.t : x.n), iconSize: [30, 14], iconAnchor: [-5, 7] }) }).addTo(oznSloj));
+    oznSloj.addTo(map);
+  }
+  function stablaHtml(p) {
+    const s = p.stabla || [], po = p.pojasi || [], pr = p.stabPrag || 50, grupe = new Map();
+    s.forEach(x => { const k = (x.r || '—') + (x.d ? ' · ' + x.d : ''); const o = grupe.get(k) || grupe.set(k, { n: 0, a: Infinity, b: -Infinity }).get(k); o.n++; if (x.n != null) { o.a = Math.min(o.a, x.n); o.b = Math.max(o.b, x.n); } });
+    const gr = [...grupe].map(([k, o]) => `<div class="dz-trag" style="--c:#94a3b8"><div class="dz-t-i"><b>${esc(k)}</b><small>${o.n} stabala${isFinite(o.a) ? ' · br. ' + o.a + '–' + o.b : ''}</small></div></div>`).join('');
+    const raspon = q => { const b = q.ids.map(i => s[i].n).filter(n => n != null); return b.length ? ' · br. ' + Math.min(...b) + '–' + Math.max(...b) : ''; };
+    const pj = po.map((q, i) => `<div class="dz-trag dz-poj" style="--c:${esc(bojaR(p, q.r))}" data-i="${i}"><div class="dz-t-i"><b>Pojas ${i + 1}${q.r ? ' · ' + esc(q.r) : ''}</b><small>${q.ids.length} stabala${raspon(q)} · ${fmtM(q.dug)}${q.d ? ' · ' + esc(q.d) : ''}</small></div>
+      <div class="dz-t-a"><button data-a="pzoom" aria-label="Na karti">🔍</button><button data-a="pdodaj" aria-label="U pojaseve projekta" ${q.dodan ? 'disabled' : ''}>${q.dodan ? '✓' : '➕'}</button></div></div>`).join('');
+    return `<section class="ng-card dz-kar">
+      <div class="dz-kpi"><div><b>${s.length}</b><span>stabala</span></div><div><b>${grupe.size}</b><span>grupa</span></div><div><b>${po.length}</b><span>pojasa</span></div></div>
+      <div class="sl-dug"><button class="zp-glavno" data-a="stuvezi">📥 Uvezi stabla (KML)</button></div>
+      <input type="file" id="doz-stabla-fajl" accept=".kml,application/vnd.google-earth.kml+xml,text/xml" hidden>
+      ${s.length ? `<div class="dz-chips" role="group" aria-label="Najveći razmak u pojasu">${[30, 50, 80].map(v => `<button data-a="prag" data-v="${v}" class="${pr === v ? 'on' : ''}">${v} m</button>`).join('')}</div>
+      <div class="sl-dug"><button class="zp-glavno" data-a="pojas">🔗 Pojas</button></div>
+      <div class="sl-dug"><button data-a="pdodajsve" ${po.length ? '' : 'disabled'}>➕ Sve u pojaseve projekta</button><button data-a="stvid">${p.stabVid === false ? '🙈' : '👁'}</button><button data-a="stukloni" aria-label="Ukloni stabla">🗑</button></div>
+      ${gr ? `<h4 class="dz-h">Grupe</h4>${gr}` : ''}${pj ? `<h4 class="dz-h">Pojasevi</h4>${pj}` : ''}${p.pojUsam ? `<h4 class="dz-h">Usamljena stabla: ${p.pojUsam}</h4>` : ''}` : ''}</section>`;
+  }
+  async function stablaUvezi(f) {
+    const p = aktivni(); if (!p || !ST()) return;
+    const doc = typeof _kmlParseDoc === 'function' ? _kmlParseDoc(await f.text()) : new DOMParser().parseFromString(await f.text(), 'text/xml');
+    const novo = ST().izKml(doc);
+    if (!novo.length) { toast('⚠ U KML-u nema tačaka (stabala)'); return; }
+    p.stabla = p.stabla || [];
+    const ima = new Set(p.stabla.map(x => x.n + '|' + x.la.toFixed(6) + '|' + x.lo.toFixed(6)));
+    let n = 0;
+    novo.forEach(x => { const k = x.n + '|' + x.la.toFixed(6) + '|' + x.lo.toFixed(6); if (ima.has(k)) return; ima.add(k); const o = { n: x.n, la: +x.la.toFixed(7), lo: +x.lo.toFixed(7) }; if (x.t != null && String(x.t) !== String(x.n)) o.t = x.t; if (x.r) o.r = x.r; if (x.d) o.d = x.d; p.stabla.push(o); n++; });
+    pisi(); crtaj(); render();
+    if (imaKartu()) { try { map.fitBounds(L.latLngBounds(p.stabla.map(x => [x.la, x.lo])).pad(0.15), { maxZoom: 18 }); } catch (e) {} }
+    toast('📥 Stabla: +' + n + (novo.length - n ? ' (' + (novo.length - n) + ' već ima)' : ''));
+  }
+  function stablaPojas(p) {
+    const r = ST().gradi(p.stabla || [], p.stabPrag || 50);
+    p.pojasi = r.pojasi; p.pojUsam = r.usamljena;
+    r.pojasi.forEach(q => { if (q.r) bojaProjektanta(p, q.r); });
+    pisi(); crtaj(); render();
+    toast('🔗 ' + r.pojasi.length + (r.pojasi.length === 1 ? ' pojas' : ' pojasa') + (r.usamljena ? ' · ' + r.usamljena + ' usamljenih' : ''));
+  }
+  async function pojasUProjekt(p, q) {
+    let ime = q.r || (window.USFKorisnik ? USFKorisnik.ime() : '');
+    if (!ime) ime = await pitajProjektanta('👤 Radnik tog pojasa', '');
+    if (!ime) return false;
+    p.tragovi.push({ id: uid(), projektant: ime, boja: bojaProjektanta(p, ime), pts: q.ids.map(i => [p.stabla[i].la, p.stabla[i].lo]), t: Date.now(), izvor: 'stabla' });
+    q.dodan = true; return true;
   }
   // Preračun podjele je skup (Voronoi + unije): odgođen i samo kad se promijene pojasevi
   function preracunaj(p, odmah) {
@@ -314,7 +375,7 @@
     const imena = Object.keys(poPr);
     const red = imena.map(i => `<div class="dz-proj"><button class="dz-boja" style="--c:${esc(poPr[i].boja)}" data-a="boja" data-ime="${esc(i)}" aria-label="Promijeni boju: ${esc(i)}"></button><div><b>${esc(i)}</b><small>${poPr[i].n} ${poPr[i].n === 1 ? 'pojas' : 'pojasa'} · ${fmtM(poPr[i].km)}</small></div><span>${pod ? fmt(poPr[i].ha, 2) + ' ha' + (p.ha ? ' · ' + Math.round(poPr[i].ha / p.ha * 100) + ' %' : '') : '…'}</span></div>`).join('');
     const tr = p.tragovi.map((t, i) => { const r = pod && pod.regije.find(x => x.i === i);
-      return `<div class="dz-trag" style="--c:${esc(t.boja)}" data-id="${esc(t.id)}"><div class="dz-t-i"><b>${esc(t.projektant)} · pojas ${i + 1}</b><small>${fmtM(duzinaLL(t.pts))} · ${t.izvor === 'kml' ? 'uvezeno' : 'GPS'} · ${new Date(t.t).toLocaleDateString('bs')}${r ? ' · ' + fmt(r.ha, 2) + ' ha' : ''}</small></div>
+      return `<div class="dz-trag" style="--c:${esc(t.boja)}" data-id="${esc(t.id)}"><div class="dz-t-i"><b>${esc(t.projektant)} · pojas ${i + 1}</b><small>${fmtM(duzinaLL(t.pts))} · ${t.izvor === 'kml' ? 'uvezeno' : t.izvor === 'stabla' ? 'stabla' : 'GPS'} · ${new Date(t.t).toLocaleDateString('bs')}${r ? ' · ' + fmt(r.ha, 2) + ' ha' : ''}</small></div>
         <div class="dz-t-a"><button data-a="tzoom" aria-label="Na karti">🔍</button><button data-a="tim" aria-label="Projektant">✏</button><button data-a="tsend" aria-label="Pošalji">📤</button><button data-a="tbris" aria-label="Obriši">🗑</button></div></div>`; }).join('');
     return `<section class="ng-card dz-kar">
       <div class="dz-kpi"><div><b>${fmt(p.ha, 2)} ha</b><span>površina odjela</span></div><div><b>${p.tragovi.length}</b><span>pojaseva</span></div><div><b>${pod ? fmt(pod.regije.reduce((a, r) => a + r.ha, 0), 2) + ' ha' : p._racuna ? '⏳' : '—'}</b><span>obuhvaćeno</span></div></div>
@@ -324,6 +385,7 @@
       ${red ? `<h4 class="dz-h">Projektanti</h4>${red}` : ''}
       ${tr ? `<h4 class="dz-h">Pojasevi</h4>${tr}` : ''}</section>`;
   }
+  const tabHtml = () => `<div class="gf-tabs dz-tabs" role="tablist">${[['poj', '🧭', 'Pojasevi'], ['stab', '🌲', 'Stabla']].map(([k, i, t]) => `<button role="tab" data-a="tab" data-t="${k}" class="${tab === k ? 'on' : ''}"><i>${i}</i><span>${t}</span></button>`).join('')}</div>`;
   function render() {
     const e = typeof document !== 'undefined' && el(); if (!e) return;
     const st = document.getElementById('mc-stat-doznaka'); if (st) st.textContent = S.projekti.length ? String(S.projekti.length) : '';
@@ -332,7 +394,7 @@
       <button data-a="zoom" aria-label="Na karti">🔍</button><button data-a="vid" aria-label="Prikaži/sakrij">${p.vis === false ? '🙈' : '👁'}</button><button data-a="bris" aria-label="Izbriši">🗑</button></div>`).join('');
     const p = aktivni();
     e.innerHTML = `<section class="ng-card dz-uvod"><h3>Doznaka stabala</h3>
-      <div class="sl-dug"><button class="zp-glavno" data-a="novi">＋ Novi projekat</button></div>${lista ? `<div class="dz-lista">${lista}</div>` : ''}</section>${p ? projektHtml(p) : ''}`;
+      <div class="sl-dug"><button class="zp-glavno" data-a="novi">＋ Novi projekat</button></div>${lista ? `<div class="dz-lista">${lista}</div>` : ''}</section>${p ? tabHtml() + (tab === 'stab' ? stablaHtml(p) : projektHtml(p)) : ''}`;
     if (p && !p._pod && !p._racuna && p.tragovi.length) preracunaj(p);
   }
 
@@ -452,6 +514,26 @@
     }
     if (a === 'snimi') return snimi();
     if (a === 'uvezi') { const f = document.getElementById('doz-fajl'); if (f) f.click(); return; }
+    if (a === 'tab') { tab = cvor.dataset.t; return render(); }
+    if (a === 'stuvezi') { const f = document.getElementById('doz-stabla-fajl'); if (f) f.click(); return; }
+    if (a === 'prag') { p.stabPrag = +cvor.dataset.v; pisi(); if (p.pojasi && p.pojasi.length) return stablaPojas(p); return render(); }
+    if (a === 'pojas') return stablaPojas(p);
+    if (a === 'stvid') { p.stabVid = p.stabVid === false; pisi(); crtaj(); return render(); }
+    if (a === 'stukloni') {
+      if (typeof _dlgConfirm === 'function' && !await _dlgConfirm('Ukloniti sva uvezena stabla i pojase od njih (' + (p.stabla || []).length + ' stabala)?', { title: 'Ukloni stabla', danger: true, okLabel: 'Ukloni' })) return;
+      p.stabla = []; p.pojasi = []; p.pojUsam = 0; pisi(); crtaj(); return render();
+    }
+    if (a === 'pzoom' || a === 'pdodaj') {
+      const q = (p.pojasi || [])[+((cvor.closest('.dz-poj') || {}).dataset || {}).i]; if (!q) return;
+      if (a === 'pzoom') { if (imaKartu()) { switchMainTab('karta'); map.fitBounds(L.latLngBounds(q.ids.map(i => [p.stabla[i].la, p.stabla[i].lo])).pad(0.3), { maxZoom: 19 }); } return; }
+      if (await pojasUProjekt(p, q)) { p._pot = null; p._pod = null; pisi(); preracunaj(p); crtaj(); render(); toast('➕ Pojas dodan u projekat'); }
+      return;
+    }
+    if (a === 'pdodajsve') {
+      let n = 0; for (const q of (p.pojasi || [])) { if (q.dodan) continue; if (await pojasUProjekt(p, q)) n++; else break; }
+      if (n) { p._pot = null; p._pod = null; pisi(); preracunaj(p); crtaj(); render(); toast('➕ Dodano pojaseva: ' + n); }
+      return;
+    }
     if (a === 'posalji') return posalji(p, p.tragovi);
     if (a === 'boja') {
       const ime = cvor.dataset.ime, tren = p.projektanti[ime], n = PALETA[(PALETA.indexOf(tren) + 1) % PALETA.length];
@@ -474,8 +556,9 @@
     const tijelo = el(); if (!tijelo) return;
     tijelo.addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (b && !b.disabled) akcija(b.dataset.a, b); });
     tijelo.addEventListener('change', async e => {
-      if (e.target.id !== 'doz-fajl' || !e.target.files[0]) return;
-      const f = e.target.files[0]; e.target.value = '';
+      if ((e.target.id !== 'doz-fajl' && e.target.id !== 'doz-stabla-fajl') || !e.target.files[0]) return;
+      const f = e.target.files[0], stabla = e.target.id === 'doz-stabla-fajl'; e.target.value = '';
+      if (stabla) { try { await stablaUvezi(f); } catch (er) { toast('⚠ KML nije učitan: ' + er.message); } return; }
       try { const doc = typeof _kmlParseDoc === 'function' ? _kmlParseDoc(await f.text()) : new DOMParser().parseFromString(await f.text(), 'text/xml'); if (!await izKml(doc, true)) toast('⚠ U KML-u nema linija (traga)'); }
       catch (er) { toast('⚠ KML nije učitan: ' + er.message); }
     });
@@ -490,6 +573,7 @@
   function init() {
     if (typeof document === 'undefined' || typeof map === 'undefined') return;
     veze(); crtaj(); render();
+    map.on('moveend zoomend', stablaOznake);
     S.projekti.forEach(p => { if (p.tragovi.length > 1) preracunaj(p); });
     const spremi = () => { if (snima) snimaPisi(); };
     document.addEventListener('visibilitychange', () => { if (document.hidden) spremi(); });
