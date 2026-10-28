@@ -464,8 +464,8 @@
     if (!izbor || !imaKartu()) return;
     const g = izbSloj = L.layerGroup().addTo(map), v = map.getBounds(), rend = L.canvas({ pane: pane(), padding: 0.3 });
     const vidi = x => x.bb[2] >= v.getSouth() && x.bb[0] <= v.getNorth() && x.bb[3] >= v.getWest() && x.bb[1] <= v.getEast();
-    izbor.lista.filter(x => x === izbor.sel || (map.getZoom() >= 11 && vidi(x))).slice(0, 900).forEach(x => {
-      const sel = x === izbor.sel;
+    izbor.lista.filter(x => izbor.sel.includes(x) || (map.getZoom() >= 11 && vidi(x))).slice(0, 900).forEach(x => {
+      const sel = izbor.sel.includes(x);
       L.polygon(x.ring, { pane: pane(), renderer: rend, color: sel ? '#fb7185' : '#fde68a', weight: sel ? 3 : 1.3, fillColor: '#fb7185', fillOpacity: sel ? 0.4 : 0.04, interactive: false }).addTo(g);
     });
   }
@@ -473,18 +473,19 @@
     const bar = document.getElementById('doz-bar'); if (!bar) return;
     bar.classList.toggle('show', !!izbor || !!snima);
     if (!izbor) return;
-    const s = izbor.sel;
+    const s = izbor.sel, ha = s.reduce((a, x) => a + x.ha, 0);
     bar.style.setProperty('--c', '#fb7185'); bar.classList.remove('rec');
-    bar.innerHTML = `<div class="db-top"><b>🗺 Dodirni odjel na karti</b><span>${esc(izbor.naziv)}</span></div>
-      <div class="db-izb"${s ? '' : ' hidden'}>${s ? `<b>${esc(s.ime)}</b> · ${fmt(s.ha, 2)} ha <small>${esc(s.sloj)}</small>` : ''}</div>
-      <div class="db-dug"><button data-a="izb-ok" ${s ? '' : 'disabled'}>✓ Napravi projekat</button><button data-a="izb-x">✕ Odustani</button></div>`;
+    bar.innerHTML = `<div class="db-top"><b>🗺 Dodirni odsjeke odjela</b><span>${esc(izbor.naziv)}</span></div>
+      <div class="db-izb"${s.length ? '' : ' hidden'}>${s.length ? `<b>${s.length === 1 ? esc(s[0].ime) : s.length + ' poligona'}</b> · ${fmt(ha, 2)} ha <small>${s.length === 1 ? esc(s[0].sloj) : 'dodir na izabrani ga uklanja'}</small>` : ''}</div>
+      <div class="db-dug"><button data-a="izb-ok" ${s.length ? '' : 'disabled'}>✓ Napravi projekat</button><button data-a="izb-x">✕ Odustani</button></div>`;
   }
   function izbKlik(e) {
     if (!izbor) return;
     let naj = null;
     izbor.lista.forEach(x => { if (e.latlng.lat >= x.bb[0] && e.latlng.lat <= x.bb[2] && e.latlng.lng >= x.bb[1] && e.latlng.lng <= x.bb[3] && unutar(e.latlng.lat, e.latlng.lng, x.ring) && (!naj || x.ha < naj.ha)) naj = x; });
     if (!naj) return;
-    izbor.sel = naj; izbCrtaj(); izbBar();
+    const i = izbor.sel.indexOf(naj); if (i >= 0) izbor.sel.splice(i, 1); else izbor.sel.push(naj);
+    izbCrtaj(); izbBar();
   }
   function izbKraj() {
     if (!izbor) return;
@@ -498,15 +499,31 @@
     if (v == null || !String(v).trim()) return;
     const lista = izvoriPoligona().map(o => ({ ...o, bb: bbox(o.ring), ha: povrsinaLL(o.ring) / 10000 }));
     if (!lista.length) { toast('⚠ Nema poligona — učitaj sloj „Granice taksacije” (Karte → Server) ili svoj KML'); return; }
-    izbor = { naziv: String(v).trim(), lista, sel: null };
+    izbor = { naziv: String(v).trim(), lista, sel: [] };
     window._npHvataKlik = true; map.on('click', izbKlik); map.on('moveend', izbCrtaj);
     if (typeof switchMainTab === 'function') switchMainTab('karta');
     if (typeof map.closePopup === 'function') map.closePopup();
     if (map.getZoom() < 11) { try { map.fitBounds(L.latLngBounds(lista.flatMap(x => x.ring)), { padding: [30, 30], maxZoom: 12 }); } catch (e) {} if (map.getZoom() < 11) map.setZoom(11); }
     izbCrtaj(); izbBar();
   }
+  // Unija više odsjeka u jedan prsten (pukotine ±1 m se zatvaraju); null ako su razdvojeni
+  function spojiPoligone(sel) {
+    try {
+      const f = sel.map(x => turf.polygon([zatvori(x.ring).map(([la, lo]) => [lo, la])]));
+      let gj = _turfUnija(f);
+      if (gj && gj.geometry.type === 'MultiPolygon') {
+        const z = _turfUnija(f.map(x => turf.buffer(x, 1, { units: 'meters' }))), v = z && turf.buffer(z, -1, { units: 'meters' });
+        if (v && v.geometry.type === 'Polygon') gj = v;
+      }
+      if (!gj || gj.geometry.type !== 'Polygon') return null;
+      const ring = gj.geometry.coordinates[0].slice(0, -1).map(([lo, la]) => [la, lo]);
+      return { ring, ha: povrsinaLL(ring) / 10000, ime: sel.map(x => x.ime).join(', ').slice(0, 80) };
+    } catch (e) { return null; }
+  }
   function izbGotovo() {
-    const o = izbor && izbor.sel; if (!o) return;
+    const sel = izbor && izbor.sel; if (!sel || !sel.length) return;
+    const o = sel.length === 1 ? sel[0] : spojiPoligone(sel);
+    if (!o) { toast('⚠ Izabrani poligoni nisu susjedni — izaberi odsjeke koji se dodiruju'); return; }
     const naziv = izbor.naziv;
     izbKraj();
     const p = { id: uid(), naziv, odjel: o.ime, ring: o.ring, ha: o.ha, vis: true, projektanti: {}, tragovi: [], t: Date.now() };
