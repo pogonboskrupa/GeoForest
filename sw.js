@@ -2,7 +2,7 @@
 // Service Worker — GeoForest
 // Promijeni APP_VERSION pri svakom deploymentu → okida update
 // =====================================================================
-const APP_VERSION = '1.1.5';
+const APP_VERSION = '1.1.6';
 const APP_CACHE   = 'geoforest-app-v' + APP_VERSION;
 const TILE_CACHE  = 'geoforest-tiles-v1';
 const LIB_CACHE   = 'geoforest-lib-v1';

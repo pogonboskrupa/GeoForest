@@ -515,3 +515,5 @@ html[data-btn-stil="akcent"] #ab-loc:not(.active) { box-shadow: 0 0 0 1px rgba(7
 #doz-bar.rec .db-dug button { min-height: 44px; flex: none; padding: 0 14px; font-size: 15px; }
 #doz-bar.rec .db-dug button[data-a="odbaci"] { width: 44px; padding: 0; }
 #doz-bar .db-izb[hidden] { display: none; }
+#doz-bar.gubi { border-color: #f59e0b; }
+#doz-bar.gubi .db-top i { background: #f59e0b; }

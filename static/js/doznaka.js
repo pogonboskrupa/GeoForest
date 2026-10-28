@@ -182,17 +182,41 @@
   }
 
   // ── Snimanje pojasa ──
+  // Pojas se NE smije prekinuti i mora biti precizan. Tačke stižu iz native GpsService (samo GPS provider, 1 s, trajni bafer na disku,
+  // wake lock, restart poslije ubijanja); ovdje se filtriraju po tačnosti i GPS skokovima, spremaju na disk poslije SVAKE serije
+  // (`usf_doz_snima`), a gubitak signala se vidi (traka, vibracija) i broji u pojasu (`prekidi`).
+  const AC_DOBRA = 20, AC_SLABA = 40, ZAZOR_S = 12, SKOK_MS = 5, GUBI_S = 10, PREKID_S = 60;
   let snima = null;
-  function snimaPisi() { if (snima) try { localStorage.setItem(KLJUC_SNIMA, JSON.stringify({ pid: snima.pid, ime: snima.ime, boja: snima.boja, pts: snima.pts, zadT: snima.zadT })); } catch (e) {} }
+  function snimaPisi() {
+    if (!snima) return true;
+    try { localStorage.setItem(KLJUC_SNIMA, JSON.stringify({ pid: snima.pid, ime: snima.ime, boja: snima.boja, pts: snima.pts, zadT: snima.zadT, prekidi: snima.prekidi, skokova: snima.skokova })); return true; }
+    catch (e) { if (!snima.upozPisi) { snima.upozPisi = true; toast('⚠ Nema mjesta za zaštitnu kopiju pojasa — oslobodi memoriju'); } return false; }
+  }
+  // Prihvata fiks (la, lo, ac m, t ms). Vraća true ako je tačka ušla u pojas.
   function tackaDodaj(la, lo, ac, t) {
-    if (!snima || !(ac <= 20) || !(t > snima.zadT)) return false;
+    if (!snima || !(t > snima.zadT)) return false;
+    // prekid GPS-a: razmak između uzastopnih fiksova (ne dolaska paketa — paketi kasne kad je ekran ugašen)
+    if (snima.zadFixT && t - snima.zadFixT > PREKID_S * 1000) { snima.prekidi.n++; snima.prekidi.maxS = Math.max(snima.prekidi.maxS, Math.round((t - snima.zadFixT) / 1000)); }
+    snima.zadFixT = t;
+    // dobra tačnost ≤ 20 m; slabija (≤ 40 m) tek kad dobrih nema duže od 12 s, da u pojasu nema rupe
+    const zazor = t - snima.zadT > ZAZOR_S * 1000;
+    if (!(ac <= AC_DOBRA || (ac <= AC_SLABA && zazor))) return false;
     const z = snima.pts[snima.pts.length - 1];
-    if (z && duzinaLL([z, [la, lo]]) < 3) return false;
+    if (z) {
+      const d = duzinaLL([z, [la, lo]]), dtS = Math.max(1, (t - snima.zadT) / 1000);
+      if (d < Math.min(8, Math.max(2.5, 0.4 * ac))) return false;     // šum u mjestu
+      if (d / dtS > SKOK_MS && dtS < 30) { snima.skokova++; return false; } // GPS skok (> 18 km/h pješice)
+    }
     snima.pts.push([la, lo]); snima.zadT = t;
-    if (++snima.nes >= 5) { snima.nes = 0; snimaPisi(); }
     return true;
   }
-  function nativno(pts) { let n = 0; for (const q of pts) if (tackaDodaj(q.la, q.lo, Number.isFinite(q.ac) ? q.ac : 99, q.t)) n++; if (n) snimaOsvjezi(); }
+  function nativno(pts) {
+    let n = 0;
+    for (const q of pts) if (tackaDodaj(q.la, q.lo, Number.isFinite(q.ac) ? q.ac : 99, q.t)) n++;
+    if (n) snimaPisi();
+    snimaOsvjezi();
+  }
+  const tisina = () => (snima && snima.zadFixT ? Date.now() - snima.zadFixT : 0);
   function snimaOsvjezi() {
     if (imaKartu() && snima) {
       if (!snimaSloj) snimaSloj = L.polyline([], { pane: pane(), color: snima.boja, weight: 4, dashArray: '2 7', lineCap: 'round', interactive: false }).addTo(map);
@@ -202,32 +226,44 @@
     if (izbor) return;
     bar.classList.toggle('show', !!snima);
     if (!snima) return;
-    const gps = typeof lastP !== 'undefined' && lastP && Number.isFinite(lastP.la) ? lastP : null;
+    const gubi = tisina() > GUBI_S * 1000;
     bar.style.setProperty('--c', snima.boja);
-    bar.classList.add('rec');
-    bar.innerHTML = `<div class="db-top"><i></i><b>${esc(snima.ime)}</b><span>${fmtM(duzinaLL(snima.pts))}</span></div>
+    bar.classList.add('rec'); bar.classList.toggle('gubi', gubi);
+    bar.innerHTML = `<div class="db-top"><i></i><b>${esc(snima.ime)}</b><span>${fmtM(duzinaLL(snima.pts))}${gubi ? ' · ⚠ nema GPS' : ''}</span></div>
       <div class="db-dug"><button data-a="kraj" aria-label="Završi pojas">✓ Završi</button><button data-a="odbaci" aria-label="Odbaci pojas">✕</button></div>`;
   }
+  // Svake sekunde: tačke bez native servisa (preglednik), čuvar servisa i znak gubitka signala
   function snimaTik() {
     if (!snima) return;
     const gps = typeof lastP !== 'undefined' && lastP && Number.isFinite(lastP.la) ? lastP : null;
-    if (gps && !snima.nat && tackaDodaj(gps.la, gps.lo, gps.ac || 99, Date.now())) { /* crta se ispod */ }
+    if (gps && !snima.nat && tackaDodaj(gps.la, gps.lo, gps.ac || 99, Date.now())) snimaPisi();
+    const t = tisina(), bg = window.usfPozadina;
+    if (snima.nat && t > 30000 && Date.now() - snima.restartT > 30000) {
+      snima.restartT = Date.now();
+      try { bg.dopuni(); } catch (e) {}
+      try {
+        if (typeof AndroidGps !== 'undefined' && AndroidGps.isRecording && !AndroidGps.isRecording()) { bg.zavrsi(BG_ID); bg.pocni(BG_ID, 'Doznaka stabala · ' + snima.ime, nativno); toast('⚠ GPS servis ponovo pokrenut'); }
+      } catch (e) {}
+    }
+    if (t > 20000 && !snima.vibrirao) { snima.vibrirao = true; try { navigator.vibrate && navigator.vibrate([300, 150, 300]); } catch (e) {} }
+    if (t <= GUBI_S * 1000) snima.vibrirao = false;
     snimaOsvjezi();
   }
   function snimaPocni(p, ime, boja, stari) {
     const bg = typeof window !== 'undefined' ? window.usfPozadina : null;
     if (typeof gpsOn !== 'undefined' && !gpsOn && typeof startGPS === 'function') startGPS();
-    snima = { pid: p.id, ime, boja, pts: stari ? stari.pts : [], zadT: stari ? stari.zadT : Date.now(), nes: 0, nat: !!(bg && bg.nativno()), tik: setInterval(snimaTik, 1000) };
+    snima = { pid: p.id, ime, boja, pts: stari ? stari.pts : [], zadT: stari ? stari.zadT : Date.now(), zadFixT: stari ? stari.zadT : 0, prekidi: (stari && stari.prekidi) || { n: 0, maxS: 0 }, skokova: (stari && stari.skokova) || 0,
+      restartT: Date.now(), nat: !!(bg && bg.nativno()), tik: setInterval(snimaTik, 1000) };
     if (bg) bg.pocni(BG_ID, 'Doznaka stabala · ' + ime, nativno);
     snimaPisi(); snimaOsvjezi();
     if (typeof switchMainTab === 'function') switchMainTab('karta');
     if (imaKartu() && p.ring) map.fitBounds(L.latLngBounds(p.ring).pad(0.2), { maxZoom: 18 });
   }
-  function snimaGasi() {
+  function snimaGasi(zadrziKopiju) {
     if (!snima) return;
     clearInterval(snima.tik);
     const bg = window.usfPozadina; if (bg) bg.zavrsi(BG_ID);
-    try { localStorage.removeItem(KLJUC_SNIMA); } catch (e) {}
+    if (!zadrziKopiju) { try { localStorage.removeItem(KLJUC_SNIMA); } catch (e) {} }
     if (snimaSloj && imaKartu()) { map.removeLayer(snimaSloj); snimaSloj = null; }
     snima = null; snimaOsvjezi();
   }
@@ -235,12 +271,15 @@
     if (!snima) return;
     const bg = window.usfPozadina; if (bg) { try { await bg.dopuni(); } catch (e) {} }
     const s = snima, p = nadji(s.pid), d = duzinaLL(s.pts);
-    snimaGasi();
+    snimaGasi(true); // zaštitna kopija ostaje dok pojas nije sigurno upisan
     if (!p) return;
-    if (s.pts.length < 2 || d < 20) { toast('⚠ Pojas je prekratak (' + Math.round(d) + ' m) — nije sačuvan'); render(); return; }
-    p.tragovi.push({ id: uid(), projektant: s.ime, boja: bojaProjektanta(p, s.ime), pts: s.pts, t: Date.now(), izvor: 'gps' });
-    p.t = Date.now(); pisi(); preracunaj(p); crtaj(); render();
-    toast('✅ Pojas sačuvan · ' + fmtM(d));
+    if (s.pts.length < 2 || d < 20) { try { localStorage.removeItem(KLJUC_SNIMA); } catch (e) {} toast('⚠ Pojas je prekratak (' + Math.round(d) + ' m) — nije sačuvan'); render(); return; }
+    p.tragovi.push({ id: uid(), projektant: s.ime, boja: bojaProjektanta(p, s.ime), pts: s.pts, t: Date.now(), izvor: 'gps', prekidi: s.prekidi, skokova: s.skokova });
+    p.t = Date.now();
+    if (pisi()) { try { localStorage.removeItem(KLJUC_SNIMA); } catch (e) {} }
+    else { p.tragovi.pop(); toast('⚠ Pojas NIJE upisan (nema mjesta) — kopija je sačuvana, oslobodi memoriju pa ponovo pokreni aplikaciju'); render(); return; }
+    preracunaj(p); crtaj(); render();
+    toast('✅ Pojas sačuvan · ' + fmtM(d) + (s.prekidi.n ? ' · ⚠ ' + s.prekidi.n + (s.prekidi.n === 1 ? ' prekid GPS-a' : ' prekida GPS-a') + ' (najduži ' + s.prekidi.maxS + ' s)' : ''));
     if (typeof switchMainTab === 'function') { _otvoriPanel(); }
   }
   async function snimaOdbaci() {
@@ -448,6 +487,9 @@
     if (typeof document === 'undefined' || typeof map === 'undefined') return;
     veze(); crtaj(); render();
     S.projekti.forEach(p => { if (p.tragovi.length > 1) preracunaj(p); });
+    const spremi = () => { if (snima) snimaPisi(); };
+    document.addEventListener('visibilitychange', () => { if (document.hidden) spremi(); });
+    window.addEventListener('pagehide', spremi);
     setTimeout(nastavi, 1500);
   }
 
@@ -455,5 +497,5 @@
     window.USFDoz = { otvori() { _otvoriPanel(); }, izKml, osvjezi: () => { crtaj(); render(); }, geo: { podijeli, ravan, povrsinaLL, duzinaLL, uzorak } };
     if (typeof document !== 'undefined') { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init(); }
   }
-  if (typeof module !== 'undefined') module.exports = { ravan, uzorak, podijeli, povrsinaLL, duzinaLL, kmlTragovi, linijeIzKml, bojaKml, PALETA };
+  if (typeof module !== 'undefined') module.exports = { _tackaDodaj: tackaDodaj, _postaviSnimanje: v => { snima = v; }, ravan, uzorak, podijeli, povrsinaLL, duzinaLL, kmlTragovi, linijeIzKml, bojaKml, PALETA };
 })();

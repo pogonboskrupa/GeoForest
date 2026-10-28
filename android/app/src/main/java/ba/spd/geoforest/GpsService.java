@@ -142,7 +142,7 @@ public class GpsService extends Service {
             // provider ionako nema šta ponuditi.
             {
                 locationManager.requestLocationUpdates(
-                        LocationManager.GPS_PROVIDER, 2000L, 0f, locationListener);
+                        LocationManager.GPS_PROVIDER, 1000L, 0f, locationListener);
             }
         } catch (SecurityException ignored) {
             // dozvola oduzeta između provjere i poziva — nema šta, pobjegli fiksovi

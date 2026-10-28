@@ -59,7 +59,7 @@ t('prije starta provjera prostora; GpsService ne pada na odbijen startForeground
 });
 
 t('Drive lista ima istek (slab signal), Xiaomi Autostart prečica', () => {
-  assert.ok(izvadi('_dkUcitaj').includes('setTimeout(() => ctl.abort(), 8000)'));
+  assert.ok(izvadi('_listaUcitaj').includes('setTimeout(() => ctl.abort(), 6000)') && izvadi('_dkUcitaj').includes('_listaUcitaj('));
   const J = fs.readFileSync(path.join(__dirname, '../../android/app/src/main/java/ba/spd/geoforest/MainActivity.java'), 'utf8');
   assert.ok(J.includes('public boolean jeXiaomi()') && J.includes('AutoStartManagementActivity'));
   assert.ok(H.includes('id="set-autostart"') && H.includes("localStorage.getItem('usf_autostart_hint')"));

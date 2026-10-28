@@ -59,4 +59,35 @@ t('Doznaka: bez opisnih hint tekstova', () => {
   assert.ok(!R('static/js/doznaka.js').includes('uk-izvor'));
 });
 
+t('snimanje pojasa: filter tačnosti, šuma, GPS skokova i prekida', () => {
+  const nov = () => ({ pts: [], zadT: 1000, zadFixT: 0, prekidi: { n: 0, maxS: 0 }, skokova: 0 });
+  const [la0, lo0] = ll(100, 100), korak = m => ll(100 + m, 100);
+  let sn = nov(); D._postaviSnimanje(sn);
+  assert.strictEqual(D._tackaDodaj(la0, lo0, 5, 2000), true, 'dobar fiks ulazi');
+  assert.strictEqual(D._tackaDodaj(...korak(1), 5, 3000), false, 'pomak 1 m = šum');
+  assert.strictEqual(D._tackaDodaj(...korak(6), 30, 4000), false, 'tačnost 30 m odbijena dok je razmak kratak');
+  assert.strictEqual(D._tackaDodaj(...korak(10), 30, 20000), true, 'slabija (≤ 40 m) ulazi poslije 12 s bez dobrih tačaka — nema rupe');
+  assert.strictEqual(D._tackaDodaj(...korak(300), 5, 21000), false, '300 m u 1 s = GPS skok');
+  assert.strictEqual(sn.skokova, 1);
+  assert.strictEqual(D._tackaDodaj(...korak(9), 50, 22000), false, 'tačnost 50 m nikad');
+  sn = nov(); D._postaviSnimanje(sn);
+  D._tackaDodaj(la0, lo0, 5, 2000); D._tackaDodaj(...korak(10), 5, 100000);
+  assert.strictEqual(sn.prekidi.n, 1); assert.strictEqual(sn.prekidi.maxS, 98, 'prekid GPS-a > 60 s se broji');
+  D._postaviSnimanje(null);
+});
+t('snimanje: spremanje poslije svake serije, zaštitna kopija do upisa, čuvar servisa; GPS 1 s', () => {
+  const J = R('static/js/doznaka.js');
+  assert.ok(J.includes('if (n) snimaPisi();') && J.includes("addEventListener('pagehide'") && J.includes('snimaGasi(true)'));
+  assert.ok(J.includes('AndroidGps.isRecording') && J.includes('navigator.vibrate'));
+  assert.ok(R('android/app/src/main/java/ba/spd/geoforest/GpsService.java').includes('GPS_PROVIDER, 1000L, 0f'));
+});
+t('offline sa slabim signalom: mrežni poslovi iza _mrezaSmije, liste iz keša, pločice ograničene', () => {
+  const H = R('index.html');
+  assert.ok(H.includes('function _mrezaSmije()') && H.includes('async function _listaUcitaj('));
+  const l = H.slice(H.indexOf('async function _listaUcitaj('), H.indexOf('async function _dkGhUcitaj'));
+  assert.ok(l.indexOf('_mrezaSmije()') < l.indexOf('localStorage.getItem(lsKljuc)') && l.indexOf('localStorage.getItem(lsKljuc)') < l.indexOf('dohvati(ugradjena)'), 'redoslijed: server → zadnja sačuvana → ugrađena');
+  assert.ok(H.includes('_tileSlot()') && H.includes('_tileFree()') && H.includes('if (navigator.onLine === false) return null;'));
+  assert.ok(R('static/js/firebase-init.js').includes('async function _fbPrijava()'));
+});
+
 console.log('\n' + pass + ' prošlo, ' + (process.exitCode ? 'IMA PALIH' : '0 palo') + ' — doznaka');

@@ -27,6 +27,14 @@ const FIREBASE_CONFIG = {
 
 let fbApp = null, fbAuth = null, fbDb = null, fbUid = null;
 
+// Anonimna prijava samo kad ima interneta i dok se ne snima trag; istek 15 s, ponovo pri povratku veze
+async function _fbPrijava() {
+  if (!fbAuth || fbAuth.currentUser) return;
+  try { if (navigator.onLine === false || (typeof _anyRecOn === 'function' && _anyRecOn())) return; } catch (e) { return; }
+  try { await Promise.race([fbAuth.signInAnonymously(), new Promise((_, odbij) => setTimeout(() => odbij(new Error('istek')), 15000))]); } catch (e) { /* offline rezerva: UID se uzme kad veza dođe */ }
+}
+window.addEventListener('online', () => { _fbPrijava(); });
+
 async function _fbInit() {
   if (!FIREBASE_CONFIG) return; // konfiguracija još nije postavljena
   if (typeof firebase === 'undefined') return; // SDK nije učitan (offline prvi put)
@@ -40,7 +48,7 @@ async function _fbInit() {
     fbAuth.onAuthStateChanged(user => {
       if (user) { fbUid = user.uid; _fbOnReady(); }
     });
-    if (!fbAuth.currentUser) await fbAuth.signInAnonymously();
+    await _fbPrijava();
   } catch(e) {
     console.error('Firebase init greška:', e);
   }

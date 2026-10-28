@@ -2297,7 +2297,7 @@ body.sl-uredi #sl-ured { display: block; }
 // android/app/build.gradle versionCode+versionName. Sva tri MORAJU biti
 // usklađena prije svakog commita.
 // =====================================================================
-const APP_VER = 'v1.1.5';
+const APP_VER = 'v1.1.6';
 document.getElementById('meni-ver-badge').textContent = 'GeoForest ' + APP_VER;
 
 // Verzije koriste tri jednocifrena segmenta: patch i minor idu 0–9.
@@ -2328,6 +2328,11 @@ function _vezaLoša() {
   const nedavne = _netBuf.filter(m => m.t > prag);
   return nedavne.length >= 3 && nedavne.filter(m => !m.ok).length >= 3;
 }
+// Opcioni mrežni poslovi (liste karata, visine, prijava) idu samo kad je veza dobra i dok se NE snima trag/pojas:
+// slab signal ne smije zauzimati CPU i radio uređaja koji snima, a sve ima lokalnu rezervu.
+function _mrezaSmije() {
+  try { if (navigator.onLine === false || _vezaLoša()) return false; return !_anyRecOn(); } catch (e) { return true; }
+}
 
 // ── Stanje veze — prikazuje se samo u Postavke tabu ─────────────────
 function _updOfflineBanner() {
@@ -2348,6 +2353,11 @@ _updOfflineBanner();
 // nule bi ponovo unijelo iste terenske bugove (siva mreža na pločicama,
 // slomljene slike od WMS grešaka, zombi-fetch na brzom pan/zoom-u).
 const TILE_CACHE_NAME = 'geoforest-tiles-v1';
+// Mrežne pločice: ograničen broj istovremenih zahtjeva (slab signal se ne guši stotinama fetch-eva; dok se snima trag još manje)
+const _tileNet = { n: 0, q: [] };
+const _tileMax = () => { try { return _anyRecOn() ? 3 : _vezaLoša() ? 4 : 8; } catch (e) { return 8; } };
+const _tileSlot = () => new Promise(res => { const go = () => { _tileNet.n++; res(); }; _tileNet.n < _tileMax() ? go() : _tileNet.q.push(go); });
+function _tileFree() { _tileNet.n = Math.max(0, _tileNet.n - 1); while (_tileNet.q.length && _tileNet.n < _tileMax()) _tileNet.q.shift()(); }
 function makeCachedTileLayer(cacheName) {
   cacheName = cacheName || TILE_CACHE_NAME;
   return L.TileLayer.extend({
@@ -2374,19 +2384,25 @@ function makeCachedTileLayer(cacheName) {
         this._hooked = true;
         this.on('tileunload', ev => {
           const el = ev.tile;
+          if (el) el._gone = true;
           if (el && el._ctls) { el._ctls.forEach(c => { try { c.abort(); } catch(e) {} }); el._ctls.clear(); }
           if (el && el._blobUrl) { try { URL.revokeObjectURL(el._blobUrl); } catch(e) {} el._blobUrl = null; }
         });
         if (this._map) this._map.on('zoomend moveend', () => this._retryEmpty());
       }
 
-      const fetchTile = (u, ms) => new Promise(resolve => {
-        const ctl = new AbortController();
-        img._ctls.add(ctl);
-        const t = setTimeout(() => ctl.abort(), ms);
-        const finish = (r) => { clearTimeout(t); img._ctls.delete(ctl); resolve(r); };
-        fetch(u, { mode: 'cors', signal: ctl.signal }).then(finish).catch(() => finish(null));
-      });
+      const fetchTile = async (u, ms) => {
+        if (navigator.onLine === false) return null; // bez veze nema čekanja: parent pločica iz keša
+        await _tileSlot();
+        if (img._gone) { _tileFree(); return null; }
+        return new Promise(resolve => {
+          const ctl = new AbortController();
+          img._ctls.add(ctl);
+          const t = setTimeout(() => ctl.abort(), ms);
+          const finish = (r) => { clearTimeout(t); img._ctls.delete(ctl); _tileFree(); resolve(r); };
+          fetch(u, { mode: 'cors', signal: ctl.signal }).then(finish).catch(() => finish(null));
+        });
+      };
 
       const parentFallback = async () => {
         if (!('caches' in window)) return false;
@@ -2425,7 +2441,7 @@ function makeCachedTileLayer(cacheName) {
 
       const fromNet = async (isRetry) => {
         let r = await fetchTile(url, 8000);
-        if (!r || !r.ok) {
+        if ((!r || !r.ok) && navigator.onLine !== false && !(typeof _anyRecOn === 'function' && _anyRecOn())) {
           await new Promise(rs => setTimeout(rs, 1200));
           r = await fetchTile(url, 8000);
         }
@@ -4365,6 +4381,7 @@ async function _msrFetchElev(lat, lng) {
   if (window.USFDem) {
     try { const h = USFDem.visina(await USFDem.ucitaj(), lat, lng); if (h !== null) return (_msrElevCache[key] = Math.round(h)); } catch(e) {}
   }
+  if (navigator.onLine === false || _vezaLoša()) return null;
   try {
     const r = await _fetchT(`https://api.open-meteo.com/v1/elevation?latitude=${lat.toFixed(5)}&longitude=${lng.toFixed(5)}`, 8000);
     const d = await r.json();
@@ -7192,22 +7209,27 @@ const _DK_URL = 'https://raw.githubusercontent.com/pogonboskrupa/FOREST-UNA-SANA
 // pokušali dešifrovati (i obrisali ključ). Isti nativni tok skidanja (AndroidKarta.preuzmi) kao Drive.
 const _DKG_URL = _DK_URL.replace('karte_drive.json', 'karte_github.json');
 let _dkLista = null, _dkNapredak = {}, _dkGh = [], _dkGhPokusano = false;
+// Liste sa servera: mreža samo kad je veza dobra (6 s), inače zadnja sačuvana lista, pa ugrađena rezerva — nikad prazno i nikad bez isteka.
+async function _listaUcitaj(daljinski, ugradjena, lsKljuc, filtriraj) {
+  const dohvati = async u => {
+    const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 6000);
+    try { const r = await fetch(u, { cache: 'no-store', signal: ctl.signal }); if (!r.ok) return null; const l = await r.json(); return Array.isArray(l) ? filtriraj(l) : null; }
+    catch (e) { return null; } finally { clearTimeout(tm); }
+  };
+  if (_mrezaSmije()) {
+    const l = await dohvati(daljinski + '?t=' + Math.floor(Date.now() / 36e5));
+    if (l) { try { localStorage.setItem(lsKljuc, JSON.stringify(l)); } catch (e) {} return l; }
+  }
+  try { const c = JSON.parse(localStorage.getItem(lsKljuc) || 'null'); if (Array.isArray(c) && c.length) return c; } catch (e) {}
+  return (await dohvati(ugradjena)) || [];
+}
 async function _dkGhUcitaj() {
   _dkGhPokusano = true;
-  for (const u of [_DKG_URL + '?t=' + Math.floor(Date.now() / 36e5), 'static/data/karte_github.json']) {
-    const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 8000);
-    try { const r = await fetch(u, { cache: 'no-store', signal: ctl.signal }).finally(() => clearTimeout(tm)); if (r.ok) { const l = await r.json(); if (Array.isArray(l)) { _dkGh = l.filter(k => k && k.id && /^https:\/\/github\.com\/pogonboskrupa\/KARTE\/releases\/download\//.test(k.url || '')); try { localStorage.setItem('usf_karte_gh', JSON.stringify(_dkGh)); } catch(e) {} return _dkGh; } } } catch(e) {}
-  }
-  try { _dkGh = JSON.parse(localStorage.getItem('usf_karte_gh') || '[]'); } catch(e) { _dkGh = []; }
+  _dkGh = await _listaUcitaj(_DKG_URL, 'static/data/karte_github.json', 'usf_karte_gh', l => l.filter(k => k && k.id && /^https:\/\/github\.com\/pogonboskrupa\/KARTE\/releases\/download\//.test(k.url || '')));
   return _dkGh;
 }
 async function _dkUcitaj() {
-  for (const u of [_DK_URL + '?t=' + Math.floor(Date.now() / 36e5), 'static/data/karte_drive.json']) {
-    // slab signal: GitHub ne smije držati listu u nedogled — poslije 8 s ugrađena/zapamćena
-    const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 8000);
-    try { const r = await fetch(u, { cache: 'no-store', signal: ctl.signal }).finally(() => clearTimeout(tm)); if (r.ok) { const l = await r.json(); if (Array.isArray(l)) { _dkLista = l; try { localStorage.setItem('usf_karte_lista', JSON.stringify(l)); } catch(e) {} return l; } } } catch(e) {}
-  }
-  try { _dkLista = JSON.parse(localStorage.getItem('usf_karte_lista') || '[]'); } catch(e) { _dkLista = []; }
+  _dkLista = await _listaUcitaj(_DK_URL, 'static/data/karte_drive.json', 'usf_karte_lista', l => l);
   return _dkLista;
 }
 // PIN karata se mijenja svaki mjesec, ali ko je jednom otključao ne unosi ga ponovo: sačuvani ključ + mjesec u kojem je unesen
@@ -7286,11 +7308,7 @@ function _driveKraj(id, ok, poruka) {
 const _DKML_URL = _DK_URL.replace('karte_drive.json', 'kml_drive.json');
 let _dkmlLista = null, _dkmlP = null;
 async function _dkmlUcitaj() {
-  for (const u of [_DKML_URL + '?t=' + Math.floor(Date.now() / 36e5), 'static/data/kml_drive.json']) {
-    const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 8000);
-    try { const r = await fetch(u, { cache: 'no-store', signal: ctl.signal }).finally(() => clearTimeout(tm)); if (r.ok) { const l = await r.json(); if (Array.isArray(l)) { _dkmlLista = l; try { localStorage.setItem('usf_kml_lista', JSON.stringify(l)); } catch(e) {} return l; } } } catch(e) {}
-  }
-  try { _dkmlLista = JSON.parse(localStorage.getItem('usf_kml_lista') || '[]'); } catch(e) { _dkmlLista = []; }
+  _dkmlLista = await _listaUcitaj(_DKML_URL, 'static/data/kml_drive.json', 'usf_kml_lista', l => l);
   return _dkmlLista;
 }
 const _dkmlImena = k => [k.naziv + '.kml', k.naziv + '.kmz'];
