@@ -223,6 +223,7 @@
       <input type="file" id="doz-stabla-fajl" accept=".kml,application/vnd.google-earth.kml+xml,text/xml" hidden>
       ${s.length ? `<div class="dz-chips" role="group" aria-label="Najveći razmak u pojasu">${[30, 50, 80].map(v => `<button data-a="prag" data-v="${v}" class="${pr === v ? 'on' : ''}">${v} m</button>`).join('')}</div>
       ${bezOznaka(p) ? `<div class="dz-chips"><button data-a="nacin" data-v="skok" class="${blokNacin(p) === 'skok' ? 'on' : ''}">Blok po skoku</button><button data-a="nacin" data-v="korak" class="${blokNacin(p) === 'korak' ? 'on' : ''}">Blok po broju</button></div>
+      <label class="dz-korak"><span>Broj projektanata u odjelu</span><input id="doz-brpr" type="number" inputmode="numeric" min="0" max="12" placeholder="—" value="${p.stabBrPr > 0 ? p.stabBrPr : ''}"></label>
       <label class="dz-korak"><span>${blokNacin(p) === 'skok' ? 'Skok među brojevima (m)' : 'Pločica po inženjeru'}</span><input id="doz-blok" type="number" inputmode="numeric" min="1" value="${blokVrijednost(p)}"></label>` : ''}
       <div class="sl-dug"><button class="zp-glavno" data-a="pojas">🔗 Pojas</button></div>
       <div class="sl-dug"><button data-a="pdodajsve" ${po.length ? '' : 'disabled'}>➕ Sve u pojaseve projekta</button></div>
@@ -251,7 +252,8 @@
     const zad = nacin === 'skok' ? ST().blokoviSkok(p.stabla || [], vr) : ST().blokovi(p.stabla || [], vr);
     if (!p.stabBl || !p.stabBl.length || p.stabBlStep !== potpis) {
       const stari = p.stabBl || [];
-      p.stabBl = zad.map(b => { const o = stari.find(x => x.od === b.od && x.do === b.do); return o ? { ...b, ime: o.ime } : b; });
+      const k = p.stabBrPr > 0 ? p.stabBrPr : 0, im = k ? ST().dodijeli(p.stabla || [], zad, k) : null;
+      p.stabBl = zad.map((b, i) => { const o = stari.find(x => x.od === b.od && x.do === b.do); return o ? { ...b, ime: o.ime } : (im ? { ...b, ime: im[i] } : b); });
       p.stabBlStep = potpis; return;
     }
     const max = Math.max(...(p.stabla || []).map(x => x.n).filter(n => n != null), 0), zadnji = p.stabBl[p.stabBl.length - 1];
@@ -639,6 +641,7 @@
     const tijelo = el(); if (!tijelo) return;
     tijelo.addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (b && !b.disabled) akcija(b.dataset.a, b); });
     tijelo.addEventListener('change', async e => {
+      if (e.target.id === 'doz-brpr') { const p = aktivni(), v = Math.max(0, Math.min(12, Math.round(+e.target.value) || 0)); if (p) { p.stabBrPr = v; p.stabBl = null; p.stabBlStep = null; stablaPojas(p); } return; }
       if (e.target.id === 'doz-blok') { const p = aktivni(), v = Math.round(+e.target.value); if (p && v > 0) { if (blokNacin(p) === 'skok') p.stabSkok = v; else p.stabBlok = v; p.stabBl = null; stablaPojas(p); } return; }
       if ((e.target.id !== 'doz-fajl' && e.target.id !== 'doz-stabla-fajl') || !e.target.files[0]) return;
       const f = e.target.files[0], stabla = e.target.id === 'doz-stabla-fajl'; e.target.value = '';

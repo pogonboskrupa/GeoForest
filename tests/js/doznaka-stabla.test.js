@@ -81,4 +81,19 @@ t('povezano u aplikaciju: podtab, uvoz, offline lista', () => {
   assert.ok(R('sw.js').includes('static/js/doznaka-stabla.js'));
   assert.ok(J.includes("data-a=\"tab\"") && J.includes('ST().gradi') && J.includes('ST().izKml') && J.includes('window.USFDozStabla') && J.includes('p.stabla'));
 });
+t('dodijeli: prvi k blokova različiti projektanti, sljedeći nastavlja najbliži', () => {
+  const ST2 = require('../../static/js/doznaka-stabla.js');
+  const st = [];
+  // dva paralelna reda (A: 1-5 pa 11-15 nastavak, B: 6-10) na ~500 m razmaka
+  for (let i = 0; i < 5; i++) st.push({ n: 1 + i, la: 44 + i * 0.0001, lo: 16 });
+  for (let i = 0; i < 5; i++) st.push({ n: 6 + i, la: 44 + i * 0.0001, lo: 16.01 });
+  for (let i = 0; i < 5; i++) st.push({ n: 11 + i, la: 44.0006 + i * 0.0001, lo: 16 });
+  const bl = [{ od: 1, do: 5 }, { od: 6, do: 10 }, { od: 11, do: 15 }];
+  assert.deepStrictEqual(ST2.dodijeli(st, bl, 2), ['Projektant 1', 'Projektant 2', 'Projektant 1']);
+  assert.deepStrictEqual(ST2.dodijeli(st, bl, 1), ['Projektant 1', 'Projektant 1', 'Projektant 1']);
+});
+t('broj projektanata: kontrola i veza', () => {
+  const J = R('static/js/doznaka.js');
+  assert.ok(J.includes('doz-brpr') && J.includes('stabBrPr') && J.includes('ST().dodijeli'));
+});
 console.log('\n' + pass + ' prošlo, ' + (process.exitCode ? 'IMA PALIH' : '0 palo') + ' — doznaka stabla');

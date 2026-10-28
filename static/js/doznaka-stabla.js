@@ -124,6 +124,27 @@
     out.push({ od, do: pr.n, ime: 'Projektant ' + (out.length + 1) });
     return out;
   }
+  // Raspodjela blokova na `k` projektanata: prva 2.. k blokova su različiti projektanti (rade paralelno), a svaki sljedeći blok ide
+  // onome čiji je prethodni blok ZAVRŠIO najbliže početku novog (nastavlja gdje je stao). → niz imena ('Projektant 1'…) po blokovima.
+  function dodijeli(stabla, bl, k) {
+    k = Math.max(1, Math.round(k) || 1);
+    if (!bl.length) return [];
+    const P = ravan(stabla[0].la, stabla[0].lo), xy = stabla.map(s => P.fw([s.la, s.lo]));
+    const krajevi = bl.map(b => {
+      let a = null, z = null;
+      stabla.forEach((s, i) => { if (s.n == null || s.n < b.od || s.n > b.do) return; if (!a || s.n < stabla[a].n) a = i; if (!z || s.n > stabla[z].n) z = i; });
+      return a == null ? null : { a: xy[a], z: xy[z] };
+    });
+    const zadnji = [], out = [];
+    bl.forEach((b, i) => {
+      const kr = krajevi[i]; let d = -1;
+      if (i < k || !kr) d = Math.min(i, k - 1);
+      else { let naj = Infinity; zadnji.forEach((z, j) => { if (!z) return; const r = dist(z, kr.a); if (r < naj) { naj = r; d = j; } }); if (d < 0) d = 0; }
+      if (kr) zadnji[d] = kr.z;
+      out.push('Projektant ' + (d + 1));
+    });
+    return out;
+  }
   // Pojasi po blokovima: stabla bloka redom po broju; razmak veći od praga prekida pojas.
   // → { pojasi: [{ r: ime, d: '', sig: 'od-do', ids, dug }], usamljena, bezBroja }
   function gradiBlokove(stabla, prag, bl) {
@@ -143,7 +164,7 @@
     return { pojasi, usamljena, bezBroja: stabla.length - dodijeljeno };
   }
 
-  const api = { izKml, gradi, blokovi, blokoviSkok, gradiBlokove, brojIzNaziva, danIz, PRAG_ZAD };
+  const api = { izKml, gradi, blokovi, blokoviSkok, dodijeli, gradiBlokove, brojIzNaziva, danIz, PRAG_ZAD };
   root.USFDozStabla = api;
   if (typeof module !== 'undefined') module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);
