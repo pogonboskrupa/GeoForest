@@ -1184,6 +1184,68 @@ public class MainActivity extends Activity {
             }).start();
         }
 
+        // „Skini aplikaciju na uređaj”: najnoviji APK ide u Downloads (bez instalacije), bez obzira na instaliranu verziju.
+        @JavascriptInterface
+        public void skiniApk() {
+            if (updateInProgress) {
+                postUpdate("downloading", "Preuzimanje je već u toku…", -1, 0, 0);
+                return;
+            }
+            updateInProgress = true;
+            postUpdate("checking", "Provjeravam najnoviju verziju…", -1, 0, 0);
+            new Thread(() -> {
+                try {
+                    org.json.JSONObject rel = dohvatiJson(RELEASES_URL);
+                    if (rel == null) { postUpdate("error", "Ne mogu provjeriti verziju — provjeri internet", -1, 0, 0); return; }
+                    String tag = rel.optString("tag_name", "");
+                    String ver = tag.startsWith("v") ? tag.substring(1) : tag;
+                    String apkUrl = null;
+                    org.json.JSONArray assets = rel.optJSONArray("assets");
+                    if (assets != null) {
+                        for (int i = 0; i < assets.length() && apkUrl == null; i++) {
+                            org.json.JSONObject a = assets.getJSONObject(i);
+                            if (a.optString("name", "").endsWith(".apk")) apkUrl = a.optString("browser_download_url", null);
+                        }
+                    }
+                    if (ver.isEmpty() || apkUrl == null) { postUpdate("error", "APK nije pronađen u najnovijoj objavi", -1, 0, 0); return; }
+                    postUpdate("downloading", "Preuzimam verziju v" + ver + "…", 0, 0, 0);
+                    File dir = new File(getCacheDir(), "update");
+                    if (!dir.exists()) dir.mkdirs();
+                    String ime = "GeoForest-v" + ver + ".apk";
+                    File part = new File(dir, ime + ".part");
+                    if (part.exists()) part.delete();
+                    if (!preuzmiFajl(apkUrl, part, ver)) { postUpdate("error", "Preuzimanje nije uspjelo — provjeri vezu i pokušaj ponovo", -1, 0, 0); return; }
+                    spremiUDownloads(part, ime);
+                    part.delete();
+                    postUpdate("saved", "Sačuvano u Downloads: " + ime, 100, 0, 0);
+                } catch (Exception e) {
+                    postUpdate("error", "Greška pri preuzimanju: " + e.getClass().getSimpleName(), -1, 0, 0);
+                } finally {
+                    updateInProgress = false;
+                }
+            }).start();
+        }
+
+        private void spremiUDownloads(File src, String ime) throws IOException {
+            OutputStream os;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                ContentValues values = new ContentValues();
+                values.put(MediaStore.Downloads.DISPLAY_NAME, ime);
+                values.put(MediaStore.Downloads.MIME_TYPE, "application/vnd.android.package-archive");
+                values.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
+                Uri uri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+                os = uri == null ? null : getContentResolver().openOutputStream(uri);
+            } else {
+                os = new FileOutputStream(new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), ime));
+            }
+            if (os == null) throw new IOException("downloads_open");
+            try (InputStream is = new java.io.FileInputStream(src); OutputStream o = os) {
+                byte[] buf = new byte[65536];
+                int n;
+                while ((n = is.read(buf)) > 0) o.write(buf, 0, n);
+            }
+        }
+
         private org.json.JSONObject dohvatiJson(String urlStr) throws IOException, org.json.JSONException {
             URL u = new URL(urlStr);
             HttpURLConnection c = (HttpURLConnection) u.openConnection();

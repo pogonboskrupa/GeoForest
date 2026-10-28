@@ -578,3 +578,7 @@ html[data-btn-stil="akcent"] #ab-loc:not(.active) { box-shadow: 0 0 0 1px rgba(7
 #doznaka-panel .dz-korak { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; font-size: 15px; font-weight: 800; color: var(--gf-txt); }
 #doznaka-panel .dz-korak input { width: 110px; min-height: 48px; padding: 0 10px; border-radius: 12px; border: 2px solid #3d5a4b; background: #0b1220; color: var(--gf-txt); font: inherit; font-size: 17px; text-align: center; }
 #doznaka-panel .dz-bl button:not(.dz-boja) { width: 48px; min-height: 48px; padding: 0; flex: none; }
+
+/* Skini aplikaciju na uređaj (v1.2.6) */
+.update-skini { display:block; width:100%; margin-top:10px; min-height:var(--gf-tap, 52px); border-radius:12px; border:1.5px solid rgba(255,255,255,.18); background:rgba(255,255,255,.06); color:inherit; font-size:15px; font-weight:700; }
+.update-skini:disabled { opacity:.55; }

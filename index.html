@@ -2055,6 +2055,7 @@ body.sl-uredi #sl-ured { display: block; }
         <div class="update-card-copy"><b>Ažuriranje aplikacije</b><small>Provjeri, preuzmi APK i pokreni instalaciju direktno iz aplikacije</small></div>
         <button id="set-update-btn" onclick="checkForUpdate()">Provjeri</button>
       </div>
+      <button id="set-skini-btn" class="update-skini" onclick="skiniApk()">⬇ Skini aplikaciju na uređaj</button>
       <div id="set-update-status" role="status" aria-live="polite">
         <div class="update-status-line"><span class="update-spinner"></span><span id="set-update-message">Priprema…</span></div>
         <div class="update-progress-track"><div id="set-update-progress"></div></div>
@@ -2299,7 +2300,7 @@ body.sl-uredi #sl-ured { display: block; }
 // android/app/build.gradle versionCode+versionName. Sva tri MORAJU biti
 // usklađena prije svakog commita.
 // =====================================================================
-const APP_VER = 'v1.2.5';
+const APP_VER = 'v1.2.6';
 document.getElementById('meni-ver-badge').textContent = 'GeoForest ' + APP_VER;
 
 // Verzije koriste tri jednocifrena segmenta: patch i minor idu 0–9.
@@ -7710,6 +7711,14 @@ function checkForUpdate() {
     showToast('⚠ Auto-update je dostupan samo u Android aplikaciji');
   }
 }
+function skiniApk() {
+  if (typeof AndroidUpdate !== 'undefined' && AndroidUpdate.skiniApk) {
+    _azurirajStatus('Provjeravam najnoviju verziju…', -1, 'checking', 0, 0);
+    AndroidUpdate.skiniApk();
+  } else {
+    window.open('https://github.com/pogonboskrupa/GeoForest/releases', '_blank');
+  }
+}
 // AndroidUpdate.checkAndInstall() javlja status pozivom ove globalne funkcije
 // (vidi MainActivity.UpdateBridge.postStatus).
 function _azurirajStatus(msg, pct, phase, downloaded, total) {
@@ -7736,7 +7745,9 @@ function _azurirajStatus(msg, pct, phase, downloaded, total) {
     btn.disabled = radi;
     btn.textContent = phase === 'downloading' ? 'Skidanje…' : phase === 'checking' ? 'Provjera…' : phase === 'permission' ? 'Dozvola…' : phase === 'installing' || phase === 'ready' ? 'Instalacija…' : phase === 'error' ? 'Pokušaj opet' : 'Provjeri';
   }
-  if (phase === 'error' || phase === 'latest') showToast(msg);
+  const skini = document.getElementById('set-skini-btn');
+  if (skini) skini.disabled = radi;
+  if (phase === 'error' || phase === 'latest' || phase === 'saved') showToast(msg);
 }
 async function clearTileCache() {
   const ok = await _dlgConfirm('Obrisati keširane pločice karte? Trebaće ponovo internet za prikaz karte dok se ne keširaju iznova.', { danger: true, okLabel: 'Očisti' });
