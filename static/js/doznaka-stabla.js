@@ -108,6 +108,22 @@
     }
     return out;
   }
+  // Zadani blokovi po SKOKU: kad se sljedeći broj nalazi dalje od `skok` m (zadano 300) od prethodnog, počinje novi blok — drugi inženjer
+  // ili novi dan na drugom mjestu. (U stvarnom fajlu doznake paketi pločica ≈ 210–260 završavaju upravo na takvim skokovima od 350–880 m.)
+  function blokoviSkok(stabla, skok) {
+    skok = skok > 0 ? skok : 300;
+    const l = stabla.map((s, i) => ({ n: s.n, i })).filter(x => x.n != null).sort((a, b) => a.n - b.n || a.i - b.i);
+    if (!l.length) return [];
+    const P = ravan(stabla[l[0].i].la, stabla[l[0].i].lo), xy = stabla.map(s => P.fw([s.la, s.lo])), out = [];
+    let od = l[0].n, pr = l[0];
+    for (let k = 1; k < l.length; k++) {
+      const b = l[k]; if (b.n === pr.n) continue;
+      if (dist(xy[pr.i], xy[b.i]) > skok) { out.push({ od, do: pr.n, ime: 'Projektant ' + (out.length + 1) }); od = b.n; }
+      pr = b;
+    }
+    out.push({ od, do: pr.n, ime: 'Projektant ' + (out.length + 1) });
+    return out;
+  }
   // Pojasi po blokovima: stabla bloka redom po broju; razmak veći od praga prekida pojas.
   // → { pojasi: [{ r: ime, d: '', sig: 'od-do', ids, dug }], usamljena, bezBroja }
   function gradiBlokove(stabla, prag, bl) {
@@ -127,7 +143,7 @@
     return { pojasi, usamljena, bezBroja: stabla.length - dodijeljeno };
   }
 
-  const api = { izKml, gradi, blokovi, gradiBlokove, brojIzNaziva, danIz, PRAG_ZAD };
+  const api = { izKml, gradi, blokovi, blokoviSkok, gradiBlokove, brojIzNaziva, danIz, PRAG_ZAD };
   root.USFDozStabla = api;
   if (typeof module !== 'undefined') module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -66,6 +66,15 @@ t('veći razmak od 50 m prekida pojas unutar bloka (sljedeći dan počinje drugd
   assert.deepStrictEqual(g.pojasi.map(p => p.ids.length), [3, 3]);
   assert.ok(g.pojasi.every(p => p.r === 'Ana'), 'isti inženjer (isti blok)');
 });
+t('blokovi po skoku: novi blok kad je sljedeći broj dalje od 300 m (paketi pločica iz stvarne doznake)', () => {
+  const stabla = [];
+  for (let n = 1; n <= 40; n++) stabla.push(st(n, n * 8, 0));        // paket 1
+  for (let n = 41; n <= 90; n++) stabla.push(st(n, -400 + (n - 41) * 8, 600)); // sljedeći broj počinje 600+ m dalje
+  for (let n = 91; n <= 100; n++) stabla.push(st(n, -8 + (n - 90) * 8, 600));
+  const bl = S.blokoviSkok(stabla, 300);
+  assert.deepStrictEqual(bl.map(b => [b.od, b.do]), [[1, 40], [41, 100]]);
+  assert.strictEqual(S.gradiBlokove(stabla, 50, bl).pojasi.length, 2);
+});
 t('povezano u aplikaciju: podtab, uvoz, offline lista', () => {
   const H = R('index.html'), J = R('static/js/doznaka.js');
   assert.ok(H.includes('static/js/doznaka-stabla.js'));
