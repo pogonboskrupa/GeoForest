@@ -132,7 +132,7 @@
     const P = ravan(stabla[0].la, stabla[0].lo), xy = stabla.map(s => P.fw([s.la, s.lo]));
     const krajevi = bl.map(b => {
       let a = null, z = null;
-      stabla.forEach((s, i) => { if (s.n == null || s.n < b.od || s.n > b.do) return; if (!a || s.n < stabla[a].n) a = i; if (!z || s.n > stabla[z].n) z = i; });
+      stabla.forEach((s, i) => { if (s.n == null || s.n < b.od || s.n > b.do) return; if (a == null || s.n < stabla[a].n) a = i; if (z == null || s.n > stabla[z].n) z = i; });
       return a == null ? null : { a: xy[a], z: xy[z] };
     });
     const zadnji = [], out = [];

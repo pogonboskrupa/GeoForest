@@ -100,4 +100,13 @@ t('kartica pojasa: izvor klika i raspon pločica', () => {
   const J = R('static/js/doznaka.js');
   assert.ok(J.includes('pojasKartica') && J.includes('_kartaKlikIzvor') && J.includes("'Pločice'"));
 });
+t('dodijeli: početak bloka je ispravan i kad je prvo stablo u nizu iz tog bloka', () => {
+  const ST2 = require('../../static/js/doznaka-stabla.js');
+  // blok 3 (11–12) je PRVI u nizu: 11 je uz kraj bloka 2 (10), 12 uz kraj bloka 1 (5) → počinje stablom 11 pa ide projektantu 2
+  const st = [{ n: 11, la: 44.0010, lo: 16.01 }, { n: 12, la: 44.0004, lo: 16 }]
+    .concat([1, 2, 3, 4, 5].map((n, i) => ({ n, la: 44 + i * 0.0001, lo: 16 })))
+    .concat([6, 7, 8, 9, 10].map((n, i) => ({ n, la: 44.0006 + i * 0.0001, lo: 16.01 })));
+  const bl = [{ od: 1, do: 5 }, { od: 6, do: 10 }, { od: 11, do: 12 }];
+  assert.deepStrictEqual(ST2.dodijeli(st, bl, 2), ['Projektant 1', 'Projektant 2', 'Projektant 2']);
+});
 console.log('\n' + pass + ' prošlo, ' + (process.exitCode ? 'IMA PALIH' : '0 palo') + ' — doznaka stabla');

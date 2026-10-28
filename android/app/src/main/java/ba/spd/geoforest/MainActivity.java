@@ -1236,7 +1236,11 @@ public class MainActivity extends Activity {
                 Uri uri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
                 os = uri == null ? null : getContentResolver().openOutputStream(uri);
             } else {
-                os = new FileOutputStream(new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), ime));
+                // Android 7–9: javni Downloads traži runtime dozvolu za pisanje — umjesto nje ide mapa aplikacije (vidljiva u Files → Android/data)
+                File dir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+                if (dir == null) throw new IOException("downloads_dir");
+                if (!dir.exists()) dir.mkdirs();
+                os = new FileOutputStream(new File(dir, ime));
             }
             if (os == null) throw new IOException("downloads_open");
             try (InputStream is = new java.io.FileInputStream(src); OutputStream o = os) {

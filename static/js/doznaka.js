@@ -274,7 +274,10 @@
       p.stabBlStep = potpis; return;
     }
     const max = Math.max(...(p.stabla || []).map(x => x.n).filter(n => n != null), 0), zadnji = p.stabBl[p.stabBl.length - 1];
-    if (zadnji && max > zadnji.do) zad.filter(b => b.do > zadnji.do).forEach(b => p.stabBl.push({ od: Math.max(b.od, zadnji.do + 1), do: b.do, ime: b.ime }));
+    if (zadnji && max > zadnji.do) {
+      const k = p.stabBrPr > 0 ? p.stabBrPr : 0, im = k ? ST().dodijeli(p.stabla || [], zad, k) : null;
+      zad.forEach((b, i) => { if (b.do > zadnji.do) p.stabBl.push({ od: Math.max(b.od, zadnji.do + 1), do: b.do, ime: im ? im[i] : b.ime }); });
+    }
   }
   const bezOznaka = p => (p.stabla || []).length > 0 && p.stabla.every(x => !x.r);
   function stablaPojas(p) {
