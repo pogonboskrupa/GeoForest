@@ -1892,6 +1892,7 @@ body.sl-uredi #sl-ured { display: block; }
 <div id="meni-panel" class="usf-panel">
   <div class="up-hdr"><h2>☰ Meni</h2><button class="up-close" onclick="switchMainTab('karta')">✕</button></div>
   <div class="up-body">
+    <div id="meni-korisnik" class="kor-chip" hidden></div>
     <div id="meni-nedavno" class="meni-nedavno" hidden></div>
     <section class="meni-grp">
       <h3>Rad na terenu</h3>
@@ -2047,6 +2048,7 @@ body.sl-uredi #sl-ured { display: block; }
       <button role="tab" data-t="podaci"><i>💾</i><span>Podaci</span></button>
     </div>
     <div class="gf-tab-sek" data-tab="app">
+    <section class="ng-card set-korisnik-kar" id="set-korisnik-dno"><h3>👤 Korisnik aplikacije</h3><div id="set-korisnik-box"></div></section>
     <section class="update-card" id="set-update-card" data-phase="idle">
       <div class="update-card-head">
         <div class="update-card-icon">⇩</div>
@@ -2297,7 +2299,7 @@ body.sl-uredi #sl-ured { display: block; }
 // android/app/build.gradle versionCode+versionName. Sva tri MORAJU biti
 // usklađena prije svakog commita.
 // =====================================================================
-const APP_VER = 'v1.1.7';
+const APP_VER = 'v1.1.8';
 document.getElementById('meni-ver-badge').textContent = 'GeoForest ' + APP_VER;
 
 // Verzije koriste tri jednocifrena segmenta: patch i minor idu 0–9.
@@ -7769,6 +7771,7 @@ window.addEventListener('load', () => {
 <script src="static/js/sjekacke.js"></script>
 <script src="static/js/primka.js"></script>
 <script src="static/js/inventura.js"></script>
+<script src="static/js/korisnik.js"></script>
 <script src="static/js/doznaka.js"></script>
 <script src="static/js/mjerenja-profil.js"></script>
 <script src="static/js/slika-karte.js"></script>

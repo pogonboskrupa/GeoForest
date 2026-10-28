@@ -80,8 +80,8 @@ t('Meni: velike kartice za radne tokove, pločice za ostalo, tap >= 48 px', () =
   assert.ok(/#meni-panel \.meni-set \{[^}]*min-height: var\(--gf-tap\)/.test(css));
 });
 
-t('Korisnik aplikacije je uklonjen (kod, HTML, font)', () => {
-  for (const x of ['set-korisnik', 'set-profil', 'meni-korisnik', '_korisnikUi', 'Ko koristi aplikaciju', 'Dancing Script', 'kor-ime']) assert.ok(!HTML.includes(x), x);
+t('Korisnik aplikacije: novi modul (korisnik.js), bez starog koda i fonta Dancing Script', () => {
+  for (const x of ['set-profil', '_korisnikUi', 'Ko koristi aplikaciju', 'Dancing Script']) assert.ok(!HTML.includes(x), x);
   assert.ok(!fs.existsSync(path.join(__dirname, '../../static/fonts')));
   assert.ok(!R('sw.js').includes('static/fonts') && !R('android/copy-assets.sh').includes('static/fonts'));
 });

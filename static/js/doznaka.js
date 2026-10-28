@@ -6,7 +6,7 @@
 // localStorage `usf_doznaka`: { akt, projekti: [{ id, naziv, odjel, ring, ha, vis, projektanti: {ime: boja}, tragovi: [{ id, projektant, boja, pts, t, izvor }], t }] }.
 (function () {
   'use strict';
-  const KLJUC = 'usf_doznaka', KLJUC_SNIMA = 'usf_doz_snima', KLJUC_PROJ = 'usf_doz_projektant', BG_ID = 'doznaka';
+  const KLJUC = 'usf_doznaka', KLJUC_SNIMA = 'usf_doz_snima', BG_ID = 'doznaka';
   const PALETA = ['#f97316', '#38bdf8', '#a78bfa', '#f43f5e', '#22c55e', '#eab308', '#14b8a6', '#ec4899'];
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -106,10 +106,10 @@
     const stilovi = boje.map(b => `<Style id="s${b.slice(1)}"><LineStyle><color>${bojaKml(b)}</color><width>4</width></LineStyle></Style>`).join('');
     const pm = tragovi.map((t, i) => {
       const meta = uB64(JSON.stringify({ projektant: t.projektant, boja: t.boja, projekat: p.naziv, t: t.t }));
-      return `<Placemark><name>${esc(t.projektant)} · pojas ${i + 1}</name><styleUrl>#s${t.boja.slice(1)}</styleUrl><ExtendedData><Data name="usf_doznaka"><value>${meta}</value></Data></ExtendedData><LineString><tessellate>1</tessellate><coordinates>${t.pts.map(k).join(' ')}</coordinates></LineString></Placemark>`;
+      return `<Placemark><name>${esc(t.projektant)} · pojas ${i + 1}</name><description>${esc('Doznaku radio: ' + t.projektant + ' · ' + (p.odjel || p.naziv) + (t.t ? ' · ' + new Date(t.t).toLocaleDateString('bs') : ''))}</description><styleUrl>#s${t.boja.slice(1)}</styleUrl><ExtendedData><Data name="usf_doznaka"><value>${meta}</value></Data></ExtendedData><LineString><tessellate>1</tessellate><coordinates>${t.pts.map(k).join(' ')}</coordinates></LineString></Placemark>`;
     }).join('\n');
     const odjel = sa_odjelom && p.ring ? `<Style id="odjel"><LineStyle><color>ff8ae6fd</color><width>2</width></LineStyle><PolyStyle><fill>0</fill></PolyStyle></Style><Placemark><name>${esc(p.odjel || p.naziv)}</name><styleUrl>#odjel</styleUrl><Polygon><outerBoundaryIs><LinearRing><coordinates>${zatvori(p.ring).map(k).join(' ')}</coordinates></LinearRing></outerBoundaryIs></Polygon></Placemark>` : '';
-    return `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>${esc('Doznaka · ' + p.naziv)}</name>${stilovi}${odjel}\n${pm}\n</Document></kml>`;
+    return `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>${esc('Doznaka · ' + p.naziv)}</name><description>${esc('Doznaku radio: ' + [...new Set(tragovi.map(t => t.projektant))].join(', '))}</description>${stilovi}${odjel}\n${pm}\n</Document></kml>`;
   }
   // Sve LineString linije iz KML dokumenta: [{ ime, pts: [[la, lo]], meta }]
   function linijeIzKml(doc) {
@@ -400,17 +400,22 @@
     toast('🌲 Projekat „' + p.naziv + '” · ' + fmt(p.ha, 2) + ' ha');
   }
   function zoom(id) { const p = nadji(id); if (p && p.ring && imaKartu()) { if (typeof switchMainTab === 'function') switchMainTab('karta'); map.fitBounds(L.latLngBounds(p.ring).pad(0.15), { maxZoom: 18 }); } }
-  const zapamtiProjektanta = ime => { try { localStorage.setItem(KLJUC_PROJ, ime); } catch (e) {} };
-  const zadnjiProjektant = () => { try { return localStorage.getItem(KLJUC_PROJ) || ''; } catch (e) { return ''; } };
+    const zadnjiProjektant = () => (window.USFKorisnik ? USFKorisnik.ime() : '');
   async function pitajProjektanta(naslov, zad) {
     const v = typeof _dlgPrompt === 'function' ? await _dlgPrompt('Ime projektanta', zad || zadnjiProjektant(), { title: naslov, okLabel: 'Spremi' }) : prompt('Projektant', zad || '');
     const ime = v == null ? '' : String(v).trim().slice(0, 40);
     return ime || null;
   }
+  // Pojas nosi ime korisnika aplikacije (Postavke → Korisnik aplikacije); bez imena snimanje ne počinje
   async function snimi() {
     const p = aktivni(); if (!p || snima) { if (snima) toast('⏺ Snimanje pojasa je već u toku'); return; }
-    const ime = await pitajProjektanta('▶ Snimanje pojasa'); if (!ime) return;
-    zapamtiProjektanta(ime); snimaPocni(p, ime, bojaProjektanta(p, ime)); pisi();
+    let ime = window.USFKorisnik ? USFKorisnik.ime() : '';
+    if (!ime) {
+      const v = typeof _dlgPrompt === 'function' ? await _dlgPrompt('Prvo upiši ko si ti — pojas doznake nosi tvoje ime i ide uz trag kad ga pošalješ. Ime se čuva u Postavkama (Korisnik aplikacije).', '', { title: '⚠ Ime korisnika nije uneseno', okLabel: 'Spremi i snimaj' }) : prompt('Ime korisnika', '');
+      if (!v || !String(v).trim() || !window.USFKorisnik || !USFKorisnik.postavi(v)) { toast('⚠ Bez imena korisnika nema snimanja pojasa'); return; }
+      ime = USFKorisnik.ime();
+    }
+    snimaPocni(p, ime, bojaProjektanta(p, ime)); pisi();
   }
   async function izKml(doc, force) {
     const lin = linijeIzKml(doc), oznaceno = lin.filter(l => l.meta);
@@ -420,7 +425,6 @@
     const sug = (oznaceno[0] && oznaceno[0].meta.projektant) || zadnjiProjektant() || '';
     if (!force && typeof _dlgConfirm === 'function' && !await _dlgConfirm('Trag doznake (' + lin.length + (lin.length === 1 ? ' pojas' : ' pojasa') + ') uvesti u projekat „' + p.naziv + '”?\n\nOdustani = običan KML sloj.', { title: '🌲 Doznaka stabala', okLabel: 'Uvezi' })) return false;
     const ime = await pitajProjektanta('📥 Projektant tog traga', sug); if (!ime) return true;
-    zapamtiProjektanta(ime);
     const boja = bojaProjektanta(p, ime);
     lin.forEach(l => p.tragovi.push({ id: uid(), projektant: ime, boja, pts: l.pts, t: Date.now(), izvor: 'kml' }));
     p.t = Date.now(); pisi(); preracunaj(p); crtaj(); render(); _otvoriPanel();

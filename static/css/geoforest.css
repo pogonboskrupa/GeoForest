@@ -542,3 +542,21 @@ html[data-btn-stil="akcent"] #ab-loc:not(.active) { box-shadow: 0 0 0 1px rgba(7
 #meni-panel section.meni-grp:nth-of-type(n+2) .meni-card:last-of-type:nth-of-type(odd) { min-height: 64px; }
 #meni-panel .meni-set { padding: 8px 14px; }
 #meni-panel .meni-nedavno button { min-height: 44px; }
+
+/* ═══ Korisnik aplikacije (v1.1.8): ime u Postavkama → Aplikacija, čip u Meniju ═══ */
+#postavke-panel .set-korisnik-kar { border: 2px solid var(--gf-rub); border-left: 6px solid #4ade80; border-radius: 16px; background: var(--gf-kar); padding: 10px 14px; margin: 0; }
+#postavke-panel .set-korisnik-kar h3 { font-size: 16px; font-weight: 900; margin: 0 0 8px; color: var(--gf-txt); }
+.kor-red { display: flex; gap: 8px; align-items: center; }
+.kor-red input { flex: 1; min-width: 0; min-height: 48px; padding: 0 12px; border-radius: 12px; border: 2px solid #3d5a4b; background: #0b1220; color: var(--gf-txt, #e2e8f0); font: inherit; font-size: 16px; }
+.kor-red button { min-height: 48px; padding: 0 16px; border-radius: 12px; border: 2px solid #86efac; background: var(--gf-zel-jak, #22c55e); color: #06140d; font: inherit; font-size: 15px; font-weight: 800; }
+.kor-red .kor-ime { flex: 1; min-width: 0; }
+.kor-red .kor-ime b { display: block; font-size: 18px; font-weight: 900; color: var(--gf-txt, #e2e8f0); overflow-wrap: anywhere; }
+.kor-red .kor-ime small { font-size: 13px; color: var(--gf-dim, #94a3b8); }
+.kor-red[class*="uredi"] button, .kor-red .kor-ime + button { background: var(--gf-kar-2, #12261b); border-color: #3d5a4b; color: var(--gf-txt, #e2e8f0); }
+.kor-dno { margin-top: 8px; }
+.kor-dno button { flex: 1; background: var(--gf-kar-2, #12261b); border-color: #3d5a4b; color: var(--gf-txt, #e2e8f0); }
+.kor-dno button.opasno { background: #2a0f0f; border-color: #7f1d1d; color: #fca5a5; }
+#meni-korisnik.kor-chip { display: flex; align-items: center; gap: 10px; padding: 6px 14px; margin: 0 0 8px; border-radius: 14px; background: linear-gradient(135deg, #14532d, #0b2a1c 75%); border: 2px solid #1f6b3f; }
+#meni-korisnik.kor-chip[hidden] { display: none; }
+#meni-korisnik.kor-chip i { font-style: normal; font-size: 18px; }
+#meni-korisnik.kor-chip b { font-size: 16px; font-weight: 800; color: #f0fdf4; overflow-wrap: anywhere; }

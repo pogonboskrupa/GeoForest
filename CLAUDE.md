@@ -85,7 +85,7 @@ drugi package, drugi podaci, drugi update kanal.
 - **Teren**: lokalni DEM `static/data/dem_opcine.tif` (`dem-local.js`, `USFDem`, sam učitava `static/libs/geotiff.js`)
   + Terrarium pločice (`_getTerrariumTile`/`_terrariumDecodeTile`, blok TEREN u `index.html`, keš `_TERR_CACHE`).
 - **Izvještaj odjela** (`odjeli.js`): samo teren (nagib %, visine, ekspozicija, ruža), slika A4 i izvoz KML/CSV.
-- Korisnik aplikacije (ime) i font Dancing Script su uklonjeni.
+- **Korisnik aplikacije (v1.1.8)** (`static/js/korisnik.js`, `USFKorisnik`; Postavke → Aplikacija → „👤 Korisnik aplikacije”, čip `#meni-korisnik` u Meniju): ime koje korisnik upiše sam, localStorage `usf_korisnik` {ime, datum} (ulazi u rezervnu kopiju). Služi kao VLASNIK podataka: pojas doznake se snima pod tim imenom (bez pitanja za svaki trag), a KML pri slanju nosi `Doznaku radio: <ime>` (Placemark/Document `description` + `usf_doznaka` meta). Bez imena „Snimi pojas” ne počinje — dijalog traži da se ime upiše (`_dlgPrompt`, sprema u Postavke). Font Dancing Script je i dalje uklonjen.
 - Rezervna kopija piše `app: 'geoforest'`, a prima i kopiju Grmeč Navigatora (`_KOPIJA_APP`) — isti `usf_` ključevi.
 
 ## Detalji naslijeđenih modula
