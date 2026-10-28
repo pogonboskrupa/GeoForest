@@ -74,6 +74,7 @@
           if (!poznata && n != null && o.n != null && n - o.n > maxBroj) continue; // preplitanje: predaleko u numeraciji
           let c = d;
           if (o.smjer && d > 0.5) { const cs = (o.smjer[0] * (q[0] - o.zad[0]) + o.smjer[1] * (q[1] - o.zad[1])) / (Math.hypot(o.smjer[0], o.smjer[1]) * d); c = d * (1 + 0.5 * (1 - cs)); }
+          if (!poznata && n != null && o.n != null) c += Math.max(0, n - o.n - 1); // bliži broj = isti projektant (svaki preskočeni broj ≈ 1 m)
           if (c < nc) { nc = c; naj = o; }
         }
         if (naj) { naj.smjer = [q[0] - naj.zad[0], q[1] - naj.zad[1]]; naj.zad = q; naj.n = n; naj.ids.push(i); }
@@ -92,7 +93,33 @@
     return { pojasi, usamljena };
   }
 
-  const api = { izKml, gradi, brojIzNaziva, danIz, PRAG_ZAD };
+  // Prepoznavanje PROJEKTANATA iz numeracije (kad fajl ne nosi radnika): pojasevi čija se numeracija NASTAVLJA
+  // (sljedeći počinje 1…5 brojeva iza kraja prethodnog) i koji su prostorno susjedni (≤ 150 m) pripadaju istom
+  // projektantu — npr. 1–150 slijeva nadesno pa nazad istim pojasom 151–300. Susjedni pojasevi s drugačijom
+  // (preklopljenom ili nepovezanom) numeracijom su drugi projektant.
+  // → [{ strips:[indeksi pojaseva], a, b, dug, stabala }] poredano po početnom broju
+  function prepoznaj(stabla, pojasi, opc) {
+    opc = opc || {};
+    const maxRaz = opc.maxRazmak > 0 ? opc.maxRazmak : 5, maxD = opc.maxD > 0 ? opc.maxD : 150;
+    if (!stabla.length || !pojasi.length) return [];
+    const P = ravan(stabla[0].la, stabla[0].lo);
+    const info = pojasi.map(q => {
+      const ns = q.ids.map(i => stabla[i].n); if (ns.some(n => n == null)) return null;
+      const a = Math.min(...ns), b = Math.max(...ns), ia = q.ids.find(i => stabla[i].n === a), ib = q.ids.find(i => stabla[i].n === b);
+      return { a, b, p1: P.fw([stabla[ia].la, stabla[ia].lo]), p2: P.fw([stabla[ib].la, stabla[ib].lo]) };
+    });
+    const par = [];
+    info.forEach((A, i) => { if (A) info.forEach((B, j) => { if (!B || i === j) return; const gap = B.a - A.b, d = dist(A.p2, B.p1); if (gap >= 1 && gap <= maxRaz && d <= maxD) par.push({ i, j, c: d + gap * 5 }); }); });
+    par.sort((x, y) => x.c - y.c);
+    const nasl = new Map(), pred = new Map();
+    for (const q of par) if (!nasl.has(q.i) && !pred.has(q.j)) { nasl.set(q.i, q.j); pred.set(q.j, q.i); } // brojevi strogo rastu ⇒ nema ciklusa
+    const lanci = [];
+    info.forEach((A, i) => { if (!A || pred.has(i)) return; const l = [i]; let k = i; while (nasl.has(k)) { k = nasl.get(k); l.push(k); } lanci.push(l); });
+    lanci.sort((x, y) => info[x[0]].a - info[y[0]].a || x[0] - y[0]);
+    return lanci.map(l => ({ strips: l, a: info[l[0]].a, b: info[l[l.length - 1]].b, dug: l.reduce((a, i) => a + (pojasi[i].dug || 0), 0), stabala: l.reduce((a, i) => a + pojasi[i].ids.length, 0) }));
+  }
+
+  const api = { izKml, gradi, prepoznaj, brojIzNaziva, danIz, PRAG_ZAD };
   root.USFDozStabla = api;
   if (typeof module !== 'undefined') module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

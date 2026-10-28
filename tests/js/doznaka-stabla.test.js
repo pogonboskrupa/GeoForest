@@ -40,6 +40,26 @@ t('usamljena stabla se ne crtaju kao pojas', () => {
   const r = S.gradi([st(1, 0, 0), st(2, 500, 0)], 50);
   assert.strictEqual(r.pojasi.length, 0); assert.strictEqual(r.usamljena, 2);
 });
+t('prepoznavanje projektanata: povratak istim pojasom = isti projektant; drugačiji brojevi među susjedima = drugi', () => {
+  const stabla = [];
+  for (let n = 1; n <= 150; n++) stabla.push(st(n, 2 * n, 0));                    // A: 1–150 slijeva nadesno
+  for (let n = 151; n <= 300; n++) stabla.push(st(n, 300 - 2 * (n - 151), 70));   // A: nazad susjednim pojasom 151–300 (70 m razmaka ⇒ poseban pojas)
+  for (let n = 1; n <= 140; n++) stabla.push(st(n, 2 * n, 200));                  // B: brojevi se preklapaju s A ⇒ drugi projektant
+  for (let n = 141; n <= 280; n++) stabla.push(st(n, 280 - 2 * (n - 141), 270));
+  const g = S.gradi(stabla, 50);
+  assert.strictEqual(g.pojasi.length, 4, 'razmak 70 m prekida pojas: ' + g.pojasi.map(p => p.ids.length));
+  const pr = S.prepoznaj(stabla, g.pojasi);
+  assert.strictEqual(pr.length, 2, 'dva projektanta');
+  assert.deepStrictEqual(pr.map(x => [x.a, x.b]), [[1, 300], [1, 280]]);
+  assert.deepStrictEqual(pr.map(x => x.strips.length), [2, 2]);
+});
+t('prepoznavanje: potpuno različiti raspon brojeva susjednih pojaseva = dva projektanta', () => {
+  const stabla = [];
+  for (let n = 1; n <= 50; n++) stabla.push(st(n, 3 * n, 0));
+  for (let n = 501; n <= 550; n++) stabla.push(st(n, 3 * (n - 500), 60));
+  const g = S.gradi(stabla, 50), pr = S.prepoznaj(stabla, g.pojasi);
+  assert.strictEqual(g.pojasi.length, 2); assert.strictEqual(pr.length, 2);
+});
 t('povezano u aplikaciju: podtab, uvoz, offline lista', () => {
   const H = R('index.html'), J = R('static/js/doznaka.js');
   assert.ok(H.includes('static/js/doznaka-stabla.js'));

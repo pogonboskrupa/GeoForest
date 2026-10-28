@@ -166,31 +166,52 @@
         });
       }
       p.tragovi.forEach(t => L.polyline(t.pts, { pane: pane(), renderer: rend, color: t.boja, weight: 3, opacity: 1, interactive: false }).addTo(slojevi));
-      if (p.stabla && p.stabla.length && p.stabVid !== false) {
-        (p.pojasi || []).forEach(q => L.polyline(q.ids.map(i => [p.stabla[i].la, p.stabla[i].lo]), { pane: pane(), renderer: rend, color: bojaR(p, q.r), weight: 2, opacity: 0.95, interactive: false }).addTo(slojevi));
-        p.stabla.forEach(x => L.circleMarker([x.la, x.lo], { pane: pane(), renderer: rend, radius: 3, color: '#fff', weight: 1, fillColor: bojaR(p, x.r), fillOpacity: 1, interactive: false }).addTo(slojevi));
+      if (p.stabla && p.stabla.length) {
+        const st = stil(p);
+        (p.pojasi || []).forEach(q => L.polyline(q.ids.map(i => [p.stabla[i].la, p.stabla[i].lo]), { pane: pane(), renderer: rend, color: st.boja || bojaR(p, q.r), weight: st.w, opacity: st.op / 100, dashArray: STIL_CRTE[st.crta] || null, lineCap: 'round', interactive: false }).addTo(slojevi));
+        if (p.stabVid !== false) p.stabla.forEach(x => L.circleMarker([x.la, x.lo], { pane: pane(), renderer: rend, radius: 3, color: '#fff', weight: 1, fillColor: bojaR(p, x.r), fillOpacity: 1, interactive: false }).addTo(slojevi));
       }
     });
     slojevi.addTo(map);
     stablaOznake();
   }
   // ── Doznačena stabla (KML) i pojasi od brojeva ──
-  let tab = 'poj', oznSloj = null;
+  let tab = 'poj', oznSloj = null, stilOtv = false;
+  const STIL_ZAD = { w: 2, crta: 'puna', op: 95, boja: '' }, STIL_CRTE = { puna: null, isprek: '10 8', tack: '2 7' };
+  const stil = p => ({ ...STIL_ZAD, ...(p.stil || {}) });
   const ST = () => window.USFDozStabla;
   const bojaR = (p, r) => (r ? ((p.projektanti || {})[r] || PALETA[[...r].reduce((a, c) => a + c.charCodeAt(0), 0) % PALETA.length]) : '#94a3b8');
   // Brojevi stabala uz tačke (zoom ≥ 17, najviše 150 u pogledu)
   function stablaOznake() {
     if (!imaKartu()) return;
     if (oznSloj) { map.removeLayer(oznSloj); oznSloj = null; }
-    const p = aktivni(); if (!p || p.vis === false || p.stabVid === false || !p.stabla || !p.stabla.length || map.getZoom() < 17) return;
-    const v = map.getBounds(); oznSloj = L.layerGroup();
-    p.stabla.filter(x => v.contains([x.la, x.lo])).slice(0, 150).forEach(x => L.marker([x.la, x.lo], { pane: pane(), interactive: false, icon: L.divIcon({ className: 'dz-br', html: esc(x.t != null && x.t !== '' ? x.t : x.n), iconSize: [30, 14], iconAnchor: [-5, 7] }) }).addTo(oznSloj));
+    const p = aktivni(); if (!p || p.vis === false || p.stabBr === false || !p.stabla || !p.stabla.length || map.getZoom() < 16) return;
+    const v = map.getBounds(), kept = []; oznSloj = L.layerGroup();
+    // razrijeđeno: natpis tek ako je od prethodnog udaljen ≥ 30 px (brojevi se ne gomilaju na manjem zumu)
+    p.stabla.filter(x => v.contains([x.la, x.lo])).forEach(x => {
+      if (kept.length >= 250) return;
+      const q = map.latLngToContainerPoint([x.la, x.lo]);
+      if (kept.some(k => Math.abs(k.x - q.x) < 30 && Math.abs(k.y - q.y) < 16)) return;
+      kept.push(q);
+      L.marker([x.la, x.lo], { pane: pane(), interactive: false, icon: L.divIcon({ className: 'dz-br', html: esc(x.t != null && x.t !== '' ? x.t : x.n), iconSize: [30, 14], iconAnchor: [-5, 7] }) }).addTo(oznSloj);
+    });
     oznSloj.addTo(map);
+  }
+  function stilHtml(p) {
+    const st = stil(p), ch = (k, v, t, on) => `<button data-a="stil" data-k="${k}" data-v="${esc(v)}" class="${on ? 'on' : ''}">${t}</button>`;
+    return `<div class="dz-stil">
+      <div class="dz-sr"><b>Debljina</b><div class="dz-chips">${[1, 2, 3, 5, 8].map(v => ch('w', v, v, st.w === v)).join('')}</div></div>
+      <div class="dz-sr"><b>Crta</b><div class="dz-chips">${[['puna', '━'], ['isprek', '╍'], ['tack', '┈']].map(([v, t]) => ch('crta', v, t, st.crta === v)).join('')}</div></div>
+      <div class="dz-sr"><b>Prozirnost</b><div class="dz-chips">${[30, 60, 100].map(v => ch('op', v, v + ' %', st.op === v || (v === 100 && st.op > 95) )).join('')}</div></div>
+      <div class="dz-sr"><b>Boja</b><div class="dz-chips dz-boje">${ch('boja', '', 'Po projektantu', !st.boja)}${PALETA.map(b => `<button data-a="stil" data-k="boja" data-v="${b}" class="dz-sw${st.boja === b ? ' on' : ''}" style="--c:${b}" aria-label="Boja ${b}"></button>`).join('')}</div></div></div>`;
   }
   function stablaHtml(p) {
     const s = p.stabla || [], po = p.pojasi || [], pr = p.stabPrag || 50, grupe = new Map();
     s.forEach(x => { const k = (x.r || '—') + (x.d ? ' · ' + x.d : ''); const o = grupe.get(k) || grupe.set(k, { n: 0, a: Infinity, b: -Infinity }).get(k); o.n++; if (x.n != null) { o.a = Math.min(o.a, x.n); o.b = Math.max(o.b, x.n); } });
     const gr = [...grupe].map(([k, o]) => `<div class="dz-trag" style="--c:#94a3b8"><div class="dz-t-i"><b>${esc(k)}</b><small>${o.n} stabala${isFinite(o.a) ? ' · br. ' + o.a + '–' + o.b : ''}</small></div></div>`).join('');
+    const poR = new Map();
+    po.forEach(q => { if (!q.r) return; const o = poR.get(q.r) || poR.set(q.r, { r: q.r, sig: q.sig, n: 0, st: 0, dug: 0, a: Infinity, b: -Infinity }).get(q.r); o.n++; o.st += q.ids.length; o.dug += q.dug; q.ids.forEach(i => { const n = s[i].n; if (n != null) { o.a = Math.min(o.a, n); o.b = Math.max(o.b, n); } }); });
+    const prj = [...poR.values()].map(o => `<div class="dz-proj"><button class="dz-boja" style="--c:${esc(bojaR(p, o.r))}" data-a="boja" data-ime="${esc(o.r)}" aria-label="Promijeni boju: ${esc(o.r)}"></button><div><b>${esc(o.r)}</b><small>${o.n} ${o.n === 1 ? 'pojas' : 'pojasa'} · ${o.st} stabala${isFinite(o.a) ? ' · br. ' + o.a + '–' + o.b : ''} · ${fmtM(o.dug)}</small></div><button data-a="prime" data-ime="${esc(o.r)}" aria-label="Preimenuj">✏</button></div>`).join('');
     const raspon = q => { const b = q.ids.map(i => s[i].n).filter(n => n != null); return b.length ? ' · br. ' + Math.min(...b) + '–' + Math.max(...b) : ''; };
     const pj = po.map((q, i) => `<div class="dz-trag dz-poj" style="--c:${esc(bojaR(p, q.r))}" data-i="${i}"><div class="dz-t-i"><b>Pojas ${i + 1}${q.r ? ' · ' + esc(q.r) : ''}</b><small>${q.ids.length} stabala${raspon(q)} · ${fmtM(q.dug)}${q.d ? ' · ' + esc(q.d) : ''}</small></div>
       <div class="dz-t-a"><button data-a="pzoom" aria-label="Na karti">🔍</button><button data-a="pdodaj" aria-label="U pojaseve projekta" ${q.dodan ? 'disabled' : ''}>${q.dodan ? '✓' : '➕'}</button></div></div>`).join('');
@@ -200,8 +221,10 @@
       <input type="file" id="doz-stabla-fajl" accept=".kml,application/vnd.google-earth.kml+xml,text/xml" hidden>
       ${s.length ? `<div class="dz-chips" role="group" aria-label="Najveći razmak u pojasu">${[30, 50, 80].map(v => `<button data-a="prag" data-v="${v}" class="${pr === v ? 'on' : ''}">${v} m</button>`).join('')}</div>
       <div class="sl-dug"><button class="zp-glavno" data-a="pojas">🔗 Pojas</button></div>
-      <div class="sl-dug"><button data-a="pdodajsve" ${po.length ? '' : 'disabled'}>➕ Sve u pojaseve projekta</button><button data-a="stvid">${p.stabVid === false ? '🙈' : '👁'}</button><button data-a="stukloni" aria-label="Ukloni stabla">🗑</button></div>
-      ${gr ? `<h4 class="dz-h">Grupe</h4>${gr}` : ''}${pj ? `<h4 class="dz-h">Pojasevi</h4>${pj}` : ''}${p.pojUsam ? `<h4 class="dz-h">Usamljena stabla: ${p.pojUsam}</h4>` : ''}` : ''}</section>`;
+      <div class="sl-dug"><button data-a="pdodajsve" ${po.length ? '' : 'disabled'}>➕ Sve u pojaseve projekta</button></div>
+      <div class="sl-dug dz-tgl"><button data-a="stvid" class="${p.stabVid === false ? '' : 'on'}">👁 Stabla</button><button data-a="stbr" class="${p.stabBr === false ? '' : 'on'}">🔢 Brojevi</button><button data-a="stilot" class="${stilOtv ? 'on' : ''}">🎨 Linije</button><button data-a="stukloni" aria-label="Ukloni stabla">🗑</button></div>
+      ${stilOtv ? stilHtml(p) : ''}
+      ${prj ? `<h4 class="dz-h">Projektanti</h4>${prj}` : gr ? `<h4 class="dz-h">Grupe</h4>${gr}` : ''}${pj ? `<h4 class="dz-h">Pojasevi</h4>${pj}` : ''}${p.pojUsam ? `<h4 class="dz-h">Usamljena stabla: ${p.pojUsam}</h4>` : ''}` : ''}</section>`;
   }
   async function stablaUvezi(f) {
     const p = aktivni(); if (!p || !ST()) return;
@@ -219,6 +242,13 @@
   function stablaPojas(p) {
     const r = ST().gradi(p.stabla || [], p.stabPrag || 50);
     p.pojasi = r.pojasi; p.pojUsam = r.usamljena;
+    if (r.pojasi.every(q => !q.r)) { // fajl ne nosi radnika: projektanti se prepoznaju iz numeracije
+      p.prIme = p.prIme || {};
+      ST().prepoznaj(p.stabla, r.pojasi).forEach((x, k) => {
+        const sig = x.a + '-' + x.b, ime = p.prIme[sig] || 'Projektant ' + (k + 1);
+        x.strips.forEach(i => { r.pojasi[i].r = ime; r.pojasi[i].sig = sig; });
+      });
+    }
     r.pojasi.forEach(q => { if (q.r) bojaProjektanta(p, q.r); });
     pisi(); crtaj(); render();
     toast('🔗 ' + r.pojasi.length + (r.pojasi.length === 1 ? ' pojas' : ' pojasa') + (r.usamljena ? ' · ' + r.usamljena + ' usamljenih' : ''));
@@ -519,6 +549,16 @@
     if (a === 'prag') { p.stabPrag = +cvor.dataset.v; pisi(); if (p.pojasi && p.pojasi.length) return stablaPojas(p); return render(); }
     if (a === 'pojas') return stablaPojas(p);
     if (a === 'stvid') { p.stabVid = p.stabVid === false; pisi(); crtaj(); return render(); }
+    if (a === 'stbr') { p.stabBr = p.stabBr === false; pisi(); stablaOznake(); return render(); }
+    if (a === 'stilot') { stilOtv = !stilOtv; return render(); }
+    if (a === 'stil') { const k = cvor.dataset.k, v = cvor.dataset.v; p.stil = { ...(p.stil || {}), [k]: (k === 'w' || k === 'op') ? +v : v }; pisi(); crtaj(); return render(); }
+    if (a === 'prime') {
+      const stari = cvor.dataset.ime, ime = await pitajProjektanta('✏ Projektant', stari); if (!ime || ime === stari) return;
+      p.projektanti = p.projektanti || {}; p.projektanti[ime] = p.projektanti[ime] || p.projektanti[stari] || bojaProjektanta(p, ime); delete p.projektanti[stari];
+      (p.pojasi || []).forEach(q => { if (q.r === stari) { q.r = ime; if (q.sig) { p.prIme = p.prIme || {}; p.prIme[q.sig] = ime; } } });
+      p.tragovi.forEach(t => { if (t.izvor === 'stabla' && t.projektant === stari) { t.projektant = ime; t.boja = p.projektanti[ime]; } });
+      p._pot = null; p._pod = null; pisi(); preracunaj(p); crtaj(); return render();
+    }
     if (a === 'stukloni') {
       if (typeof _dlgConfirm === 'function' && !await _dlgConfirm('Ukloniti sva uvezena stabla i pojase od njih (' + (p.stabla || []).length + ' stabala)?', { title: 'Ukloni stabla', danger: true, okLabel: 'Ukloni' })) return;
       p.stabla = []; p.pojasi = []; p.pojUsam = 0; pisi(); crtaj(); return render();

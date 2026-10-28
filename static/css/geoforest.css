@@ -568,3 +568,10 @@ html[data-btn-stil="akcent"] #ab-loc:not(.active) { box-shadow: 0 0 0 1px rgba(7
 #doznaka-panel .dz-chips button { flex: 1; }
 #doznaka-panel .dz-chips button.on { background: var(--gf-zel-jak); border-color: #86efac; color: var(--gf-zel-tamna); }
 .dz-br { color: #fff; font: 800 11px/14px system-ui, sans-serif; text-shadow: 0 0 3px #000, 0 0 3px #000, 0 0 2px #000; white-space: nowrap; pointer-events: none; }
+#doznaka-panel .dz-tgl button.on { background: color-mix(in srgb, #fb7185 18%, var(--gf-kar-2)); border-color: #fb7185; }
+#doznaka-panel .dz-stil { margin-top: 10px; padding: 10px 12px; border: 2px solid var(--gf-rub); border-radius: 14px; background: var(--gf-kar-2); }
+#doznaka-panel .dz-sr { margin-bottom: 8px; }
+#doznaka-panel .dz-sr > b { display: block; margin-bottom: 4px; font-size: 14px; color: var(--gf-dim); }
+#doznaka-panel .dz-boje { flex-wrap: wrap; }
+#doznaka-panel .dz-sw { flex: none; width: 44px; min-height: 44px; height: 44px; padding: 0; border-radius: 50%; border: 3px solid #fff; background: var(--c); }
+#doznaka-panel .dz-sw.on { box-shadow: 0 0 0 3px #0a140f, 0 0 0 6px #86efac; }
