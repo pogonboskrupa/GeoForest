@@ -93,33 +93,41 @@
     return { pojasi, usamljena };
   }
 
-  // Prepoznavanje PROJEKTANATA iz numeracije (kad fajl ne nosi radnika): pojasevi čija se numeracija NASTAVLJA
-  // (sljedeći počinje 1…5 brojeva iza kraja prethodnog) i koji su prostorno susjedni (≤ 150 m) pripadaju istom
-  // projektantu — npr. 1–150 slijeva nadesno pa nazad istim pojasom 151–300. Susjedni pojasevi s drugačijom
-  // (preklopljenom ili nepovezanom) numeracijom su drugi projektant.
-  // → [{ strips:[indeksi pojaseva], a, b, dug, stabala }] poredano po početnom broju
-  function prepoznaj(stabla, pojasi, opc) {
-    opc = opc || {};
-    const maxRaz = opc.maxRazmak > 0 ? opc.maxRazmak : 5, maxD = opc.maxD > 0 ? opc.maxD : 150;
-    if (!stabla.length || !pojasi.length) return [];
-    const P = ravan(stabla[0].la, stabla[0].lo);
-    const info = pojasi.map(q => {
-      const ns = q.ids.map(i => stabla[i].n); if (ns.some(n => n == null)) return null;
-      const a = Math.min(...ns), b = Math.max(...ns), ia = q.ids.find(i => stabla[i].n === a), ib = q.ids.find(i => stabla[i].n === b);
-      return { a, b, p1: P.fw([stabla[ia].la, stabla[ia].lo]), p2: P.fw([stabla[ib].la, stabla[ib].lo]) };
-    });
-    const par = [];
-    info.forEach((A, i) => { if (A) info.forEach((B, j) => { if (!B || i === j) return; const gap = B.a - A.b, d = dist(A.p2, B.p1); if (gap >= 1 && gap <= maxRaz && d <= maxD) par.push({ i, j, c: d + gap * 5 }); }); });
-    par.sort((x, y) => x.c - y.c);
-    const nasl = new Map(), pred = new Map();
-    for (const q of par) if (!nasl.has(q.i) && !pred.has(q.j)) { nasl.set(q.i, q.j); pred.set(q.j, q.i); } // brojevi strogo rastu ⇒ nema ciklusa
-    const lanci = [];
-    info.forEach((A, i) => { if (!A || pred.has(i)) return; const l = [i]; let k = i; while (nasl.has(k)) { k = nasl.get(k); l.push(k); } lanci.push(l); });
-    lanci.sort((x, y) => info[x[0]].a - info[y[0]].a || x[0] - y[0]);
-    return lanci.map(l => ({ strips: l, a: info[l[0]].a, b: info[l[l.length - 1]].b, dug: l.reduce((a, i) => a + (pojasi[i].dug || 0), 0), stabala: l.reduce((a, i) => a + pojasi[i].ids.length, 0) }));
+  // ── Blokovi pločica = inženjeri ──
+  // Pločice su JEDINSTVENE i idu redom od 1: svaki inženjer dobije blok (npr. 1–300, 301–600, 601–900; prvi pa opet 901–1200 — nije
+  // pravilo), pa blok (raspon brojeva) određuje ko je doznačio stablo. Kad fajl ne nosi radnika, projektant = blok.
+  // Zadani blokovi: svakih `korak` brojeva (zadano 300); korisnik ih može pomjeriti i imenovati (isto ime = isti projektant).
+  function blokovi(stabla, korak) {
+    korak = korak > 0 ? Math.round(korak) : 300;
+    const ns = stabla.map(s => s.n).filter(n => n != null);
+    if (!ns.length) return [];
+    const max = Math.max(...ns), out = [];
+    for (let od = 1, k = 0; od <= max; od += korak, k++) {
+      const do_ = Math.min(od + korak - 1, max);
+      if (ns.some(n => n >= od && n <= do_)) out.push({ od, do: do_, ime: 'Projektant ' + (k + 1) });
+    }
+    return out;
+  }
+  // Pojasi po blokovima: stabla bloka redom po broju; razmak veći od praga prekida pojas.
+  // → { pojasi: [{ r: ime, d: '', sig: 'od-do', ids, dug }], usamljena, bezBroja }
+  function gradiBlokove(stabla, prag, bl) {
+    prag = prag > 0 ? prag : PRAG_ZAD;
+    if (!stabla || !stabla.length || !bl || !bl.length) return { pojasi: [], usamljena: 0, bezBroja: stabla ? stabla.length : 0 };
+    const P = ravan(stabla[0].la, stabla[0].lo), xy = stabla.map(s => P.fw([s.la, s.lo]));
+    const pojasi = []; let usamljena = 0, dodijeljeno = 0;
+    for (const b of bl) {
+      const ids = []; stabla.forEach((s, i) => { if (s.n != null && s.n >= b.od && s.n <= b.do) ids.push(i); });
+      ids.sort((x, y) => stabla[x].n - stabla[y].n || x - y);
+      dodijeljeno += ids.length;
+      let tek = [];
+      const zatvori = () => { if (tek.length > 1) { let dug = 0; for (let j = 1; j < tek.length; j++) dug += dist(xy[tek[j - 1]], xy[tek[j]]); pojasi.push({ r: b.ime, d: '', sig: b.od + '-' + b.do, ids: tek, dug }); } else if (tek.length === 1) usamljena++; tek = []; };
+      for (const i of ids) { if (tek.length && dist(xy[tek[tek.length - 1]], xy[i]) > prag) zatvori(); tek.push(i); }
+      zatvori();
+    }
+    return { pojasi, usamljena, bezBroja: stabla.length - dodijeljeno };
   }
 
-  const api = { izKml, gradi, prepoznaj, brojIzNaziva, danIz, PRAG_ZAD };
+  const api = { izKml, gradi, blokovi, gradiBlokove, brojIzNaziva, danIz, PRAG_ZAD };
   root.USFDozStabla = api;
   if (typeof module !== 'undefined') module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -40,25 +40,31 @@ t('usamljena stabla se ne crtaju kao pojas', () => {
   const r = S.gradi([st(1, 0, 0), st(2, 500, 0)], 50);
   assert.strictEqual(r.pojasi.length, 0); assert.strictEqual(r.usamljena, 2);
 });
-t('prepoznavanje projektanata: povratak istim pojasom = isti projektant; drugačiji brojevi među susjedima = drugi', () => {
-  const stabla = [];
-  for (let n = 1; n <= 150; n++) stabla.push(st(n, 2 * n, 0));                    // A: 1–150 slijeva nadesno
-  for (let n = 151; n <= 300; n++) stabla.push(st(n, 300 - 2 * (n - 151), 70));   // A: nazad susjednim pojasom 151–300 (70 m razmaka ⇒ poseban pojas)
-  for (let n = 1; n <= 140; n++) stabla.push(st(n, 2 * n, 200));                  // B: brojevi se preklapaju s A ⇒ drugi projektant
-  for (let n = 141; n <= 280; n++) stabla.push(st(n, 280 - 2 * (n - 141), 270));
-  const g = S.gradi(stabla, 50);
-  assert.strictEqual(g.pojasi.length, 4, 'razmak 70 m prekida pojas: ' + g.pojasi.map(p => p.ids.length));
-  const pr = S.prepoznaj(stabla, g.pojasi);
-  assert.strictEqual(pr.length, 2, 'dva projektanta');
-  assert.deepStrictEqual(pr.map(x => [x.a, x.b]), [[1, 300], [1, 280]]);
-  assert.deepStrictEqual(pr.map(x => x.strips.length), [2, 2]);
+t('blokovi pločica: zadani korak, bez praznih blokova', () => {
+  const stabla = []; for (let n = 1; n <= 700; n += 7) stabla.push(st(n, n, 0));
+  const bl = S.blokovi(stabla, 300);
+  assert.deepStrictEqual(bl.map(b => [b.od, b.do, b.ime]), [[1, 300, 'Projektant 1'], [301, 600, 'Projektant 2'], [601, 694, 'Projektant 3']]);
+  assert.deepStrictEqual(S.blokovi([st(305, 0, 0), st(310, 5, 0)], 300).map(b => [b.od, b.do, b.ime]), [[301, 310, 'Projektant 2']], 'prazan prvi blok se preskače');
 });
-t('prepoznavanje: potpuno različiti raspon brojeva susjednih pojaseva = dva projektanta', () => {
+t('tri inženjera, polje 600 m: blok = projektant, povratak „sa starim pločicama” ostaje u istom pojasu, drugi inženjer se ne spaja', () => {
+  // A: 1–60 odlazi y=0 (x 0→590), vraća se 61–120 na y=45; B: 121–180 odlazi y=22, vraća 181–240 y=67; C: 241–300 y=… (jedan prolaz)
   const stabla = [];
-  for (let n = 1; n <= 50; n++) stabla.push(st(n, 3 * n, 0));
-  for (let n = 501; n <= 550; n++) stabla.push(st(n, 3 * (n - 500), 60));
-  const g = S.gradi(stabla, 50), pr = S.prepoznaj(stabla, g.pojasi);
-  assert.strictEqual(g.pojasi.length, 2); assert.strictEqual(pr.length, 2);
+  for (let k = 0; k < 60; k++) stabla.push(st(1 + k, k * 10, 0));
+  for (let k = 0; k < 60; k++) stabla.push(st(61 + k, 590 - k * 10, 45));
+  for (let k = 0; k < 60; k++) stabla.push(st(121 + k, k * 10, 22));       // B počinje 25 m od kraja A-ovog povratka (x=0) ⇒ blok ih mora razdvojiti
+  for (let k = 0; k < 60; k++) stabla.push(st(181 + k, 590 - k * 10, 67));
+  const bl = S.blokovi(stabla, 120);
+  assert.strictEqual(bl.length, 2);
+  const g = S.gradiBlokove(stabla, 50, bl);
+  assert.strictEqual(g.pojasi.length, 2, 'po jedan pojas (odlazak + povratak) za svakog: ' + g.pojasi.map(p => p.ids.length));
+  assert.deepStrictEqual(g.pojasi.map(p => [p.r, p.ids.length, p.sig]), [['Projektant 1', 120, '1-120'], ['Projektant 2', 120, '121-240']]);
+  assert.strictEqual(g.bezBroja, 0);
+});
+t('veći razmak od 50 m prekida pojas unutar bloka (sljedeći dan počinje drugdje, brojevi se nastavljaju)', () => {
+  const stabla = [st(1, 0, 0), st(2, 10, 0), st(3, 20, 0), st(4, 400, 300), st(5, 410, 300), st(6, 420, 300)];
+  const g = S.gradiBlokove(stabla, 50, [{ od: 1, do: 6, ime: 'Ana' }]);
+  assert.deepStrictEqual(g.pojasi.map(p => p.ids.length), [3, 3]);
+  assert.ok(g.pojasi.every(p => p.r === 'Ana'), 'isti inženjer (isti blok)');
 });
 t('povezano u aplikaciju: podtab, uvoz, offline lista', () => {
   const H = R('index.html'), J = R('static/js/doznaka.js');
