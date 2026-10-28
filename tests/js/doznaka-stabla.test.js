@@ -96,4 +96,8 @@ t('broj projektanata: kontrola i veza', () => {
   const J = R('static/js/doznaka.js');
   assert.ok(J.includes('doz-brpr') && J.includes('stabBrPr') && J.includes('ST().dodijeli'));
 });
+t('kartica pojasa: izvor klika i raspon pločica', () => {
+  const J = R('static/js/doznaka.js');
+  assert.ok(J.includes('pojasKartica') && J.includes('_kartaKlikIzvor') && J.includes("'Pločice'"));
+});
 console.log('\n' + pass + ' prošlo, ' + (process.exitCode ? 'IMA PALIH' : '0 palo') + ' — doznaka stabla');

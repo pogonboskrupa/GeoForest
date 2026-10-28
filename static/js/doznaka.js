@@ -175,6 +175,23 @@
     slojevi.addTo(map);
     stablaOznake();
   }
+  // Dodir na pojas od stabala → kartica s rasponom pločica
+  function pojasKartica(p, q, at) {
+    const br = q.ids.map(i => p.stabla[i] && p.stabla[i].n).filter(n => n != null), od = Math.min(...br), dok = Math.max(...br);
+    const redovi = br.length ? [['Pločice', od + ' – ' + dok], ['Stabala', String(q.ids.length)], ['Nedostaje brojeva', String(Math.max(0, dok - od + 1 - new Set(br).size))]] : [['Stabala', String(q.ids.length)]];
+    if (q.dug) redovi.push(['Dužina', fmtM(q.dug)]);
+    const html = typeof _popKartica === 'function' ? _popKartica({ ikona: '🌲', boja: bojaR(p, q.r), naslov: q.r || 'Pojas', tip: 'Pojas doznake', meta: p.naziv, redovi }) : esc((q.r || 'Pojas') + ' ' + od + '–' + dok);
+    L.popup({ maxWidth: 300, minWidth: 200, className: 'pk-pop' }).setLatLng(at).setContent(html).openOn(map);
+  }
+  if (typeof _kartaKlikIzvor === 'function') _kartaKlikIzvor((ll, kp) => {
+    const out = [];
+    if (!imaKartu()) return out;
+    S.projekti.filter(p => p.vis !== false && p.stabla && p.stabla.length).forEach(p => (p.pojasi || []).forEach(q => {
+      const d = _pxDoLinije(kp, q.ids.map(i => L.latLng(p.stabla[i].la, p.stabla[i].lo)), false);
+      if (d <= 22) out.push({ vrsta: 'linija', d, otvori: at => pojasKartica(p, q, at) });
+    }));
+    return out;
+  });
   // ── Doznačena stabla (KML) i pojasi od brojeva ──
   let tab = 'poj', oznSloj = null, stilOtv = false;
   const STIL_ZAD = { w: 2, crta: 'puna', op: 95, boja: '' }, STIL_CRTE = { puna: null, isprek: '10 8', tack: '2 7' };
