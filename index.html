@@ -28,11 +28,19 @@
 <script src="static/libs/proj4.js" onerror="_libErr('proj4')"></script>
 <script src="static/libs/turf.min.js" onerror="_libErr('Turf')"></script>
 <script src="static/libs/sql-wasm.js"></script>
-<script src="static/libs/firebase/firebase-app-compat.js" onerror="_libErr('Firebase')"></script>
-<script src="static/libs/firebase/firebase-auth-compat.js" onerror="_libErr('Firebase Auth')"></script>
-<script src="static/libs/firebase/firebase-firestore-compat.js" onerror="_libErr('Firestore')"></script>
 <script src="static/js/reliable-fetch.js"></script>
-<script src="static/js/firebase-init.js"></script>
+<script>/* Firebase (samo anonimni UID) se učitava TEK kad je app nacrtan i uređaj miruje — ~170 KB manje parsiranja pri pokretanju */
+(function () {
+  var q = ['static/libs/firebase/firebase-app-compat.js', 'static/libs/firebase/firebase-auth-compat.js', 'static/js/firebase-init.js'];
+  function sljedeci() {
+    var u = q.shift(); if (!u) return;
+    var s = document.createElement('script'); s.src = u; s.onload = sljedeci;
+    s.onerror = function () { _libErr(u.indexOf('auth') > 0 ? 'Firebase Auth' : 'Firebase'); sljedeci(); };
+    document.head.appendChild(s);
+  }
+  function start() { if (window.requestIdleCallback) requestIdleCallback(sljedeci, { timeout: 6000 }); else setTimeout(sljedeci, 3000); }
+  if (document.readyState === 'complete') start(); else window.addEventListener('load', function () { setTimeout(start, 800); });
+})();</script>
 <script src="static/js/dem-local.js" onerror="_libErr('Lokalni DEM')"></script>
 <script>
 window.addEventListener('DOMContentLoaded',function(){
@@ -2302,7 +2310,7 @@ body.sl-uredi #sl-ured { display: block; }
 // android/app/build.gradle versionCode+versionName. Sva tri MORAJU biti
 // usklađena prije svakog commita.
 // =====================================================================
-const APP_VER = 'v1.3.0';
+const APP_VER = 'v1.3.1';
 document.getElementById('meni-ver-badge').textContent = 'GeoForest ' + APP_VER;
 
 // Verzije koriste tri jednocifrena segmenta: patch i minor idu 0–9.
@@ -2367,7 +2375,7 @@ function makeCachedTileLayer(cacheName) {
   cacheName = cacheName || TILE_CACHE_NAME;
   return L.TileLayer.extend({
     createTile(coords, done) {
-      const img = document.createElement('img');
+      const img = document.createElement('img'); img.decoding = 'async';
       img.alt = '';
       const url = this.getTileUrl(coords);
       img._ctls = new Set();
@@ -2521,10 +2529,10 @@ const CachedSat  = makeCachedTileLayer();
 // ── Bazne podloge — samo osnovne (Topo/Satelit/Karta/Google), bez
 // Wayback/Sentinel-2/WorldCover/Konture za sada. ─────────────────────
 const TL = {
-  '⛰ Topo':    new CachedTopo('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{maxNativeZoom:17,maxZoom:22,subdomains:['a','b','c'],keepBuffer:6,updateWhenZooming:false,updateWhenIdle:true,updateInterval:150}),
-  '🛰 Satelit': new CachedSat('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxNativeZoom:19,maxZoom:22,keepBuffer:6,updateWhenZooming:false,updateWhenIdle:true,updateInterval:150}),
-  '🗺 Karta':   new CachedOsm('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxNativeZoom:19,maxZoom:22,keepBuffer:6,updateWhenZooming:false,updateWhenIdle:true,updateInterval:150}),
-  '📡 Google':  new CachedSat('https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{maxNativeZoom:20,maxZoom:22,subdomains:['0','1','2','3'],keepBuffer:6,updateWhenZooming:false,updateWhenIdle:true,updateInterval:150})
+  '⛰ Topo':    new CachedTopo('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{maxNativeZoom:17,maxZoom:22,subdomains:['a','b','c'],keepBuffer:2,updateWhenZooming:false,updateWhenIdle:true,updateInterval:150}),
+  '🛰 Satelit': new CachedSat('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxNativeZoom:19,maxZoom:22,keepBuffer:2,updateWhenZooming:false,updateWhenIdle:true,updateInterval:150}),
+  '🗺 Karta':   new CachedOsm('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxNativeZoom:19,maxZoom:22,keepBuffer:2,updateWhenZooming:false,updateWhenIdle:true,updateInterval:150}),
+  '📡 Google':  new CachedSat('https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{maxNativeZoom:20,maxZoom:22,subdomains:['0','1','2','3'],keepBuffer:2,updateWhenZooming:false,updateWhenIdle:true,updateInterval:150})
 };
 
 // ── Podrazumijevani prikaz: Una-Sana kanton (MGI Zone 6, ista šema kao
@@ -3166,7 +3174,7 @@ document.addEventListener('click', e => {
 });
 
 // ── Kompas / smjer telefona ──────────────────────────────────────────
-let _compassConeOn = false, _compassHeading = null, _compassRotCone = 0, _compassLastUpdT = 0;
+let _compassConeOn = false, _compassHeading = null, _compassRotCone = 0, _compassLastUpdT = 0, _compassDrawn = -999;
 function _angContinuity(prevAccum, targetDeg) {
   const prevMod = ((prevAccum % 360) + 360) % 360;
   const diff = ((targetDeg - prevMod + 540) % 360) - 180;
@@ -3199,13 +3207,14 @@ function _onDeviceOrientation(e) {
   else if (e.alpha !== null && e.alpha !== undefined) heading = (360 - e.alpha) % 360;
   if (heading === null) return;
   const now = Date.now();
-  if (now - _compassLastUpdT < 60) return;
+  if (now - _compassLastUpdT < 100) return;
   _compassLastUpdT = now;
   // Niskopropusni filter (eksponencijalno zaglađivanje, kružno-svjesno) —
   // sirovi magnetometar jitteruje u mjestu, bez ovoga bi kupola treperila.
   if (_compassHeading == null) _compassHeading = heading;
   else { const diff = ((heading - _compassHeading + 540) % 360) - 180; _compassHeading = (_compassHeading + diff * 0.25 + 360) % 360; }
-  _updCompassOnMarker(_compassHeading);
+  // DOM samo kad je kupola uključena i smjer se stvarno promijenio (marker je krug — rotacija bez kupole se ne vidi; prije 16×/s bez potrebe)
+  if (_compassConeOn && Math.abs(((_compassHeading - _compassDrawn + 540) % 360) - 180) >= 1.5) { _compassDrawn = _compassHeading; _updCompassOnMarker(_compassHeading); }
 }
 // Android zna slati OBA eventa istovremeno — 'deviceorientation' tamo često
 // nosi RELATIVNI ugao, dok 'deviceorientationabsolute' nosi stvarni magnetni
@@ -6690,7 +6699,7 @@ const _NativeSqlTileLayer = L.TileLayer.extend({
     img.onload = img.onerror = null; img.src = _PRAZNA_PLOCICA; done(null, img);
   },
   createTile(coords, done) {
-    const img = document.createElement('img');
+    const img = document.createElement('img'); img.decoding = 'async';
     img.alt = ''; img.setAttribute('role', 'presentation'); img.decoding = 'async';
     const most = () => {
       let uri = '';
@@ -6723,7 +6732,7 @@ function _nativeSqlmapAdd(info) {
   const bounds = _sqlParseBounds(meta);
   const layer = new _NativeSqlTileLayer(_NATIVE_TILE_URL + encodeURIComponent(info.id) + '/{z}/{x}/{y}', {
     pane:'offlineBasePane', ..._sqlZoomOpts(info.minzoom, info.maxzoom),
-    tileSize:256, updateWhenIdle:false, updateWhenZooming:false, keepBuffer:3,
+    tileSize:256, updateWhenIdle:false, updateWhenZooming:false, keepBuffer:2,
     nativeId:info.id, format:info.format || 'png'
   });
   layer._urlRadi = false; layer._mostSamo = false;
@@ -6926,7 +6935,7 @@ function _sqlReadMetadata(db) {
 // referencu preko this.options.db (postavljeno pri konstrukciji).
 const _SqlTileLayer = L.GridLayer.extend({
   createTile(coords, done) {
-    const tile = document.createElement('img');
+    const tile = document.createElement('img'); tile.decoding = 'async';
     tile.alt = '';
     try {
       const bytes = _sqlPlocica(this.options.db, this.options.sema, coords.z, coords.x, coords.y);

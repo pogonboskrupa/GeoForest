@@ -2,7 +2,7 @@
 // Service Worker — GeoForest
 // Promijeni APP_VERSION pri svakom deploymentu → okida update
 // =====================================================================
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.3.1';
 const APP_CACHE   = 'geoforest-app-v' + APP_VERSION;
 const TILE_CACHE  = 'geoforest-tiles-v1';
 const LIB_CACHE   = 'geoforest-lib-v1';
@@ -23,7 +23,6 @@ const APP_SHELL = [
   './static/libs/sql-wasm.wasm',
   './static/libs/firebase/firebase-app-compat.js',
   './static/libs/firebase/firebase-auth-compat.js',
-  './static/libs/firebase/firebase-firestore-compat.js',
   './static/js/firebase-init.js',
   './static/js/dem-local.js',
   './static/js/odjeli.js',
@@ -156,6 +155,10 @@ self.addEventListener('fetch', event => {
     );
     return;
   }
+
+  // APK: asseti su LOKALNI (WebViewAssetLoader) — nema mreže ni potrebe za kešom; prije se svaki fajl (i dem_opcine.tif 2,4 MB)
+  // pri svakom pokretanju čitao kroz SW i ponovo upisivao u Cache Storage.
+  if (self.location.hostname === 'appassets.androidplatform.net') return;
 
   if (
     url.startsWith(self.location.origin) ||

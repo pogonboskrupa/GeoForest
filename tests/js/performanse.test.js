@@ -17,4 +17,16 @@ t('Doznaka ne pravi novi L.canvas pri svakom crtanju', () => {
 });
 t('KML renderer nema ogroman padding', () => { assert.ok(/_kmlRenderer = L\.canvas\(\{ pane: 'tragMsrLines', padding: 0\.4 \}\)/.test(H)); });
 t('visina u značci koordinata je odgođena', () => { assert.ok(H.includes('_geoBadgeT = setTimeout(_geoBadgeUpdate, 350)')); });
+t('Firebase se ne učitava blokirajuće i Firestore se ne inicijalizuje', () => {
+  assert.ok(!/<script src="static\/libs\/firebase\//.test(H), 'firebase script tag u zaglavlju');
+  assert.ok(H.includes('requestIdleCallback(sljedeci'));
+  const F = R('static/js/firebase-init.js');
+  assert.ok(!F.includes('firebase.firestore()') && !F.includes('enablePersistence('));
+});
+t('pločice: mali keepBuffer i asinhrono dekodiranje', () => {
+  assert.ok(!/keepBuffer\s*:\s*[3-9]/.test(H), 'keepBuffer > 2');
+  assert.ok((H.match(/decoding = 'async'/g) || []).length >= 3);
+});
+t('kompas ne dira DOM kad kupola nije uključena', () => { assert.ok(H.includes('_compassConeOn && Math.abs(') && H.includes('_compassDrawn')); });
+t('SW u APK-u ne presreće lokalne assete', () => { assert.ok(R('sw.js').includes("hostname === 'appassets.androidplatform.net'")); });
 console.log('\n' + pass + ' prošlo — performanse');

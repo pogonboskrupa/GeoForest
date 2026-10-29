@@ -41,10 +41,7 @@ async function _fbInit() {
   try {
     fbApp = firebase.initializeApp(FIREBASE_CONFIG);
     fbAuth = firebase.auth();
-    fbDb = firebase.firestore();
-    // Perzistentan lokalni keš — offline-first čitanje kad nema interneta
-    // (Firestore SDK ionako radi offline-first, ovo samo produžava keš preko restart-a).
-    try { await fbDb.enablePersistence({ synchronizeTabs: true }); } catch(e) { /* više tabova/nepodržano — nastavi bez perzistencije */ }
+    // Firestore se NE inicijalizuje (nijedan modul ga ne koristi; perzistencija je otvarala IndexedDB pri svakom pokretanju) — SDK je uz APK ako zatreba
     fbAuth.onAuthStateChanged(user => {
       if (user) { fbUid = user.uid; _fbOnReady(); }
     });
