@@ -324,15 +324,16 @@
   let snima = null;
   function snimaPisi() {
     if (!snima) return true;
-    try { localStorage.setItem(KLJUC_SNIMA, JSON.stringify({ pid: snima.pid, ime: snima.ime, boja: snima.boja, pts: snima.pts, zadT: snima.zadT, prekidi: snima.prekidi, skokova: snima.skokova })); return true; }
+    try { localStorage.setItem(KLJUC_SNIMA, JSON.stringify({ pid: snima.pid, ime: snima.ime, boja: snima.boja, pts: snima.pts, zadT: snima.zadT, prekidi: snima.prekidi, skokova: snima.skokova, t0: snima.t0, pauzaMs: snima.pauzaMs, pauza: snima.pauza, pauzaOd: snima.pauzaOd })); return true; }
     catch (e) { if (!snima.upozPisi) { snima.upozPisi = true; toast('⚠ Nema mjesta za zaštitnu kopiju pojasa — oslobodi memoriju'); } return false; }
   }
   // Prihvata fiks (la, lo, ac m, t ms). Vraća true ako je tačka ušla u pojas.
   function tackaDodaj(la, lo, ac, t) {
     if (!snima || !(t > snima.zadT)) return false;
     // prekid GPS-a: razmak između uzastopnih fiksova (ne dolaska paketa — paketi kasne kad je ekran ugašen)
-    if (snima.zadFixT && t - snima.zadFixT > PREKID_S * 1000) { snima.prekidi.n++; snima.prekidi.maxS = Math.max(snima.prekidi.maxS, Math.round((t - snima.zadFixT) / 1000)); }
+    if (!snima.pauza && snima.zadFixT && t - snima.zadFixT > PREKID_S * 1000) { snima.prekidi.n++; snima.prekidi.maxS = Math.max(snima.prekidi.maxS, Math.round((t - snima.zadFixT) / 1000)); }
     snima.zadFixT = t;
+    if (snima.pauza) return false; // pauza: fiksevi se prate (nema lažnog „nema GPS”), ali ne ulaze u pojas
     // dobra tačnost ≤ 20 m; slabija (≤ 40 m) tek kad dobrih nema duže od 12 s, da u pojasu nema rupe
     const zazor = t - snima.zadT > ZAZOR_S * 1000;
     if (!(ac <= AC_DOBRA || (ac <= AC_SLABA && zazor))) return false;
@@ -352,21 +353,40 @@
     snimaOsvjezi();
   }
   const tisina = () => (snima && snima.zadFixT ? Date.now() - snima.zadFixT : 0);
+  const proteklo = () => (snima ? Math.max(0, (snima.pauza ? snima.pauzaOd : Date.now()) - snima.t0 - snima.pauzaMs) : 0);
+  const sat = ms => { const q = Math.floor(ms / 1000), h = Math.floor(q / 3600), m = Math.floor(q % 3600 / 60), sk = q % 60, d = n => String(n).padStart(2, '0'); return (h ? h + ':' + d(m) : m) + ':' + d(sk); };
   function snimaOsvjezi() {
     if (imaKartu() && snima) {
-      if (!snimaSloj) snimaSloj = L.polyline([], { pane: pane(), color: snima.boja, weight: 4, dashArray: '2 7', lineCap: 'round', interactive: false }).addTo(map);
-      snimaSloj.setLatLngs(snima.pts); snimaSloj.setStyle({ color: snima.boja });
+      if (!snimaSloj) { snimaSloj = L.polyline([], { pane: pane(), color: snima.boja, weight: 5, lineCap: 'round', interactive: false }).addTo(map); snima.nacrtano = 0; }
+      // samo nove tačke (prije se cijela linija iznova postavljala svake sekunde — sporo na dugim pojasima)
+      if (snima.nacrtano > snima.pts.length) { snimaSloj.setLatLngs(snima.pts); snima.nacrtano = snima.pts.length; }
+      else { for (; snima.nacrtano < snima.pts.length; snima.nacrtano++) snimaSloj.addLatLng(snima.pts[snima.nacrtano]); }
+      snimaSloj.setStyle({ color: snima.boja, dashArray: snima.pauza ? '2 8' : null });
+      const z = snima.pts[snima.pts.length - 1];
+      if (z && !snima.slobodan && !snima.pauza && !map.getBounds().pad(-0.3).contains(z)) map.panTo(z, { animate: true, duration: 0.4 });
     }
     const bar = document.getElementById('doz-bar'); if (!bar) return;
     if (izbor) return;
     bar.classList.toggle('show', !!snima);
     if (!snima) return;
-    const gubi = tisina() > GUBI_S * 1000;
+    const gubi = !snima.pauza && tisina() > GUBI_S * 1000;
+    const ac = typeof lastP !== 'undefined' && lastP && Number.isFinite(lastP.ac) ? lastP.ac : null;
+    const acK = ac == null ? '' : ac <= 10 ? 'ok' : ac <= AC_DOBRA ? 'sl' : 'lo';
     bar.style.setProperty('--c', snima.boja);
-    bar.classList.add('rec'); bar.classList.toggle('gubi', gubi);
-    bar.innerHTML = `<div class="db-top"><i></i><b>${esc(snima.ime)}</b><span>${fmtM(duzinaLL(snima.pts))}${gubi ? ' · ⚠ nema GPS' : ''}</span></div>
-      <div class="db-dug"><button data-a="kraj" aria-label="Završi pojas">✓ Završi</button><button data-a="odbaci" aria-label="Odbaci pojas">✕</button></div>`;
+    bar.classList.add('rec'); bar.classList.toggle('gubi', gubi); bar.classList.toggle('pauza', !!snima.pauza);
+    const h = `<div class="db-top"><i></i><div><b>${esc(snima.ime)}${snima.pauza ? ' · ⏸ pauza' : gubi ? ' · ⚠ nema GPS' : ''}</b>
+      <small><span>⏱ ${sat(proteklo())}</span><span>📏 ${fmtM(duzinaLL(snima.pts))}</span>${ac == null ? '' : `<span class="ac ${acK}">◎ ±${Math.round(ac)} m</span>`}</small></div></div>
+      <div class="db-dug">${snima.slobodan ? '<button data-a="prati" aria-label="Prati me">🎯</button>' : ''}<button data-a="pauza" aria-label="${snima.pauza ? 'Nastavi' : 'Pauza'}">${snima.pauza ? '▶' : '⏸'}</button><button data-a="kraj" aria-label="Završi pojas">✓ Završi</button><button data-a="odbaci" aria-label="Odbaci pojas">✕</button></div>`;
+    if (h !== snima.barHtml) { snima.barHtml = h; bar.innerHTML = h; }
   }
+  function snimaPauza() {
+    if (!snima) return;
+    if (snima.pauza) { snima.pauzaMs += Date.now() - snima.pauzaOd; snima.pauza = false; snima.pauzaOd = 0; toast('▶ Snimanje nastavljeno'); }
+    else { snima.pauza = true; snima.pauzaOd = Date.now(); toast('⏸ Pauza — tačke se ne dodaju dok ne nastaviš'); }
+    snimaPisi(); snimaOsvjezi();
+  }
+  function snimaPrati() { if (!snima) return; snima.slobodan = false; const z = snima.pts[snima.pts.length - 1] || (typeof lastP !== 'undefined' && lastP ? [lastP.la, lastP.lo] : null); if (z && imaKartu()) map.panTo(z); snimaOsvjezi(); }
+  const naPovlacenje = () => { if (snima && !snima.slobodan) { snima.slobodan = true; snimaOsvjezi(); } };
   // Svake sekunde: tačke bez native servisa (preglednik), čuvar servisa i znak gubitka signala
   function snimaTik() {
     if (!snima) return;
@@ -388,7 +408,9 @@
     const bg = typeof window !== 'undefined' ? window.usfPozadina : null;
     if (typeof gpsOn !== 'undefined' && !gpsOn && typeof startGPS === 'function') startGPS();
     snima = { pid: p.id, ime, boja, pts: stari ? stari.pts : [], zadT: stari ? stari.zadT : Date.now(), zadFixT: stari ? stari.zadT : 0, prekidi: (stari && stari.prekidi) || { n: 0, maxS: 0 }, skokova: (stari && stari.skokova) || 0,
-      restartT: Date.now(), nat: !!(bg && bg.nativno()), tik: setInterval(snimaTik, 1000) };
+      restartT: Date.now(), nat: !!(bg && bg.nativno()), tik: setInterval(snimaTik, 1000),
+      t0: (stari && stari.t0) || Date.now(), pauzaMs: (stari && stari.pauzaMs) || 0, pauza: !!(stari && stari.pauza), pauzaOd: stari && stari.pauza ? (stari.pauzaOd || Date.now()) : 0, slobodan: false, nacrtano: 0, barHtml: '' };
+    if (imaKartu()) { map.off('dragstart', naPovlacenje); map.on('dragstart', naPovlacenje); }
     if (bg) bg.pocni(BG_ID, 'Doznaka stabala · ' + ime, nativno);
     snimaPisi(); snimaOsvjezi();
     if (typeof switchMainTab === 'function') switchMainTab('karta');
@@ -396,7 +418,7 @@
   }
   function snimaGasi(zadrziKopiju) {
     if (!snima) return;
-    clearInterval(snima.tik);
+    clearInterval(snima.tik); if (imaKartu()) map.off('dragstart', naPovlacenje);
     const bg = window.usfPozadina; if (bg) bg.zavrsi(BG_ID);
     if (!zadrziKopiju) { try { localStorage.removeItem(KLJUC_SNIMA); } catch (e) {} }
     if (snimaSloj && imaKartu()) { map.removeLayer(snimaSloj); snimaSloj = null; }
@@ -443,21 +465,27 @@
     return out;
   }
 
+  const IZV = { gps: ['📍', 'GPS'], kml: ['📥', 'uvezeno'], stabla: ['🌲', 'iz stabala'] };
   function projektHtml(p) {
     const pod = p._pod, poPr = {};
     p.tragovi.forEach((t, i) => { const o = poPr[t.projektant] = poPr[t.projektant] || { boja: t.boja, n: 0, km: 0, ha: 0 }; o.n++; o.km += duzinaLL(t.pts); const r = pod && pod.regije.find(x => x.i === i); if (r) o.ha += r.ha; });
-    const imena = Object.keys(poPr);
-    const red = imena.map(i => `<div class="dz-proj"><button class="dz-boja" style="--c:${esc(poPr[i].boja)}" data-a="boja" data-ime="${esc(i)}" aria-label="Promijeni boju: ${esc(i)}"></button><div><b>${esc(i)}</b><small>${poPr[i].n} ${poPr[i].n === 1 ? 'pojas' : 'pojasa'} · ${fmtM(poPr[i].km)}</small></div><span>${pod ? fmt(poPr[i].ha, 2) + ' ha' + (p.ha ? ' · ' + Math.round(poPr[i].ha / p.ha * 100) + ' %' : '') : '…'}</span></div>`).join('');
-    const tr = p.tragovi.map((t, i) => { const r = pod && pod.regije.find(x => x.i === i);
-      return `<div class="dz-trag" style="--c:${esc(t.boja)}" data-id="${esc(t.id)}"><div class="dz-t-i"><b>${esc(t.projektant)} · pojas ${i + 1}</b><small>${fmtM(duzinaLL(t.pts))} · ${t.izvor === 'kml' ? 'uvezeno' : t.izvor === 'stabla' ? 'stabla' : 'GPS'} · ${new Date(t.t).toLocaleDateString('bs')}${r ? ' · ' + fmt(r.ha, 2) + ' ha' : ''}</small></div>
+    const imena = Object.keys(poPr), uk = pod ? pod.regije.reduce((a, r) => a + r.ha, 0) : 0, pct = v => (p.ha > 0 ? Math.min(100, v / p.ha * 100) : 0);
+    // traka obuhvata: segment po projektantu u njegovoj boji
+    const traka = pod && p.ha > 0 ? `<div class="dz-prog" role="img" aria-label="Obuhvaćeno ${Math.round(pct(uk))} %">${imena.map(i => `<i style="width:${pct(poPr[i].ha).toFixed(1)}%;background:${esc(poPr[i].boja)}"></i>`).join('')}</div><div class="dz-prog-t"><b>${Math.round(pct(uk))} %</b> odjela obuhvaćeno · ${fmt(Math.max(0, p.ha - uk), 2)} ha ostalo</div>` : '';
+    const red = imena.map(i => `<div class="dz-proj"><button class="dz-boja" style="--c:${esc(poPr[i].boja)}" data-a="boja" data-ime="${esc(i)}" aria-label="Promijeni boju: ${esc(i)}"></button><div><b>${esc(i)}</b><small>${poPr[i].n} ${poPr[i].n === 1 ? 'pojas' : 'pojasa'} · ${fmtM(poPr[i].km)}</small>${pod && p.ha > 0 ? `<div class="dz-udio"><i style="width:${pct(poPr[i].ha).toFixed(1)}%;background:${esc(poPr[i].boja)}"></i></div>` : ''}</div><span>${pod ? fmt(poPr[i].ha, 2) + ' ha' + (p.ha ? '<small>' + Math.round(pct(poPr[i].ha)) + ' %</small>' : '') : '…'}</span></div>`).join('');
+    const tr = p.tragovi.map((t, i) => { const r = pod && pod.regije.find(x => x.i === i), iz = IZV[t.izvor] || IZV.gps, pk = t.prekidi && t.prekidi.n;
+      return `<div class="dz-trag" style="--c:${esc(t.boja)}" data-id="${esc(t.id)}"><div class="dz-t-i"><b>${esc(t.projektant)} · pojas ${i + 1}</b>
+        <div class="dz-ch"><span>📏 ${fmtM(duzinaLL(t.pts))}</span>${r ? `<span>▦ ${fmt(r.ha, 2)} ha</span>` : ''}<span>${iz[0]} ${iz[1]}</span><span>📅 ${new Date(t.t).toLocaleDateString('bs')}</span>${pk ? `<span class="up">⚠ ${t.prekidi.n} ${t.prekidi.n === 1 ? 'prekid' : 'prekida'} GPS-a</span>` : ''}</div></div>
         <div class="dz-t-a"><button data-a="tzoom" aria-label="Na karti">🔍</button><button data-a="tim" aria-label="Projektant">✏</button><button data-a="tsend" aria-label="Pošalji">📤</button><button data-a="tbris" aria-label="Obriši">🗑</button></div></div>`; }).join('');
+    const kor = window.USFKorisnik ? USFKorisnik.ime() : '';
     return `<section class="ng-card dz-kar">
-      <div class="dz-kpi"><div><b>${fmt(p.ha, 2)} ha</b><span>površina odjela</span></div><div><b>${p.tragovi.length}</b><span>pojaseva</span></div><div><b>${pod ? fmt(pod.regije.reduce((a, r) => a + r.ha, 0), 2) + ' ha' : p._racuna ? '⏳' : '—'}</b><span>obuhvaćeno</span></div></div>
-      <div class="sl-dug"><button class="zp-glavno" data-a="snimi">▶ Snimi pojas (GPS)</button></div>
+      <div class="dz-kpi"><div><b>${fmt(p.ha, 2)} ha</b><span>površina odjela</span></div><div><b>${p.tragovi.length}</b><span>pojaseva</span></div><div><b>${pod ? fmt(uk, 2) + ' ha' : p._racuna ? '⏳' : '—'}</b><span>obuhvaćeno</span></div></div>
+      ${traka}
+      <div class="sl-dug"><button class="zp-glavno dz-snimi" data-a="snimi"><b>▶ Snimi pojas (GPS)</b><small>${kor ? '👤 ' + esc(kor) : '⚠ upiši ime u Postavkama → Korisnik aplikacije'}</small></button></div>
       <div class="sl-dug"><button data-a="uvezi">📥 Uvezi trag (KML)</button><button data-a="posalji" ${p.tragovi.length ? '' : 'disabled'}>📤 Pošalji sve</button></div>
       <input type="file" id="doz-fajl" accept=".kml,application/vnd.google-earth.kml+xml,text/xml" hidden>
       ${red ? `<h4 class="dz-h">Projektanti</h4>${red}` : ''}
-      ${tr ? `<h4 class="dz-h">Pojasevi</h4>${tr}` : ''}</section>`;
+      ${tr ? `<h4 class="dz-h">Pojasevi</h4>${tr}` : '<p class="dz-prazno">Još nema pojaseva — pritisni <b>Snimi pojas</b> i kreni kroz odjel.</p>'}</section>`;
   }
   const tabHtml = () => `<div class="gf-tabs dz-tabs" role="tablist">${[['poj', '🧭', 'Pojasevi'], ['stab', '🌲', 'Stabla']].map(([k, i, t]) => `<button role="tab" data-a="tab" data-t="${k}" class="${tab === k ? 'on' : ''}"><i>${i}</i><span>${t}</span></button>`).join('')}</div>`;
   function render() {
@@ -689,7 +717,7 @@
       catch (er) { toast('⚠ KML nije učitan: ' + er.message); }
     });
     const bar = document.createElement('div'); bar.id = 'doz-bar'; bar.setAttribute('role', 'status'); document.body.appendChild(bar);
-    bar.addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (!b) return; if (b.disabled) return; const a = b.dataset.a; if (a === 'kraj') snimaKraj(); else if (a === 'odbaci') snimaOdbaci(); else if (a === 'izb-ok') izbGotovo(); else if (a === 'izb-x') izbKraj(); });
+    bar.addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (!b) return; if (b.disabled) return; const a = b.dataset.a; if (a === 'kraj') snimaKraj(); else if (a === 'odbaci') snimaOdbaci(); else if (a === 'pauza') snimaPauza(); else if (a === 'prati') snimaPrati(); else if (a === 'izb-ok') izbGotovo(); else if (a === 'izb-x') izbKraj(); });
   }
   function nastavi() { // snimanje prekinuto ubijanjem aplikacije: nastavi s onim što je sačuvano
     let z; try { z = JSON.parse(localStorage.getItem(KLJUC_SNIMA) || 'null'); } catch (e) { z = null; }

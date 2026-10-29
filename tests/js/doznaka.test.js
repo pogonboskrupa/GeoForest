@@ -90,4 +90,23 @@ t('offline sa slabim signalom: mrežni poslovi iza _mrezaSmije, liste iz keša, 
   assert.ok(R('static/js/firebase-init.js').includes('async function _fbPrijava()'));
 });
 
+t('pauza: fiksevi se prate ali ne ulaze u pojas i ne stvaraju prekid', () => {
+  const [la0, lo0] = ll(100, 100);
+  const nov2 = () => ({ pid: 'x', ime: 'T', boja: '#fff', pts: [], zadT: 1000, zadFixT: 0, prekidi: { n: 0, maxS: 0 }, skokova: 0, pauza: false });
+  const sn = nov2(); D._postaviSnimanje(sn);
+  assert.strictEqual(D._tackaDodaj(la0, lo0, 5, 2000), true);
+  sn.pauza = true;
+  assert.strictEqual(D._tackaDodaj(la0 + 0.001, lo0, 5, 3000), false, 'u pauzi tačka ne ulazi');
+  assert.strictEqual(D._tackaDodaj(la0 + 0.002, lo0, 5, 3000 + 5 * 60 * 1000), false);
+  assert.strictEqual(sn.prekidi.n, 0, 'duga pauza nije prekid GPS-a');
+  sn.pauza = false;
+  assert.strictEqual(D._tackaDodaj(la0 + 0.003, lo0, 5, 3000 + 5 * 60 * 1000 + 2000), true, 'poslije nastavka ulazi');
+  D._postaviSnimanje(null);
+});
+t('snimanje: pauza, praćenje i statistika su povezani', () => {
+  const J = R('static/js/doznaka.js');
+  assert.ok(J.includes("data-a=\"pauza\"") && J.includes('snimaPauza') && J.includes('snimaPrati') && J.includes("map.on('dragstart', naPovlacenje)"));
+  assert.ok(J.includes('snimaSloj.addLatLng') && J.includes('pauzaMs'));
+  assert.ok(J.includes('class="dz-prog"'));
+});
 console.log('\n' + pass + ' prošlo, ' + (process.exitCode ? 'IMA PALIH' : '0 palo') + ' — doznaka');
