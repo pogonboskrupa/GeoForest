@@ -238,8 +238,8 @@ t('imenovanje odjela: prijedlog iz ODJEL · ODSJEK, pita se pri pravljenju preko
 
 t('UI: Rad na terenu (ispod Primke), panel, vodič, dijeljenje KML-om', () => {
   const H = R('index.html');
-  const i = H.indexOf('<h3>Rad na terenu</h3>'), pr = H.indexOf('id="mc-primka"'), j = H.indexOf('id="mc-sjekacke"'), k = H.indexOf('<h3>Karte</h3>');
-  assert.ok(i > 0 && pr > i && j > pr && j < k, 'kartica ispod Primke, prije grupe Karte');
+  const i = H.indexOf('<h3>Rad na terenu</h3>'), pr = H.indexOf('id="mc-primka"'), j = H.indexOf('id="mc-sjekacke"'), k = H.indexOf('<h3>Alati</h3>');
+  assert.ok(i > 0 && pr > i && j > pr && j < k, 'kartica ispod Primke, prije grupe Alati');
   ['id="sjekacke-panel"', 'id="sl-vodic"', 'id="sl-ured"', '.sl-strel', '.sl-zona', "'sjekacke-panel','primka-panel'", '<script src="static/js/sjekacke.js">', "USFSjek.izKljuca('m:${m.id}')", "USFSjek.izKljuca('k:${id}')"].forEach(x => assert.ok(H.includes(x), x));
   assert.ok(H.indexOf('<script src="static/js/nagib-poligon.js">') < H.indexOf('<script src="static/js/sjekacke.js">'), 'DEM pomoćne funkcije prije');
   const js = R('static/js/sjekacke.js');

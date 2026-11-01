@@ -54,7 +54,7 @@ t('filter poligonom i redoslijed brojeva krugova', () => {
 });
 
 t('Meni: Inventura odmah ispod Sjekačkih linija, panel registrovan, skripta u sw.js', () => {
-  const sj = HTML.indexOf('id="mc-sjekacke"'), inv = HTML.indexOf('id="mc-inventura"'), karta = HTML.indexOf('id="mc-karta"');
+  const sj = HTML.indexOf('id="mc-sjekacke"'), inv = HTML.indexOf('id="mc-inventura"'), karta = HTML.indexOf('id="mc-doznaka"');
   assert.ok(sj > 0 && inv > sj && karta > inv);
   assert.ok(HTML.includes("'inventura-panel'") && HTML.includes('<script src="static/js/inventura.js">'));
   assert.ok(fs.readFileSync(path.join(__dirname, '../../sw.js'), 'utf8').includes('./static/js/inventura.js'));

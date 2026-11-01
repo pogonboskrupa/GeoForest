@@ -73,11 +73,15 @@ t('tabovi.js: izbor se pamti po panelu, sekcije drugih tabova su sakrivene', () 
   assert.ok(js.includes("'usf_tab_' + k") && js.includes("s.hidden = s.dataset.tab !== t") && js.includes("aria-selected"));
 });
 
-t('Meni: velike kartice za radne tokove, pločice za ostalo, tap >= 48 px', () => {
+t('Meni (v1.3.3): pločice 2×2 i 3 alata, kartica „Nastavi”, tap >= 48 px', () => {
   const css = R('static/css/geoforest.css');
-  assert.ok(/#meni-panel \.meni-card \{[^}]*min-height: 84px/.test(css));
-  assert.ok(css.includes('#meni-panel section.meni-grp:nth-of-type(n+2) { display: grid; grid-template-columns: 1fr 1fr'));
-  assert.ok(/#meni-panel \.meni-set \{[^}]*min-height: var\(--gf-tap\)/.test(css));
+  assert.ok(/#meni-panel \.mn-tile \{[^}]*min-height: 116px/.test(css));
+  assert.ok(css.includes('#meni-panel .mn-grp { display: grid; grid-template-columns: 1fr 1fr'));
+  assert.ok(/#meni-panel \.mn-red \{[^}]*min-height: 64px/.test(css));
+  const I = require('../../static/js/izgled.js');
+  const l = I.stavke({ trag: 'snima', pojas: 'Ana · u toku', doznaka: 'Odjel 1', primka: 'Odjel 2', nedavno: ['mc-mjerenja'] });
+  assert.deepStrictEqual(l.map(x => x.id), ['mc-tragovi', 'mc-doznaka', 'mc-primka'], 'u toku prvo, najviše 3, bez duplikata');
+  assert.deepStrictEqual(I.stavke({ nedavno: ['mc-mjerenja', 'mc-tacke'] }).map(x => x.id), ['mc-mjerenja', 'mc-tacke']);
 });
 
 t('Korisnik aplikacije: novi modul (korisnik.js), bez starog koda i fonta Dancing Script', () => {

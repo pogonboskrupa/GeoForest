@@ -18,13 +18,13 @@ console.log('Primka (realizacija izvedbenih projekata):');
 
 const kv = (la, lo, d) => [[la, lo], [la, lo + d], [la + d, lo + d], [la + d, lo]];
 
-t('Meni GeoForest: 8 sekcija u 3 grupe, ovim redom (Primka prva)', () => {
-  const grupe = [...HTML.matchAll(/<section class="meni-grp">\s*<h3>([^<]+)<\/h3>([\s\S]*?)<\/section>/g)].map(m => ({ h: m[1], ids: [...m[2].matchAll(/class="meni-card" id="(mc-[a-z]+)"/g)].map(x => x[1]) }));
+t('Meni GeoForest: 7 pločica u 2 grupe, ovim redom (Primka prva); Učitaj kartu/KML su samo u tabu Karte', () => {
+  const grupe = [...HTML.matchAll(/<section class="mn-grp[^"]*"><h3>([^<]+)<\/h3>([\s\S]*?)<\/section>/g)].map(m => ({ h: m[1], ids: [...m[2].matchAll(/class="mn-tile" id="(mc-[a-z]+)"/g)].map(x => x[1]) }));
   assert.deepStrictEqual(grupe, [
     { h: 'Rad na terenu', ids: ['mc-primka', 'mc-sjekacke', 'mc-inventura', 'mc-doznaka'] },
-    { h: 'Karte', ids: ['mc-karta', 'mc-kml'] },
     { h: 'Alati', ids: ['mc-tragovi', 'mc-mjerenja', 'mc-tacke'] }
   ]);
+  assert.ok(!HTML.includes('id="mc-karta"') && !HTML.includes('id="mc-kml"'));
   for (const x of ['mc-sumarstvo', 'mc-susenje', 'mc-pozari', 'mc-put', 'mc-tematska']) assert.ok(!HTML.includes(x), x + ' uklonjen');
   assert.ok(HTML.includes("'primka-panel'") && HTML.includes('<script src="static/js/primka.js">'));
   assert.ok(R('sw.js').includes("'./static/js/primka.js'") && R('android/copy-assets.sh').includes('static/js/primka.js'));

@@ -62,8 +62,8 @@ t('APP_VER je definisan i prati v-prefiksovanu shemu', () => {
   assert.match(HTML, /const APP_VER = 'v[0-9]+\.[0-9]+\.[0-9]+'/);
 });
 
-t('verzija je v1.3.2 i rollover koristi jednocifreni patch/minor', () => {
-  assert.ok(HTML.includes("const APP_VER = 'v1.3.2'"));
+t('verzija je v1.3.3 i rollover koristi jednocifreni patch/minor', () => {
+  assert.ok(HTML.includes("const APP_VER = 'v1.3.3'"));
   const src = extractFn('_sljedecaVerzija') + '\nreturn _sljedecaVerzija;';
   const next = new Function(src)();
   assert.strictEqual(next('v1.2.8'), 'v1.2.9');
@@ -170,12 +170,13 @@ t('uklonjeni moduli: nema ✕ za tematske slojeve, panela ni skripti', () => {
 t('meni: grupe, SVG ikone (bez emoji) i status po kartici', () => {
   const a = HTML.indexOf('<div id="meni-panel"'), b = HTML.indexOf('id="meni-ver-badge"', a);
   const meni = HTML.slice(a, b);
-  assert.strictEqual((meni.match(/class="meni-grp"/g) || []).length, 3);
-  const kartice = meni.match(/<button type="button" class="meni-card"[\s\S]*?<\/button>/g) || [];
-  assert.strictEqual(kartice.length, 9, 'Primka, Sjekačke, Inventura, Doznaka, Učitaj kartu, Učitaj KML, Tragovi, Mjerenja, Tačke');
+  assert.strictEqual((meni.match(/class="mn-grp/g) || []).length, 2);
+  const kartice = meni.match(/<button type="button" class="mn-tile"[\s\S]*?<\/button>/g) || [];
+  assert.strictEqual(kartice.length, 7, 'Primka, Sjekačke, Inventura, Doznaka, Tragovi, Mjerenja, Tačke');
   for (const k of kartice) {
-    assert.ok(/<span class="mc-ico"><svg/.test(k), 'ikona mora biti SVG');
-    assert.ok(!/\p{Extended_Pictographic}/u.test(k), 'bez emoji u kartici');
+    assert.ok(/<span class="mn-ik"><svg/.test(k), 'ikona mora biti SVG');
+    assert.ok(!/\p{Extended_Pictographic}/u.test(k), 'bez emoji u pločici');
+    assert.ok(/<span class="mn-st" id="mc-stat-[a-z]+"><\/span>/.test(k), 'status pločice');
   }
   assert.ok(HTML.includes("tab === 'meni') { document.getElementById('meni-panel').classList.add('show'); _meniStatusRender(); }"));
 });
