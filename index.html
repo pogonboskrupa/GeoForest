@@ -1934,7 +1934,6 @@ body.sl-uredi #sl-ured { display: block; }
       <div class="gf-tab-sek" data-tab="tel">
       <section class="karta-hub-card kh-gran" id="kh-gran" hidden></section>
       <section class="karta-hub-card kh-off" id="kh-offline-kartica"></section>
-      <h3 id="kh-g-podaci">Moji slojevi</h3>
       <section class="karta-hub-card kh-lista" id="kh-lista"></section>
       </div>
       <div class="gf-tab-sek" data-tab="srv">
@@ -2223,7 +2222,7 @@ body.sl-uredi #sl-ured { display: block; }
 // android/app/build.gradle versionCode+versionName. Sva tri MORAJU biti
 // usklađena prije svakog commita.
 // =====================================================================
-const APP_VER = 'v1.3.5';
+const APP_VER = 'v1.3.6';
 document.getElementById('meni-ver-badge').textContent = 'GeoForest ' + APP_VER;
 
 // Verzije koriste tri jednocifrena segmenta: patch i minor idu 0–9.
@@ -5146,7 +5145,7 @@ async function _vectorFileChosen(e) {
       const slika = await _kmzSacuvajSlike(buf, f.name.replace(/\.kmz$/i, '.kml'));
       if (slika) showToast('🖼 ' + slika + ' fotografija iz ' + f.name + ' sačuvano za offline');
       const blob = new Blob([kmlText], { type: 'application/vnd.google-earth.kml+xml' });
-      _kmlLoadFile(new File([blob], f.name.replace(/\.kmz$/i, '.kml')));
+      _kmlLoadFile(new File([blob], f.name.replace(/\.kmz$/i, '.kml'), { lastModified: f.lastModified }));
     } catch(err) { showToast('⚠ KMZ greška: ' + (err.message || f.name)); }
   }
   const shpFiles = files.filter(f => /\.shp$/i.test(f.name));
@@ -5434,7 +5433,7 @@ function _kmlLoadFile(file) {
       if (!cnt) { showToast('⚠ KML nema prepoznatih geometrija: ' + file.name); return; }
       const novi = { id: 'kml_' + Date.now() + '_' + kmlCI, name: file.name, grp, col, stil, vis: true, _content: usedText, samoOdabir: _kmlJePoligonski(file.name) };
       kmlLs.push(novi); _kmlPrimijeniPrikaz(novi);
-      _kmlSaveContent(file.name, usedText, col, stil);
+      _kmlSaveContent(file.name, usedText, col, stil, file.lastModified); novi.dodan = Date.now(); novi.fd = file.lastModified;
       _kmlRegRender();
       try { const b = grp.getBounds(); if (b.isValid()) map.fitBounds(b, { padding: [20,20] }); } catch(x) {}
       showToast('✅ Učitano: ' + file.name + ' (' + cnt + ' objekata)');
@@ -5459,12 +5458,14 @@ function _kmlMeta() { try { return JSON.parse(localStorage.getItem(_LOCAL_KML_KE
 function _kmlMetaPisi(fn) { const st = _kmlMeta(); fn(st); try { localStorage.setItem(_LOCAL_KML_KEY, JSON.stringify(st)); return true; } catch(e) { return false; } }
 // Trajno čuvanje sloja: tekst u IDB, meta u localStorage; bez IDB-a (stari WebView) sve u localStorage.
 async function _kmlSpremi(ime, txt, meta) {
-  const m = { col: meta.col, vis: meta.vis !== false, ...(meta.stil ? { stil: meta.stil } : {}) };
+  const stari = _kmlMeta()[ime];
+  const t = meta.t != null ? meta.t : stari ? stari.t : Date.now(), fd = meta.fd != null ? meta.fd : stari ? stari.fd : undefined; // dodano / datum fajla; ponovni upis (uređivanje) ih NE mijenja
+  const m = { col: meta.col, vis: meta.vis !== false, ...(meta.stil ? { stil: meta.stil } : {}), ...(t != null ? { t } : {}), ...(fd ? { fd } : {}) };
   try { await _kmlIdb('readwrite', st => st.put(txt, ime)); return _kmlMetaPisi(st => { st[ime] = { ...m, idb: 1 }; }); }
   catch(e) { return _kmlMetaPisi(st => { st[ime] = { ...m, content: txt }; }); }
 }
-function _kmlSaveContent(name, content, col, stil) {
-  _kmlSpremi(name, content, { col, vis: true, stil }).then(ok => { if (!ok) showToast('⚠ KML nije sačuvan lokalno (memorija puna?)'); });
+function _kmlSaveContent(name, content, col, stil, fd) {
+  _kmlSpremi(name, content, { col, vis: true, stil, fd }).then(ok => { if (!ok) showToast('⚠ KML nije sačuvan lokalno (memorija puna?)'); });
 }
 // „Samo za odabir poligona”: sloj granica taksacije služi samo kao izvor poligona odjela/odsjeka (nagib, sjekačke
 // linije, Primka) — nije na karti i nema kartice objekata. Stanje je samo u memoriji: pri SVAKOM pokretanju/učitavanju
@@ -5525,7 +5526,7 @@ async function _kmlRestore() {
       await new Promise(r => setTimeout(r, 0)); // popusti UI niti između velikih slojeva
       const doc = new DOMParser().parseFromString(txt, 'text/xml');
       const grp = await pkmlAsync(doc, col, undefined, data.stil);
-      const nov = { id: 'kml_' + Date.now() + '_' + kmlCI, name, grp, col, stil: data.stil, vis: data.vis !== false, _content: txt, samoOdabir: _kmlJePoligonski(name) };
+      const nov = { id: 'kml_' + Date.now() + '_' + kmlCI, name, grp, col, stil: data.stil, vis: data.vis !== false, _content: txt, samoOdabir: _kmlJePoligonski(name), dodan: data.t, fd: data.fd };
       kmlLs.push(nov); _kmlPrimijeniPrikaz(nov); _kmlRegRender(); // odmah vidljiv i u listi, ne čeka ostale
       if (data.content != null) _kmlSpremi(name, txt, data); // seoba iz localStorage u IDB
     } catch(e) {}
@@ -6297,10 +6298,11 @@ function _khOffline() {
       ${r.active ? '<span class="kh-bedz">✓ aktivna</span>' : `<button class="ko-kar-b" onclick="_sqlmapSelect('${r.id}', 'tiho')">▶ Koristi</button>`}
       ${r.bounds ? `<button class="ko-kar-z" onclick="_sqlmapZoom('${r.id}')" aria-label="Obuhvat karte" title="Obuhvat karte">⤢</button>` : ''}</div>`).join('');
   el.className = 'karta-hub-card kh-off' + (akt ? ' on' : '');
-  el.innerHTML = `<div class="kg-top"><i>🗂</i><div><h3>Offline karte ${sql.length ? `<span class="kh-bedz">${sql.length}</span>` : ''}</h3>
-      <p>${sql.length ? (akt ? 'Aktivna: ' + _escHtml(akt.name) : 'Nijedna nije aktivna — izaberi jednu') : '.sqlitedb / .mbtiles — rad bez signala. Još nema karata na telefonu.'}</p></div></div>
-    ${redovi ? `<div class="ko-kar-lista">${redovi}</div>` : ''}
-    <div class="kg-akc"><button class="glavno" onclick="document.getElementById('sqlmap-file-input').click()">📂 Dodaj sa telefona</button><button onclick="USFTabovi.izaberi('karte', 'srv')">☁ Sa servera</button><button onclick="openUcitajKartuSection()">⚙ Upravljaj</button></div>`;
+  const nazA = akt ? _escHtml(String(akt.name).replace(/\.(sqlitedb|mbtiles)$/i, '')) : '';
+  // Sklopljeno (stanje se pamti): lista karata ne zauzima mjesto dok ne zatreba; bez ijedne karte je otvoreno da se vidi „Dodaj”
+  el.innerHTML = `<details class="kl-det kh-offd" data-k="offline"${_khOtvoreno('offline') || !sql.length ? ' open' : ''}><summary>🗂 Offline karte <small>${sql.length}</small><em>${sql.length ? (akt ? '✓ ' + nazA : 'nijedna aktivna') : 'nema karata'}</em></summary>
+    <div class="kh-offd-b">${redovi ? `<div class="ko-kar-lista">${redovi}</div>` : '<p class="kh-prazno">.sqlitedb / .mbtiles — rad bez signala. Još nema karata na telefonu.</p>'}
+    <div class="kg-akc"><button class="glavno" onclick="document.getElementById('sqlmap-file-input').click()">📂 Dodaj sa telefona</button><button onclick="USFTabovi.izaberi('karte', 'srv')">☁ Sa servera</button><button onclick="openUcitajKartuSection()">⚙ Upravljaj</button></div></div></details>`;
 }
 // Serverski KML slojevi: popis iz kml_drive.json + ugrađeni; status, prekidač, preuzmi/osvježi (PIN)
 function _khServer() {
@@ -6345,6 +6347,48 @@ document.addEventListener('toggle', e => {
   const d = e.target; if (!d.matches || !d.matches('details.kl-det')) return;
   try { const o = JSON.parse(localStorage.getItem('usf_kh_otv') || '{}'); o[d.dataset.k] = d.open; localStorage.setItem('usf_kh_otv', JSON.stringify(o)); } catch(x) {}
 }, true);
+// KML fajlovi (učitani iz fajla): pretraga po imenu, redoslijed po imenu / blizini centra karte / datumu + tragovi.
+// Stanje pretrage je samo u memoriji; lista se crta u #kh-kml-redovi da polje za pretragu ne gubi fokus.
+const _khKmlF = { q: '', sort: 'ime' };
+const _KH_SORT = [['ime', 'Ime'], ['blizu', 'Blizu'], ['datum', 'Datum']];
+const _khDatum = k => k.fd || k.dodan || 0;
+const _khDatumTxt = t => t ? new Date(t).toLocaleDateString('bs-BA', { day: 'numeric', month: 'numeric', year: 'numeric' }) : '';
+// Udaljenost centra karte od sloja: 0 ako je centar unutar obuhvata, inače do najbliže tačke obuhvata (m); Infinity bez geometrije
+function _khUdaljenost(k, c) {
+  try {
+    const b = k.grp.getBounds(); if (!b.isValid()) return Infinity;
+    if (b.contains(c)) return 0;
+    const la = Math.min(Math.max(c.lat, b.getSouth()), b.getNorth()), lo = Math.min(Math.max(c.lng, b.getWest()), b.getEast());
+    return map.distance(c, [la, lo]);
+  } catch (e) { return Infinity; }
+}
+function _khKmlLista() {
+  const q = _khKmlF.q.trim().toLowerCase(), c = map.getCenter();
+  let l = kmlLs.filter(k => !_kmlJeServerski(k)).map(k => ({ k, d: _khKmlF.sort === 'blizu' ? _khUdaljenost(k, c) : null }));
+  if (q) l = l.filter(x => x.k.name.toLowerCase().includes(q));
+  if (_khKmlF.sort === 'blizu') l.sort((a, b) => a.d - b.d);
+  else if (_khKmlF.sort === 'datum') l.sort((a, b) => _khDatum(b.k) - _khDatum(a.k));
+  else l.sort((a, b) => a.k.name.localeCompare(b.k.name, 'bs'));
+  return l;
+}
+function _khKmlRedovi() {
+  const el = document.getElementById('kh-kml-redovi'); if (!el) return;
+  const l = _khKmlLista(), ukupno = kmlLs.filter(k => !_kmlJeServerski(k)).length;
+  const brojEl = document.getElementById('kh-kml-broj'); if (brojEl) brojEl.textContent = l.length === ukupno ? String(ukupno) : l.length + ' / ' + ukupno;
+  el.innerHTML = l.map(({ k, d }) => {
+    const s = _kmlStat(k), vid = _kmlNaKarti(k);
+    const info = [s.pol ? s.pol + ' pol.' : '', s.lin ? s.lin + ' lin.' : '', s.tac ? s.tac + ' tač.' : ''].filter(Boolean).join(' · ') || 'prazno';
+    const dod = _khDatumTxt(_khDatum(k));
+    const dist = d == null ? '' : d === Infinity ? '' : d === 0 ? '<span class="kl-d in">📍 unutar</span>' : `<span class="kl-d">📍 ${_msrFmt(d)}</span>`;
+    return `<div class="kl-red${vid ? '' : ' skriven'}" style="--kc:${k.col}"><i></i><div onclick="_kmlZoom('${k.id}')"><b>${_escHtml(k.name)}</b><small>${info}${dod ? ' · 📅 ' + dod : ''}</small>${dist}</div>
+      <button class="kl-stil" onclick="_kmlPromijeniBoju('${k.id}')" aria-label="Stil sloja">🎨</button><label class="ng-switch"><input type="checkbox" ${vid ? 'checked' : ''} onchange="_kmlToggle('${k.id}')"><span></span></label></div>`;
+  }).join('') || `<p class="kh-prazno">${ukupno ? 'Nijedan fajl ne odgovara pretrazi.' : 'Još nisi učitao svoj KML / KMZ / SHP. Učitani fajlovi ostaju na telefonu.'}</p>`;
+}
+function _khKmlF_set(polje, v) {
+  _khKmlF[polje] = v;
+  if (polje === 'sort') document.querySelectorAll('#kh-lista .kh-sort button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  _khKmlRedovi();
+}
 // Moji slojevi (učitani iz fajla) + tragovi
 function _khSlojevi() {
   const el = document.getElementById('kh-lista'); if (!el) return;
@@ -6352,14 +6396,14 @@ function _khSlojevi() {
   const tragovi = tr.length ? `<details class="kl-det" data-k="tragovi"${_khOtvoreno('tragovi') ? ' open' : ''}><summary>🥾 Tragovi <small>${tr.length}</small></summary>` + tr.slice(0, 12).map(t => { const vid = t.visible !== false;
     return `<div class="kl-red${vid ? '' : ' skriven'}" style="--kc:${t.color || '#f97316'}"><i></i><div onclick="_tragRegZoom('${t.id}')"><b>${_escHtml(t.name)}</b><small>${_tragFmtLen(_tragCalcLen(t.pts))} · ${t.pts.length} tač.</small></div>
       <button class="kl-stil" onclick="_tragStilUredi('${t.id}')" aria-label="Stil traga">🎨</button><label class="ng-switch"><input type="checkbox" ${vid ? 'checked' : ''} onchange="_tragRegToggle('${t.id}')"><span></span></label></div>`; }).join('') + (tr.length > 12 ? `<small class="kl-vise" onclick="openTragoviPanel()">… još ${tr.length - 12} — otvori sve tragove ›</small>` : '') + '</details>' : '';
-  const gr = l.length ? _kmlGrupisi(l) : [];
-  const kml = l.length ? `<details class="kl-det" data-k="kml"${_khOtvoreno('kml') ? ' open' : ''}><summary>🗺 KML / SHP slojevi <small>${l.length}</small><em>${l.filter(_kmlNaKarti).length} na karti</em></summary>` + gr.flatMap(g => [{ g }, ...g.slojevi]).map(k => { if (k.g) return gr.length > 1 ? `<div class="kl-podnasl">${k.g.ik} ${_escHtml(k.g.naziv)} <small>${k.g.slojevi.length}</small></div>` : ''; const s = _kmlStat(k), vid = _kmlNaKarti(k);
-    return `<div class="kl-red${vid ? '' : ' skriven'}" style="--kc:${k.col}"><i></i><div onclick="_kmlZoom('${k.id}')"><b>${_escHtml(k.name)}</b><small>${[s.pol ? s.pol + ' pol.' : '', s.lin ? s.lin + ' lin.' : '', s.tac ? s.tac + ' tač.' : ''].filter(Boolean).join(' · ') || 'prazno'}</small></div>
-      <button class="kl-stil" onclick="_kmlPromijeniBoju('${k.id}')" aria-label="Stil sloja">🎨</button><label class="ng-switch"><input type="checkbox" ${vid ? 'checked' : ''} onchange="_kmlToggle('${k.id}')"><span></span></label></div>`; }).join('') + '</details>' : '<p class="kh-prazno">Još nisi učitao svoj KML / KMZ / SHP. Učitani fajlovi ostaju na telefonu.</p>';
   el.hidden = false;
   const svi = [...l.filter(k => !k.samoOdabir), ...tr], vidSvi = svi.filter(x => x.grp ? _kmlNaKarti(x) : x.visible !== false).length;
   const sakrijBtn = svi.length ? `<button class="kh-sakrij${vidSvi ? '' : ' off'}" onclick="_khMojiVid(${vidSvi ? 'false' : 'true'})" aria-label="${vidSvi ? 'Sakrij sve moje slojeve' : 'Prikaži sve moje slojeve'}">${vidSvi ? '🙈 Sakrij sve' : '👁 Prikaži sve'}</button>` : '';
-  el.innerHTML = `<div class="kh-lista-zag">${sakrijBtn}</div>` + kml + tragovi + '<div class="kg-akc" style="margin-top:10px"><button class="glavno" onclick="document.getElementById(\'kml-file-input\').click()">＋ Dodaj KML / KMZ / SHP</button></div>' + (kmlLs.length ? '<div class="kg-akc kh-alati"><button onclick="_khKmlTrazi()">🔎 Objekti i pretraga</button><button onclick="_kedListaOtvori()">🎨 Stil slojeva</button></div>' : '');
+  const alat = l.length ? `<div class="kh-trazi-r"><input id="kh-kml-q" class="kh-trazi" type="search" placeholder="🔎 Traži po imenu…" enterkeyhint="search" value="${_escHtml(_khKmlF.q)}" oninput="_khKmlF_set('q', this.value)" aria-label="Traži KML fajl po imenu"></div>
+    <div class="kh-sort" role="group" aria-label="Redoslijed">${_KH_SORT.map(([v, t]) => `<button data-v="${v}" class="${_khKmlF.sort === v ? 'on' : ''}" onclick="_khKmlF_set('sort','${v}')">${t === 'Blizu' ? '📍 ' : t === 'Datum' ? '📅 ' : 'A–Š '}${t}</button>`).join('')}</div>` : '';
+  el.innerHTML = `<div class="kh-lista-zag"><b>KML fajlovi <small id="kh-kml-broj">${l.length}</small></b>${sakrijBtn}</div>` + alat + (l.length ? '<div id="kh-kml-redovi" class="kh-kml-redovi"></div>' : '<p class="kh-prazno">Još nisi učitao svoj KML / KMZ / SHP. Učitani fajlovi ostaju na telefonu.</p>') + tragovi
+    + '<div class="kg-akc" style="margin-top:10px"><button class="glavno" onclick="document.getElementById(\'kml-file-input\').click()">＋ Dodaj KML / KMZ / SHP</button></div>' + (kmlLs.length ? '<div class="kg-akc kh-alati"><button onclick="_khKmlTrazi()">🔎 Objekti i pretraga</button><button onclick="_kedListaOtvori()">🎨 Stil slojeva</button></div>' : '');
+  _khKmlRedovi();
 }
 function _khKmlTrazi() {
   const q = document.getElementById('kh-kml-trazi')?.value || '';

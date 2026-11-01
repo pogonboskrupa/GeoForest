@@ -86,6 +86,14 @@ t('Meni (v1.3.3): pločice 2×2 i 3 alata, kartica „Nastavi”, tap >= 48 px',
   assert.deepStrictEqual(I.stavke({ nedavno: ['mc-mjerenja', 'mc-tacke'] }).map(x => x.id), ['mc-mjerenja', 'mc-tacke']);
 });
 
+t('Karte (v1.3.6): Offline karte sklopljene, KML fajlovi s pretragom po imenu / blizini / datumu', () => {
+  assert.ok(HTML.includes('class="kl-det kh-offd" data-k="offline"') && HTML.includes("_khOtvoreno('offline')"), 'offline karte su sklopivi odjeljak');
+  assert.ok(HTML.includes('id="kh-kml-q"') && HTML.includes('const _KH_SORT = [[\'ime\', \'Ime\'], [\'blizu\', \'Blizu\'], [\'datum\', \'Datum\']]'));
+  assert.ok(HTML.includes('function _khUdaljenost(k, c)') && HTML.includes('map.getCenter()') && HTML.includes('_kmlLoadFile(new File([blob]'), 'blizina računa od centra karte');
+  assert.ok(HTML.includes('file.lastModified') && HTML.includes('{ lastModified: f.lastModified }'), 'datum fajla se čuva (meta fd)');
+  assert.ok(HTML.includes("meta.fd != null ? meta.fd : stari ? stari.fd : undefined"), 'ponovni upis ne mijenja datum');
+});
+
 t('Korisnik aplikacije: novi modul (korisnik.js), bez starog koda i fonta Dancing Script', () => {
   for (const x of ['set-profil', '_korisnikUi', 'Ko koristi aplikaciju', 'Dancing Script']) assert.ok(!HTML.includes(x), x);
   assert.ok(!fs.existsSync(path.join(__dirname, '../../static/fonts')));

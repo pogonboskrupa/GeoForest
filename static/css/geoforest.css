@@ -778,3 +778,25 @@ html.desk #meni-panel .mn-grp { grid-template-columns: 1fr 1fr; }
 #karte-panel.gf-nov #kt-srv-karte .kt-red { margin: 0 0 8px; border-radius: var(--nv-r); background: var(--nv-kar); border: 1px solid var(--nv-crta); }
 #karte-panel.gf-nov .gf-tabs button b { display: none; }
 #karte-panel.gf-nov .karta-hub-card .kg-top { margin: 0; padding: 0; min-height: 0; align-items: flex-start; }
+
+/* Karte — Offline karte (sklopljeno) i KML fajlovi s pretragom (v1.3.6) */
+#karte-panel .kh-offd { margin: 0; border: 0; background: none; border-radius: 0; overflow: visible; }
+#karte-panel .kh-offd > summary { min-height: 52px; padding: 0 2px; font-size: 16px; color: var(--nv-txt); }
+#karte-panel .kh-offd > summary small { background: var(--nv-kar2); color: var(--nv-dim); font-size: 12px; }
+#karte-panel .kh-offd > summary em { max-width: 52%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: #86efac; }
+#karte-panel .kh-offd > summary::after { color: var(--nv-dim); }
+#karte-panel .kh-offd[open] > summary { border-bottom: 1px solid var(--nv-crta); margin-bottom: 10px; }
+#karte-panel #kh-offline-kartica { padding-top: 4px; padding-bottom: 12px; }
+#karte-panel .kh-lista-zag { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+#karte-panel .kh-lista-zag b { font-size: 16px; color: var(--nv-txt); }
+#karte-panel .kh-lista-zag b small { margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--nv-kar2); color: var(--nv-dim); font-size: 12px; }
+#karte-panel .kh-trazi-r { margin-bottom: 8px; }
+#karte-panel .kh-trazi-r .kh-trazi { width: 100%; min-height: 48px; padding: 0 14px; border-radius: 14px; background: var(--nv-kar2); border: 1px solid var(--nv-crta); color: var(--nv-txt); font-size: 16px; box-sizing: border-box; }
+#karte-panel .kh-sort { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; }
+#karte-panel .kh-sort button { min-height: 44px; border-radius: 12px; background: var(--nv-kar2); border: 1px solid var(--nv-crta); color: var(--nv-dim); font-size: 14px; font-weight: 800; box-shadow: none; }
+#karte-panel .kh-sort button.on { background: color-mix(in srgb, var(--nv-acc) 20%, var(--nv-kar2)); border-color: color-mix(in srgb, var(--nv-acc) 55%, var(--nv-crta)); color: #e0f2fe; }
+#karte-panel .kh-kml-redovi { display: grid; gap: 6px; }
+#karte-panel .kh-kml-redovi .kl-red { margin: 0; }
+#karte-panel .kl-d { display: inline-block; margin-top: 2px; font-size: 12px; font-weight: 800; color: #7dd3fc; }
+#karte-panel .kl-d.in { color: #86efac; }
+#karte-panel .kh-prazno { margin: 6px 2px; font-size: 14px; color: var(--nv-dim); }
