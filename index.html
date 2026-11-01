@@ -1987,22 +1987,18 @@ body.sl-uredi #sl-ured { display: block; }
 </div>
 
 <!-- Postavke panel -->
-<div id="postavke-panel" class="usf-panel">
-  <div class="up-hdr"><h2>⚙ Postavke</h2><button class="up-close" onclick="switchMainTab('karta')">✕</button></div>
+<div id="postavke-panel" class="usf-panel gf-nov">
+  <div class="up-hdr"><button type="button" class="set-nazad" id="set-nazad" hidden aria-label="Nazad">‹</button><h2 id="set-naslov">Postavke</h2><button class="up-close" onclick="switchMainTab('karta')" aria-label="Zatvori">✕</button></div>
   <div class="up-body">
-    <section class="ng-card set-app">
-      <img src="icon-192.png" alt="" class="set-ikona">
-      <div class="set-app-txt"><h3>GeoForest</h3><small>Verzija <b id="set-ver-txt"></b></small></div>
-      <span id="set-mreza-txt" class="set-veza" role="status"></span>
+    <div class="set-str" id="set-glavna">
+    <section class="set-glava">
+      <section class="ng-card set-app">
+        <img src="icon-192.png" alt="" class="set-ikona">
+        <div class="set-app-txt"><h3>GeoForest</h3><small>Verzija <b id="set-ver-txt"></b></small></div>
+        <span id="set-mreza-txt" class="set-veza" role="status"></span>
+      </section>
+      <div id="set-korisnik-dno"><div id="set-korisnik-box"></div></div>
     </section>
-    <div class="gf-tabs set-tabs" role="tablist" aria-label="Postavke" data-tabovi="postavke">
-      <button role="tab" data-t="app"><i>⇩</i><span>Aplikacija</span></button>
-      <button role="tab" data-t="prikaz"><i>🗺</i><span>Prikaz</span></button>
-      <button role="tab" data-t="gps"><i>📍</i><span>GPS i trag</span></button>
-      <button role="tab" data-t="podaci"><i>💾</i><span>Podaci</span></button>
-    </div>
-    <div class="gf-tab-sek" data-tab="app">
-    <section class="ng-card set-korisnik-kar" id="set-korisnik-dno"><h3>👤 Korisnik aplikacije</h3><div id="set-korisnik-box"></div></section>
     <section class="update-card" id="set-update-card" data-phase="idle">
       <div class="update-card-head">
         <div class="update-card-icon">⇩</div>
@@ -2016,33 +2012,25 @@ body.sl-uredi #sl-ured { display: block; }
         <div class="update-progress-meta"><span id="set-update-size"></span><span id="set-update-percent"></span></div>
       </div>
     </section>
+    <h3>Izgled i karta</h3>
+    <div class="set-lista"><button type="button" class="mn-red" data-str="izgled" style="--mc:#fbbf24"><span class="mn-ik"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="10" r="1.3"/><circle cx="12" cy="7.5" r="1.3"/><circle cx="15.5" cy="10" r="1.3"/><path d="M12 21a3 3 0 0 1 0-6h1.5a2 2 0 0 0 0-4"/></svg></span><span class="mn-tx"><b>Izgled</b><small id="set-sub-izgled">Šablon, dugmad na karti, koordinate</small></span><svg class="mn-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button><button type="button" class="mn-red" data-str="razmjera" style="--mc:#38bdf8"><span class="mn-ik"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.8-4.8M8 10.5h5M10.5 8v5"/></svg></span><span class="mn-tx"><b>Prikaz po razmjeri</b><small id="set-sub-razmjera">Kad se slojevi sakrivaju pri udaljavanju</small></span><svg class="mn-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></div>
+    <h3>GPS i snimanje</h3>
+    <div class="set-lista"><button type="button" class="mn-red" data-str="gps" style="--mc:#f472b6"><span class="mn-ik"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg></span><span class="mn-tx"><b>GPS i baterija</b><small id="set-sub-gps">Rad u pozadini, Xiaomi autostart</small></span><svg class="mn-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button><button type="button" class="mn-red" data-str="trag" style="--mc:#fb923c"><span class="mn-ik"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h7.5a3.5 3.5 0 0 0 0-7h-7a3.5 3.5 0 0 1 0-7H16"/></svg></span><span class="mn-tx"><b>Snimanje traga</b><small id="set-sub-trag">Izgled linije i tačnost GPS-a</small></span><svg class="mn-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></div>
+    <h3>Podaci</h3>
+    <div class="set-lista"><button type="button" class="mn-red" data-str="podaci" style="--mc:#facc15"><span class="mn-ik"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg></span><span class="mn-tx"><b>Rezervna kopija</b><small id="set-sub-podaci">Kopija i vraćanje podataka</small></span><svg class="mn-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button><button type="button" class="mn-red" data-str="memorija" style="--mc:#4ade80"><span class="mn-ik"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5 9 4l6 2.5L21 4v13.5L15 20l-6-2.5L3 20z"/><path d="M9 4v13.5M15 6.5V20"/></svg></span><span class="mn-tx"><b>Karte i memorija</b><small id="set-sub-memorija">Keš pločica, Protomaps</small></span><svg class="mn-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></div>
+    <h3>Ostalo</h3>
+    <div class="set-lista"><button type="button" class="mn-red" data-str="napredno" style="--mc:#94a3b8"><span class="mn-ik"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></span><span class="mn-tx"><b>Napredno</b><small id="set-sub-napredno">Prikaz na računaru, ID uređaja</small></span><svg class="mn-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></div>
     </div>
-    <div class="gf-tab-sek" data-tab="prikaz">
-    <section class="ng-card set-kar" id="set-s-sablon" style="--acc:#fbbf24">
-      <h3 class="set-kar-h">🎨 Šablon interfejsa</h3>
-      <div class="set-acc-body">
+    <div class="set-str" data-str="izgled" data-naslov="Izgled" hidden>
+    <section class="ng-card set-blok" id="set-s-sablon"><h4>Šablon interfejsa</h4>
       <p class="set-nap">Jednim dodirom postavlja izgled koordinata i dugmadi na karti (tema, providnost, veličina, debljina ikona). Poslije možeš sve fino podesiti u „Koordinate i dugmad”.</p>
       <div id="set-sablon" class="sab-mreza" role="radiogroup" aria-label="Šablon interfejsa"></div>
-      </div>
     </section>
-    <section class="ng-card set-kar" id="set-s-dugmad" style="--acc:#a78bfa">
-      <h3 class="set-kar-h">🎛 Šablon dugmadi na mapi</h3>
-      <div class="set-acc-body">
+    <section class="ng-card set-blok" id="set-s-dugmad"><h4>Dugmad na karti</h4>
       <p class="set-nap">Izgled zoom dugmadi, lokacije, mjerenja, tragova i izbora karte. Pregled je tačan prikaz; finu providnost, veličinu i oblik možeš dalje mijenjati u „Koordinate i dugmad”.</p>
       <div id="set-dugmad-sab" class="bsab-lista" role="radiogroup" aria-label="Šablon dugmadi na mapi"></div>
-      </div>
     </section>
-    <section class="ng-card set-kar" id="set-s-razmjera" style="--acc:#38bdf8">
-      <h3 class="set-kar-h">🔭 Prikaz po razmjeri</h3>
-      <div class="set-acc-body">
-      <div class="rz-sad" id="set-razmjera-sad" role="status"></div>
-      <p class="set-nap">Za svaki sloj izaberi do koje razmjere se vidi. Kad zumiraš dalje od toga, sloj se sakrije; kad se vratiš bliže, opet se pojavi. <b>Veći broj iza „1:” = dalji pogled</b> (npr. 1:100 000 je cijela općina, 1:5 000 je jedan odsjek).</p>
-      <div id="set-razmjera"></div>
-      </div>
-    </section>
-    <section class="ng-card set-kar" id="set-s-ui" style="--acc:#a78bfa">
-      <h3 class="set-kar-h">🎛 Koordinate i dugmad</h3>
-      <div class="set-acc-body">
+    <section class="ng-card set-blok" id="set-s-ui"><h4>Koordinate i dugmad — fino podešavanje</h4>
       <div class="ui-pregled"><div id="ui-pr-badge" class="ui-bdg"></div><div id="ui-pr-btn" class="map-ctl">🗂</div></div>
       <div class="set-red"><div><b>Tema podloge</b><small>Tamna ili svijetla staklena podloga (tekst i ikone se prilagode).</small></div></div>
       <div class="set-seg" id="ui-tema" style="grid-template-columns:1fr 1fr"><button data-v="tamna" onclick="_setUi('tema','tamna')">🌙 Tamna</button><button data-v="svijetla" onclick="_setUi('tema','svijetla')">☀ Svijetla</button></div>
@@ -2062,27 +2050,23 @@ body.sl-uredi #sl-ured { display: block; }
       <label class="set-klizac" style="margin-top:12px"><span>Providnost podloge dugmadi <b id="ui-btnA-v"></b></span><input type="range" id="ui-btnA" min="0" max="100" step="5" oninput="_setUi('btnA', +this.value)"></label>
       <label class="set-klizac"><span>Veličina dugmadi <b id="ui-btnZ-v"></b></span><input type="range" id="ui-btnZ" min="80" max="140" step="5" oninput="_setUi('btnZ', +this.value)"></label>
       <button class="set-dugme" style="margin-top:10px" onclick="_setUiZadano()">↺ Vrati zadano</button>
-      </div>
-    </section>
-    <section class="ng-card set-kar" id="set-s-prikaz" style="--acc:#22d3ee">
-      <h3 class="set-kar-h">🖥 Prikaz</h3>
-      <div class="set-acc-body">
-      <div class="set-seg" id="set-prikaz"><button data-v="auto" onclick="_prikazPostavi('auto')">Automatski</button><button data-v="desktop" onclick="_prikazPostavi('desktop')">Računar</button><button data-v="mobilni" onclick="_prikazPostavi('mobilni')">Telefon</button></div>
-      <small class="set-nap" id="set-prikaz-txt"></small>
-      </div>
     </section>
     </div>
-    <div class="gf-tab-sek" data-tab="gps">
-    <section class="ng-card set-kar" id="set-s-gps" style="--acc:#f472b6">
-      <h3 class="set-kar-h">📍 GPS i baterija</h3>
-      <div class="set-acc-body">
+    <div class="set-str" data-str="razmjera" data-naslov="Prikaz po razmjeri" hidden>
+    <section class="ng-card set-blok" id="set-s-razmjera"><h4>Prikaz po razmjeri</h4>
+      <div class="rz-sad" id="set-razmjera-sad" role="status"></div>
+      <p class="set-nap">Za svaki sloj izaberi do koje razmjere se vidi. Kad zumiraš dalje od toga, sloj se sakrije; kad se vratiš bliže, opet se pojavi. <b>Veći broj iza „1:” = dalji pogled</b> (npr. 1:100 000 je cijela općina, 1:5 000 je jedan odsjek).</p>
+      <div id="set-razmjera"></div>
+    </section>
+    </div>
+    <div class="set-str" data-str="gps" data-naslov="GPS i baterija" hidden>
+    <section class="ng-card set-blok" id="set-s-gps"><h4>GPS i baterija</h4>
       <div class="set-red"><div><b>Rad bez ograničenja baterije</b><small id="set-bat-txt">Da poziv ili druga aplikacija ne prekine GPS snimanje u pozadini.</small></div><button id="set-bat-btn" onclick="_setBaterija()">Podesi</button></div>
       <div class="set-red" id="set-autostart" hidden><div><b>Autostart (Xiaomi/Redmi)</b><small>Uključi Autostart za GeoForest — inače HyperOS može ugasiti snimanje traga dok je ekran zaključan.</small></div><button onclick="AndroidGps.otvoriAutostart()">Otvori</button></div>
-      </div>
     </section>
-    <section class="ng-card set-kar" id="set-s-trag" style="--acc:#fb923c">
-      <h3 class="set-kar-h">🥾 Snimanje traga i linije</h3>
-      <div class="set-acc-body">
+    </div>
+    <div class="set-str" data-str="trag" data-naslov="Snimanje traga" hidden>
+    <section class="ng-card set-blok" id="set-s-trag"><h4>Snimanje traga i linije</h4>
       <svg id="set-trag-pregled" class="set-pregled" viewBox="0 0 320 64" aria-hidden="true"><path d="M8 48 C60 8 110 60 160 30 S260 8 312 40" fill="none" stroke-linecap="round"/></svg>
       <label class="set-klizac"><span>Debljina <b id="set-trag-w-v"></b></span><input type="range" id="set-trag-w" min="1" max="10" step="1" oninput="_setTragStil()"></label>
       <label class="set-klizac"><span>Neprovidnost <b id="set-trag-op-v"></b></span><input type="range" id="set-trag-op" min="30" max="100" step="5" oninput="_setTragStil()"></label>
@@ -2090,22 +2074,18 @@ body.sl-uredi #sl-ured { display: block; }
       <div class="set-red"><div><b>Najlošija GPS tačnost za trag</b><small>Tačke s većom greškom od zadane se odbacuju (stroža = čistiji trag, ali rupe u šumi).</small></div></div>
       <div class="set-seg" id="set-trag-ac"><button data-v="20" onclick="_setTragAc(20)">±20 m</button><button data-v="50" onclick="_setTragAc(50)">±50 m · zadano</button><button data-v="100" onclick="_setTragAc(100)">±100 m</button></div>
       <button class="set-dugme" style="margin-top:10px" onclick="_setTragZadano()">↺ Vrati zadano</button>
-      </div>
     </section>
     </div>
-    <div class="gf-tab-sek" data-tab="podaci">
-    <section class="ng-card set-kar" id="set-s-podaci" style="--acc:#facc15">
-      <h3 class="set-kar-h">💾 Podaci na uređaju</h3>
-      <div class="set-acc-body">
+    <div class="set-str" data-str="podaci" data-naslov="Rezervna kopija" hidden>
+    <section class="ng-card set-blok" id="set-s-podaci"><h4>Podaci na uređaju</h4>
       <div class="set-grid" id="set-podaci"></div>
       <div class="rd-akc"><button class="glavno" onclick="_setBackup()">⤓ Rezervna kopija</button><button onclick="document.getElementById('set-restore-input').click()">⤒ Vrati iz kopije</button></div>
       <input type="file" id="set-restore-input" accept=".json,application/json" style="display:none" onchange="_setRestore(event)">
       <p class="set-nap">Kopija (.json) sadrži tragove, mjerenja, KML slojeve, primku, sjekačke linije, inventuru, tačke, mjerenja nagiba i postavke — ne dijeli je. Offline karte (.mbtiles) nisu u kopiji; to su već fajlovi na telefonu. Korisno pri prelasku na novi telefon.</p>
-      </div>
     </section>
-    <section class="ng-card set-kar" id="set-s-karte" style="--acc:#4ade80">
-      <h3 class="set-kar-h">🗺 Karte i memorija</h3>
-      <div class="set-acc-body">
+    </div>
+    <div class="set-str" data-str="memorija" data-naslov="Karte i memorija" hidden>
+    <section class="ng-card set-blok" id="set-s-karte"><h4>Karte i memorija</h4>
       <div class="set-mem"><div class="set-mem-bar"><i id="set-mem-fill"></i></div><small id="set-mem-txt">Računam zauzeće…</small></div>
       <div class="set-red"><div><b>Pločice karata</b><small id="set-kes-plocice">Topo / Satelit / Karta pregledane online</small></div><button onclick="clearTileCache()">Očisti</button></div>
       <div class="set-red"><div><b>Visinske pločice</b><small id="set-kes-teren">Nagib, sjenčenje, profil van 5 općina</small></div><button onclick="_setOcistiTeren()">Očisti</button></div>
@@ -2114,17 +2094,21 @@ body.sl-uredi #sl-ured { display: block; }
         <input id="protomaps-key" type="password" autocomplete="off" placeholder="Unesi svoj Protomaps ključ" class="set-input">
         <button class="set-dugme" onclick="_terrainProtomapsSave()">Sačuvaj i koristi Protomaps</button>
       </details>
-      </div>
     </section>
-    <section class="ng-card">
-      <details class="set-det"><summary>🛠 Napredno</summary>
+    </div>
+    <div class="set-str" data-str="napredno" data-naslov="Napredno" hidden>
+    <section class="ng-card set-blok" id="set-s-prikaz"><h4>Prikaz (računar / mobilni)</h4>
+      <div class="set-seg" id="set-prikaz"><button data-v="auto" onclick="_prikazPostavi('auto')">Automatski</button><button data-v="desktop" onclick="_prikazPostavi('desktop')">Računar</button><button data-v="mobilni" onclick="_prikazPostavi('mobilni')">Telefon</button></div>
+      <small class="set-nap" id="set-prikaz-txt"></small>
+    </section>
+    <section class="ng-card set-blok"><h4>ID uređaja</h4>
         <p class="set-nap">Uređaj ID (Firebase) — pošalji administratoru ako zatraži podršku.</p>
         <div class="set-uid"><code id="set-uid-txt">nema interneta / Firebase nije podešen</code><button onclick="_copyUid()">Kopiraj</button></div>
-      </details>
     </section>
     </div>
   </div>
 </div>
+
 
 <!-- Sjekačke linije -->
 <div id="doznaka-panel" class="usf-panel">
@@ -2254,7 +2238,7 @@ body.sl-uredi #sl-ured { display: block; }
 // android/app/build.gradle versionCode+versionName. Sva tri MORAJU biti
 // usklađena prije svakog commita.
 // =====================================================================
-const APP_VER = 'v1.3.3';
+const APP_VER = 'v1.3.4';
 document.getElementById('meni-ver-badge').textContent = 'GeoForest ' + APP_VER;
 
 // Verzije koriste tri jednocifrena segmenta: patch i minor idu 0–9.
@@ -7492,12 +7476,11 @@ document.addEventListener('keydown', e => {
   if (document.querySelector('#dlg-overlay.show, .dlg-overlay.show, .leaflet-popup')) return;
   if (_ALL_PANELS.some(id => document.getElementById(id)?.classList.contains('show'))) switchMainTab('karta');
 });
-// Skok na sekciju Postavki: otvori njen tab (USFTabovi), pa skrolaj do nje.
+// Skok na sekciju Postavki: otvori njenu podstranicu (USFIzgled.setZa), pa skrolaj do nje.
 function _setSkok(id) {
   const el = document.getElementById(id);
   if (!el) return;
-  if (window.USFTabovi) USFTabovi.otvoriZa(el);
-  if (window._setSekOtvori) _setSekOtvori(el);
+  if (window.USFIzgled) USFIzgled.setZa(el);
   setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 30);
 }
 function _setUiUi() {

@@ -53,19 +53,21 @@ t('tap targeti: tabovi 64 px, dugmad ≥ 48 px', () => {
   assert.ok(/\.kt-a button, \.kt-akt \{[^}]*min-height: var\(--gf-tap\)/.test(css));
 });
 
-t('Postavke: 4 taba, iste opcije (ID-ovi), skok otvara tab, bez harmonike', () => {
+t('Postavke (v1.3.4): glavna lista + podstranice, iste opcije (ID-ovi), skok otvara podstranicu', () => {
   const pp = HTML.slice(HTML.indexOf('<div id="postavke-panel"'), HTML.indexOf('<!-- Sjekačke linije -->'));
-  assert.ok(pp.includes('data-tabovi="postavke"'));
-  const tabovi = ['app', 'prikaz', 'gps', 'podaci'];
-  const sek = tab => { const a = pp.indexOf('<div class="gf-tab-sek" data-tab="' + tab + '">'); const b = pp.indexOf('<div class="gf-tab-sek"', a + 10); return pp.slice(a, b > 0 ? b : undefined); };
-  const gdje = { app: ['set-update-card'], prikaz: ['set-s-sablon', 'set-sablon', 'set-s-razmjera', 'set-razmjera', 'set-s-ui', 'ui-koord', 'ui-btnOblik', 'ui-btnZ', 'set-s-prikaz'],
-    gps: ['set-s-gps', 'set-bat-btn', 'set-autostart', 'set-s-trag', 'set-trag-w', 'set-trag-op', 'set-trag-ac'],
-    podaci: ['set-s-podaci', 'set-restore-input', 'set-s-karte', 'set-kes-plocice', 'set-kes-teren', 'protomaps-key', 'set-uid-txt'] };
-  for (const tb of tabovi) for (const id of gdje[tb]) assert.ok(sek(tb).includes('id="' + id + '"'), tb + ': ' + id);
-  assert.ok(!pp.includes('set-acc"') && !pp.includes('set-pin-zakljucaj'));
+  assert.ok(!pp.includes('data-tabovi="postavke"') && pp.includes('id="set-glavna"') && pp.includes('id="set-nazad"'));
+  const str = k => { const a = pp.indexOf('<div class="set-str" data-str="' + k + '"'); const b = pp.indexOf('<div class="set-str"', a + 10); return pp.slice(a, b > 0 ? b : undefined); };
+  const glavna = pp.slice(pp.indexOf('id="set-glavna"'), pp.indexOf('<div class="set-str" data-str='));
+  for (const id of ['set-update-card', 'set-update-btn', 'set-skini-btn', 'set-korisnik-box', 'set-ver-txt']) assert.ok(glavna.includes('id="' + id + '"'), 'glavna: ' + id);
+  const gdje = { izgled: ['set-s-sablon', 'set-sablon', 'set-s-dugmad', 'set-s-ui', 'ui-koord', 'ui-btnOblik', 'ui-btnZ'], razmjera: ['set-s-razmjera', 'set-razmjera'],
+    gps: ['set-s-gps', 'set-bat-btn', 'set-autostart'], trag: ['set-s-trag', 'set-trag-w', 'set-trag-op', 'set-trag-ac'],
+    podaci: ['set-s-podaci', 'set-restore-input'], memorija: ['set-s-karte', 'set-kes-plocice', 'set-kes-teren', 'protomaps-key'], napredno: ['set-s-prikaz', 'set-uid-txt'] };
+  for (const k of Object.keys(gdje)) { assert.ok(glavna.includes('data-str="' + k + '"'), 'red na listi: ' + k); for (const id of gdje[k]) assert.ok(str(k).includes('id="' + id + '"'), k + ': ' + id); }
+  assert.ok(!pp.includes('set-kar') && !pp.includes('🛠 Napredno'));
   const f = HTML.slice(HTML.indexOf('function _setSkok('), HTML.indexOf('function _setSkok(') + 300);
-  assert.ok(f.includes('USFTabovi.otvoriZa(el)'));
-  assert.ok(!HTML.includes("d.matches('details.set-acc')"), 'nema "samo jedna otvorena" harmonike');
+  assert.ok(f.includes('USFIzgled.setZa(el)'));
+  const I = R('static/js/izgled.js');
+  assert.ok(I.includes('history.pushState({ gfSet: k }') && I.includes("addEventListener('popstate'"), 'Android nazad vraća na listu');
 });
 
 t('tabovi.js: izbor se pamti po panelu, sekcije drugih tabova su sakrivene', () => {
@@ -77,7 +79,7 @@ t('Meni (v1.3.3): pločice 2×2 i 3 alata, kartica „Nastavi”, tap >= 48 px',
   const css = R('static/css/geoforest.css');
   assert.ok(/#meni-panel \.mn-tile \{[^}]*min-height: 116px/.test(css));
   assert.ok(css.includes('#meni-panel .mn-grp { display: grid; grid-template-columns: 1fr 1fr'));
-  assert.ok(/#meni-panel \.mn-red \{[^}]*min-height: 64px/.test(css));
+  assert.ok(/\.gf-nov \.mn-red \{[^}]*min-height: 64px/.test(css));
   const I = require('../../static/js/izgled.js');
   const l = I.stavke({ trag: 'snima', pojas: 'Ana · u toku', doznaka: 'Odjel 1', primka: 'Odjel 2', nedavno: ['mc-mjerenja'] });
   assert.deepStrictEqual(l.map(x => x.id), ['mc-tragovi', 'mc-doznaka', 'mc-primka'], 'u toku prvo, najviše 3, bez duplikata');
@@ -173,13 +175,6 @@ t('mjerenje: dok se crta uska traka bez statistike; poslije Završi kartica s po
   assert.ok(/#msr-panel\.active \.msr-stats, #msr-panel\.active \.msr-hint \{ display: none/.test(css));
   const f = HTML.slice(HTML.indexOf('function _msrRegAddFromActive'), HTML.indexOf('// ── Razmjera karte'));
   assert.ok(f.includes("classList.remove('show')") && f.includes('_msrOpenPopupNa(entry'));
-});
-
-t('Postavke: kartice su sklopive i pamte stanje, _setSkok ih otvara', () => {
-  assert.ok(/set-kar\.sklopljeno > :not\(\.set-kar-h\) \{ display: none/.test(R('static/css/geoforest.css')));
-  const js = R('static/js/postavke.js');
-  assert.ok(js.includes("'usf_set_otv'") && js.includes('_setSekPostavi') && js.includes('_setSekOtvori'));
-  assert.ok(HTML.includes('_setSekOtvori(el)'));
 });
 
 t('Karte: na vrhu prekidač „Prikaži granice odjela” za sve poligonske KML slojeve', () => {

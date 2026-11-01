@@ -679,20 +679,40 @@ html[data-btn-stil="akcent"] #ab-loc:not(.active) { box-shadow: 0 0 0 1px rgba(7
 #meni-panel .mn-st:empty { display: none; }
 #meni-panel .mn-alati .mn-st { top: 10px; right: 10px; font-size: 11px; padding: 1px 7px; }
 
-/* Meni — redovi (Nastavi, Postavke) */
-#meni-panel .mn-red { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 10px 12px; border-radius: var(--nv-r); background: var(--nv-kar); border: 1px solid var(--nv-crta); color: var(--nv-txt); text-align: left; box-shadow: none; }
-#meni-panel .mn-red > b { flex: 1; font-size: 16px; font-weight: 800; }
-#meni-panel .mn-red .mn-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-#meni-panel .mn-red .mn-tx b { font-size: 16px; font-weight: 800; }
-#meni-panel .mn-red .mn-tx small { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--nv-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#meni-panel .mn-red .mn-tx small i { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; flex: none; animation: mnPuls 1.4s ease-in-out infinite; }
-#meni-panel .mn-red.uzivo { border-color: color-mix(in srgb, #ef4444 55%, var(--nv-crta)); }
-#meni-panel .mn-chev { width: 20px; height: 20px; flex: none; fill: none; stroke: var(--nv-dim); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+/* Redovi liste (Meni „Nastavi”, Postavke) */
+.gf-nov .mn-red { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; padding: 10px 12px; border-radius: var(--nv-r); background: var(--nv-kar); border: 1px solid var(--nv-crta); color: var(--nv-txt); text-align: left; box-shadow: none; }
+.gf-nov .mn-red > b { flex: 1; font-size: 16px; font-weight: 800; }
+.gf-nov .mn-red .mn-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.gf-nov .mn-red .mn-tx b { font-size: 16px; font-weight: 800; }
+.gf-nov .mn-red .mn-tx small { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--nv-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gf-nov .mn-red .mn-tx small i { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; flex: none; animation: mnPuls 1.4s ease-in-out infinite; }
+.gf-nov .mn-red.uzivo { border-color: color-mix(in srgb, #ef4444 55%, var(--nv-crta)); }
+.gf-nov .mn-chev { width: 20px; height: 20px; flex: none; fill: none; stroke: var(--nv-dim); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 #meni-panel > .up-body > .mn-red { margin-top: 22px; }
 @keyframes mnPuls { 50% { opacity: .35; } }
-@media (prefers-reduced-motion: reduce) { #meni-panel .mn-red .mn-tx small i { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .gf-nov .mn-red .mn-tx small i { animation: none; } }
 #meni-panel .mn-nastavi { display: grid; gap: 8px; }
 #meni-panel .mn-nastavi[hidden] { display: none; }
 #meni-panel .mn-nastavi h3 { margin-top: 8px; margin-bottom: 2px; }
 #meni-panel.gf-nov #meni-ver-badge { margin-top: 18px; font-size: 13px; color: var(--nv-dim); }
 html.desk #meni-panel .mn-grp { grid-template-columns: 1fr 1fr; }
+
+.gf-nov .mn-red .mn-ik { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: color-mix(in srgb, var(--mc) 16%, transparent); color: var(--mc); flex: none; }
+.gf-nov .mn-red .mn-ik svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Postavke — lista i podstranice (v1.3.4) */
+#postavke-panel.gf-nov .set-nazad { width: 44px; height: 44px; min-height: 44px; padding: 0; border-radius: 50%; background: var(--nv-kar); border: 1px solid var(--nv-crta); color: var(--nv-txt); font-size: 28px; line-height: 1; flex: none; }
+#postavke-panel.gf-nov .set-nazad[hidden] { display: none; }
+#postavke-panel .set-str[hidden] { display: none; }
+#postavke-panel .set-lista { display: grid; gap: 8px; }
+#postavke-panel .set-glava { margin: 8px 0 10px; padding: 14px; border-radius: var(--nv-r); background: var(--nv-kar); border: 1px solid var(--nv-crta); }
+#postavke-panel .set-glava .set-app { margin: 0; padding: 0; background: none; border: 0; box-shadow: none; }
+#postavke-panel .set-glava .set-app h3 { margin: 0; font-size: 18px; color: var(--nv-txt); text-transform: none; letter-spacing: 0; }
+#postavke-panel .set-glava #set-korisnik-dno { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--nv-crta); }
+#postavke-panel.gf-nov .update-card { margin: 0 0 6px; border-radius: var(--nv-r); background: var(--nv-kar); border: 1px solid var(--nv-crta); box-shadow: none; }
+#postavke-panel.gf-nov .update-card::before { display: none; }
+#postavke-panel .set-blok { margin: 10px 0 12px; padding: 14px; border-radius: var(--nv-r); background: var(--nv-kar); border: 1px solid var(--nv-crta); border-left-width: 1px; box-shadow: none; }
+#postavke-panel .set-blok::before { display: none; }
+#postavke-panel .set-blok > h4 { margin: 0 0 10px; font-size: 16px; font-weight: 800; color: var(--nv-txt); }
+#postavke-panel .set-blok .set-nap { font-size: 13px; color: var(--nv-dim); }
+#postavke-panel .set-str > .set-blok:only-of-type > h4 { display: none; }

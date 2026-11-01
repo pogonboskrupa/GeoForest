@@ -47,6 +47,37 @@
     };
   }
 
-  W.USFIzgled = { nastavi, stavke };
+  // ── Postavke: glavna lista + podstranice (Android „nazad” vraća na listu preko history.pushState) ──
+  const setPanel = () => document.getElementById('postavke-panel');
+  function setPrikazi(k) {
+    const pn = setPanel(); if (!pn) return;
+    let naslov = 'Postavke';
+    pn.querySelectorAll('.set-str').forEach(el => { const on = (el.dataset.str || '') === (k || ''); el.hidden = !on; if (on && k) naslov = el.dataset.naslov || naslov; });
+    const h = document.getElementById('set-naslov'); if (h) h.textContent = naslov;
+    const n = document.getElementById('set-nazad'); if (n) n.hidden = !k;
+    const body = pn.querySelector('.up-body'); if (body) body.scrollTop = 0;
+  }
+  function setStr(k) {
+    const st = history.state && history.state.gfSet;
+    if (k) { if (st) history.replaceState({ gfSet: k }, ''); else history.pushState({ gfSet: k }, ''); setPrikazi(k); }
+    else if (st) history.back(); // popstate prikaže listu
+    else setPrikazi(null);
+  }
+  // Element unutar podstranice (npr. _setSkok('set-s-razmjera')) → otvori tu podstranicu
+  function setZa(el) { const str = el && el.closest && el.closest('.set-str[data-str]'); if (str) setStr(str.dataset.str); }
+  if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+    window.addEventListener('popstate', () => setPrikazi(history.state && history.state.gfSet || null));
+    document.addEventListener('click', e => {
+      const r = e.target.closest('#postavke-panel .mn-red[data-str]'); if (r) { setStr(r.dataset.str); return; }
+      if (e.target.closest('#set-nazad')) setStr(null);
+    });
+    // Ulazak u tab Postavke uvijek počinje od liste
+    if (typeof W.switchMainTab === 'function') {
+      const orig = W.switchMainTab;
+      W.switchMainTab = function (t) { if (history.state && history.state.gfSet) { history.replaceState(null, ''); } setPrikazi(null); return orig.apply(this, arguments); };
+    }
+  }
+
+  W.USFIzgled = { nastavi, stavke, setStr, setZa };
   if (typeof module !== 'undefined') module.exports = { stavke };
 })(typeof window !== 'undefined' ? window : globalThis);
