@@ -1920,71 +1920,56 @@ body.sl-uredi #sl-ured { display: block; }
 </div>
 
 <!-- Karte — tri taba po izvoru: na telefonu / server (PIN) / podloga i teren (static/js/tabovi.js, karte-tab.js) -->
-<div id="karte-panel" class="usf-panel">
-  <div class="up-hdr"><h2>🗺 Karte</h2><button class="up-close" onclick="switchMainTab('karta')">✕</button></div>
+<div id="karte-panel" class="usf-panel gf-nov">
+  <div class="up-hdr"><h2>Karte</h2><button class="up-close" onclick="switchMainTab('karta')" aria-label="Zatvori">✕</button></div>
   <div class="up-body">
+    <section id="kh-pregled" class="kh-sada" role="status"></section>
     <section class="kh-gran-sve" id="kh-gran-sve" hidden></section>
-    <div class="gf-tabs" role="tablist" aria-label="Karte po izvoru" data-tabovi="karte">
-      <button role="tab" data-t="tel"><i>📱</i><span>Na telefonu</span><b id="kt-n-tel"></b></button>
-      <button role="tab" data-t="srv"><i>☁</i><span>Server</span><b id="kt-n-srv"></b></button>
-      <button role="tab" data-t="pod"><i>🌍</i><span>Podloga i teren</span><b id="kt-n-pod"></b></button>
+    <div class="gf-tabs" role="tablist" aria-label="Karte" data-tabovi="karte">
+      <button role="tab" data-t="tel"><i><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/></svg></i><span>Moje</span><b id="kt-n-tel"></b></button>
+      <button role="tab" data-t="srv"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18a4 4 0 0 1-.5-8A6 6 0 0 1 18 9a4.5 4.5 0 0 1-.5 9z"/><path d="M12 11v6M9.5 14.5 12 17l2.5-2.5"/></svg></i><span>Preuzmi</span><b id="kt-n-srv"></b></button>
+      <button role="tab" data-t="pod"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 18 6-9 4 6 3-4 5 7z"/></svg></i><span>Podloga</span><b id="kt-n-pod"></b></button>
     </div>
     <div class="karta-hub-grid">
       <div class="gf-tab-sek" data-tab="tel">
-      <section class="karta-hub-card kh-gran" id="kh-gran"></section>
-      <div class="kh-grupa" id="kh-g-offline">🗂 Offline karte</div>
+      <section class="karta-hub-card kh-gran" id="kh-gran" hidden></section>
       <section class="karta-hub-card kh-off" id="kh-offline-kartica"></section>
-      <div class="kh-grupa moj" id="kh-g-podaci">📁 Moji podaci</div>
+      <h3 id="kh-g-podaci">Moji slojevi</h3>
       <section class="karta-hub-card kh-lista" id="kh-lista"></section>
-      <section class="karta-hub-card">
-        <h3>🗺 KML — preglednik poligona <span class="kh-bedz" id="kh-b-kml" hidden></span></h3>
-        <p id="kh-kml" class="kh-stat">Odjeli, odsjeci, putevi i tačke iz .kml / .kmz / .shp</p>
-        <input id="kh-kml-trazi" class="kh-trazi" type="search" placeholder="🔎 Traži odjel, odsjek ili atribut…" enterkeyhint="search" onkeydown="if(event.key==='Enter')_khKmlTrazi()">
-        <button class="karta-hub-action" onclick="_khKmlTrazi()">Otvori preglednik poligona</button>
-      </section>
-      <section class="karta-hub-card">
-        <h3>🎨 Editor slojeva <span class="kh-bedz" id="kh-b-ozn" hidden></span></h3>
-        <p id="kh-slojevi">Linija, ispuna i natpisi za svaki KML sloj — i za one preuzete sa servera.</p>
-        <button class="karta-hub-action" onclick="_kedListaOtvori()">Otvori editor slojeva</button>
-      </section>
-      <div class="kh-grupa">📊 Pregled</div>
-      <div id="kh-pregled" class="kh-pregled" role="status"></div>
       </div>
       <div class="gf-tab-sek" data-tab="srv">
       <div id="kt-pin" class="kt-pin" role="status"></div>
-      <div class="kh-grupa srv" id="kh-g-server">☁ Karte sa servera</div>
+      <h3 id="kh-g-server">Karte za preuzimanje</h3>
       <section class="karta-hub-card kt-srv" id="kt-srv-karte"></section>
-      <div class="kh-grupa srv">☁ Slojevi sa servera (KML)</div>
+      <h3>Slojevi sa servera (KML)</h3>
       <section class="karta-hub-card kh-srv" id="kh-server"></section>
       </div>
       <div class="gf-tab-sek" data-tab="pod">
       <section class="karta-hub-card" id="kh-razmjera"></section>
-      <div class="kh-grupa" id="kh-g-podloga">🌍 Podloga</div>
-      <section class="karta-hub-card">
-        <h3>🌍 Bazna karta</h3>
+      <h3 id="kh-g-podloga">Podloga</h3>
+      <section class="karta-hub-card kt-podloga">
         <div id="karta-base-list"></div>
         <p id="protomaps-status">Protomaps ključ podešava se u Postavkama.</p>
       </section>
-      <div class="kh-grupa" id="kh-g-teren">⛰ Teren</div>
+      <h3 id="kh-g-teren">Teren</h3>
       <section class="karta-hub-card ng-hub">
-        <h3>📐 Nagib terena</h3>
-        <p>Karta nagiba po rasponima i mjerenje nagiba poligona linijama niz padinu.</p>
+        <h4>Nagib terena</h4>
         <div id="nagib-hub-stat" class="ng-hub-stat"></div>
         <button class="karta-hub-action" onclick="openNagibSection()">Otvori nagib</button>
       </section>
-      <section class="karta-hub-card">
-        <h3>🏔 Ekspozicija i sjenčenje</h3>
-        <label style="display:block;padding:10px 0"><input id="terrain-aspect" type="checkbox" onchange="_terrainToggle('aspect',this.checked)"> Ekspozicija — strane svijeta</label>
+      <section class="karta-hub-card kt-teren">
+        <label class="kt-sw"><span><b>Ekspozicija</b><small>Strane svijeta</small></span><span class="ng-switch"><input id="terrain-aspect" type="checkbox" onchange="_terrainToggle('aspect',this.checked)"><span></span></span></label>
         <div class="asp-broj" role="group" aria-label="Broj strana ekspozicije"><button data-asp-broj="4" onclick="_terrainAspectBroj(4)">4 glavne (S·I·J·Z)</button><button data-asp-broj="8" onclick="_terrainAspectBroj(8)">8 strana</button></div>
-        <label style="display:block;padding:10px 0"><input id="terrain-shade" type="checkbox" onchange="_terrainToggle('shade',this.checked)"> Hillshade — sjenčenje reljefa</label>
-        <label>Prozirnost dodataka <input type="range" min="15" max="85" value="55" oninput="_terrainOpacity(this.value)" aria-label="Prozirnost slojeva terena"></label>
-        <div id="terrain-legend" style="font-size:12px;line-height:1.8;margin-top:12px;"></div>
-        <p id="terrain-status" role="status">DEM prikaz; pregledane visinske pločice dostupne su i offline. Nagib do 5 % je ravan teren — bez ekspozicije i bez boje.</p>
+        <label class="kt-sw"><span><b>Sjenčenje reljefa</b><small>Hillshade</small></span><span class="ng-switch"><input id="terrain-shade" type="checkbox" onchange="_terrainToggle('shade',this.checked)"><span></span></span></label>
+        <label class="set-klizac"><span>Prozirnost</span><input type="range" min="15" max="85" value="55" oninput="_terrainOpacity(this.value)" aria-label="Prozirnost slojeva terena"></label>
+        <div id="terrain-legend"></div>
+        <p id="terrain-status" role="status">Nagib do 5 % je ravan teren — bez ekspozicije i bez boje.</p>
       </section>
       </div>
     </div>
   </div>
 </div>
+
 
 <!-- Postavke panel -->
 <div id="postavke-panel" class="usf-panel gf-nov">
@@ -2238,7 +2223,7 @@ body.sl-uredi #sl-ured { display: block; }
 // android/app/build.gradle versionCode+versionName. Sva tri MORAJU biti
 // usklađena prije svakog commita.
 // =====================================================================
-const APP_VER = 'v1.3.4';
+const APP_VER = 'v1.3.5';
 document.getElementById('meni-ver-badge').textContent = 'GeoForest ' + APP_VER;
 
 // Verzije koriste tri jednocifrena segmenta: patch i minor idu 0–9.
@@ -5782,12 +5767,6 @@ function _oznOsvjezi() {
 }
 function _oznOtvori(id) { const k = id ? kmlLs.find(x => x.id === id) : kmlLs[0]; if (k) _kmlPromijeniBoju(k.id); else showToast('Nema učitanih KML slojeva — preuzmi ih u KML pregledniku'); }
 // Kartica u tabu Karte: samo sažetak; slojevi se biraju tek u editoru (pregledno i kad ih je mnogo)
-function _kedHubRender() {
-  const el = document.getElementById('kh-slojevi'); if (!el) return;
-  const nat = kmlLs.filter(k => _oznCfg(k).on).length;
-  el.textContent = kmlLs.length ? kmlLs.length + (kmlLs.length === 1 ? ' sloj' : ' slojeva') + (nat ? ' · natpisi na ' + nat : '') + ' — linija, ispuna i natpisi za svaki sloj, i za preuzete sa servera.'
-    : 'Linija, ispuna i natpisi za svaki KML sloj — i za one preuzete sa servera.';
-}
 // Editor slojeva: lista fajlova (pretraga ako ih je više od 6). Dodir na red = stil sloja; 👁 vidljivost, 🔍 prikaži na karti, ✏ uredi objekte fajla.
 function _kedListaOtvori() {
   let el = document.getElementById('kml-stil'); if (el) el.remove();
@@ -6238,30 +6217,20 @@ function _kmlTraziHtml(upit) {
 }
 // Karte tab: stanje offline karata i KML-a na karticama.
 function _khStat() {
-  const off = document.getElementById('kh-offline'), kml = document.getElementById('kh-kml');
-  const bedz = (id, t) => { const e = document.getElementById(id); if (e) { e.hidden = !t; e.textContent = t || ''; } };
   try {
     const sql = typeof _sqlLayers !== 'undefined' ? _sqlLayers : [], aktivna = sql.find(r => r.active);
-    if (off) { const n = sql.length; off.textContent = n ? (aktivna ? 'Aktivna: ' + aktivna.name + ' · ' : '') + n + (n === 1 ? ' karta' : ' karata') + ' na telefonu' : 'Još nema offline karata — .sqlitedb / .mbtiles za rad bez signala'; }
-    bedz('kh-b-off', aktivna ? '✓ aktivna' : '');
-    const st = kmlLs.reduce((a, k) => { const s = _kmlStat(k); a.pol += s.pol; a.ha += s.ha; return a; }, { pol: 0, ha: 0 });
-    if (kml) kml.textContent = kmlLs.length ? kmlLs.length + (kmlLs.length === 1 ? ' sloj' : ' sloja') + ' · ' + st.pol + ' poligona · ' + Math.round(st.ha).toLocaleString('bs-BA') + ' ha' : 'Odjeli, odsjeci, putevi i tačke iz .kml / .kmz / .shp';
     const vidljivi = kmlLs.filter(_kmlNaKarti).length;
-    bedz('kh-b-kml', kmlLs.length ? vidljivi + '/' + kmlLs.length + ' na karti' : '');
-    _khGranSve(); _khGranice(); _khRazmjera(); _khOffline(); _khServer(); _khSlojevi(); _khObavijest();
+    _khGranSve(); _khGranice(); _khRazmjera(); _khOffline(); _khServer(); _khSlojevi();
     if (window.USFKarteTab) USFKarteTab.render();
-    bedz('kh-b-ozn', kmlLs.length ? kmlLs.length + (kmlLs.length === 1 ? ' sloj' : ' sloja') : ''); _kedHubRender();
-    // Pregled: podloga, offline, KML, uključeni slojevi (teren + praćenje šume) — dodir vodi u odgovarajuću sekciju
+    // „Na karti sada”: podloga, offline karta, slojevi na karti, teren — dodir vodi u odgovarajući tab
     const slojeva = ['terrain-aspect', 'terrain-shade'].filter(id => document.getElementById(id)?.checked).length;
-    const podloga = aktivna ? aktivna.name : (typeof _currentBaseName !== 'undefined' && _currentBaseName) || 'Nema';
-    const pl = (ico, vr, lab, on, klik) => `<button class="kh-pl${on ? ' on' : ''}" onclick="${klik}"><i>${ico}</i><b>${_escHtml(String(vr))}</b><small>${lab}</small></button>`;
+    const podloga = (typeof _currentBaseName !== 'undefined' && _currentBaseName) || '—';
+    const pl = (lab, vr, on, t) => `<button class="kh-pl${on ? ' on' : ''}" onclick="USFTabovi.izaberi('karte','${t}')"><small>${lab}</small><b>${_escHtml(String(vr))}</b></button>`;
     const pr = document.getElementById('kh-pregled');
-    if (pr) pr.innerHTML = pl('🌍', podloga, aktivna ? 'offline podloga' : 'podloga', true, "document.getElementById('karta-base-list').scrollIntoView({behavior:'smooth',block:'center'})")
-      + pl('🗂', sql.length, sql.length === 1 ? 'offline karta' : 'offline karata', !!sql.length, 'openUcitajKartuSection()')
-      + pl('🗺', kmlLs.length ? kmlLs.length + ' · ' + st.pol : 0, 'KML slojeva · poligona', !!kmlLs.length, '_khKmlTrazi()')
-      + pl('🥾', typeof _tragRegistry !== 'undefined' ? _tragRegistry.length : 0, 'sačuvanih tragova', typeof _tragRegistry !== 'undefined' && !!_tragRegistry.length, 'openTragoviPanel()')
-      + pl('📏', typeof _msrRegistry !== 'undefined' ? _msrRegistry.length : 0, 'mjerenja', typeof _msrRegistry !== 'undefined' && !!_msrRegistry.length, 'openMjerenjaPanel()')
-      + pl('🧩', slojeva, slojeva === 1 ? 'uključen sloj' : 'uključenih slojeva', !!slojeva, "document.getElementById('terrain-aspect').scrollIntoView({behavior:'smooth',block:'center'})");
+    if (pr) pr.innerHTML = '<h3>Na karti sada</h3><div class="kh-sada-g">' + pl('Podloga', String(podloga).replace(/^\S+\s/, ''), true, 'pod')
+      + pl('Offline karta', aktivna ? String(aktivna.name).replace(/\.(sqlitedb|mbtiles)$/i, '') : 'nijedna', !!aktivna, 'tel')
+      + pl('Slojevi', kmlLs.length ? vidljivi + ' / ' + kmlLs.length : 'nema', !!vidljivi, 'tel')
+      + pl('Teren', slojeva ? slojeva + ' uključen' + (slojeva === 1 ? '' : 'a') : 'isključen', !!slojeva, 'pod') + '</div>';
   } catch(e) {}
 }
 // Granice odjela (sloj „Granice taksacije”): veliki prekidač prikaza na vrhu taba Karte; podaci za odabir ostaju dostupni i kad je skriveno.
@@ -6273,18 +6242,6 @@ function _khRazmjera() {
   el.className = 'karta-hub-card kh-razm' + (sk.length ? ' sk' : '');
   el.innerHTML = `<div class="kg-top"><i>🔭</i><div><h3>Razmjera <b class="rz">${_razmjeraTxt()}</b></h3><p>${sk.length ? 'Zbog razmjere je sakriveno: ' + sk.join(', ') : 'Svi slojevi su vidljivi pri ovoj razmjeri'}</p></div></div>
     <button class="karta-hub-action" onclick="switchMainTab('postavke');setTimeout(()=>_setSkok('set-s-razmjera'),150)">Podesi prikaz po razmjeri</button>`;
-}
-// Jednokratna obavijest pri prvom otvaranju taba Karte: karte i granice se mogu preuzeti sa servera
-const _KH_OBAV_KEY = 'usf_kh_obavijest_server';
-function _khObavijest() {
-  try { if (localStorage.getItem(_KH_OBAV_KEY) === '1') return; } catch (e) { return; }
-  if (!document.getElementById('karte-panel')?.classList.contains('show') || document.getElementById('kh-obavijest')) return;
-  const grid = document.querySelector('#karte-panel .gf-tab-sek[data-tab="tel"]'); if (!grid) return;
-  try { localStorage.setItem(_KH_OBAV_KEY, '1'); } catch (e) {} // prikazuje se samo jednom, bez obzira da li je zatvorena
-  const el = document.createElement('section'); el.id = 'kh-obavijest'; el.className = 'karta-hub-card kh-obav'; el.setAttribute('role', 'note');
-  el.innerHTML = `<div class="kg-top"><i>☁</i><div><h3>Karte sa servera</h3><p>Offline karte i granice odjela možeš preuzeti direktno u aplikaciju — jednom skineš, pa rade i bez interneta. Potreban je PIN karata.</p></div></div>
-    <div class="kg-akc"><button class="glavno" onclick="document.getElementById('kh-obavijest')?.remove();USFTabovi.izaberi('karte', 'srv')">☁ Pogledaj karte</button><button onclick="document.getElementById('kh-obavijest')?.remove()">Razumijem</button></div>`;
-  grid.insertBefore(el, grid.firstChild);
 }
 function _khGranicaZapis() { return _kmlServerLista().find(z => _KML_POLIGONSKI.test(z.naziv)); }
 // Preuzmi/osvježi zapis sa servera: bez PIN-a prvo traži otključavanje
@@ -6316,6 +6273,7 @@ function _khGranice() {
   const el = document.getElementById('kh-gran'); if (!el) return;
   const k = kmlLs.find(x => _kmlJePoligonski(x.name)), z = _khGranicaZapis();
   const osv = z && !(_dkNapredak && _dkNapredak[z.id]) ? `<button onclick="_khSrvAkcija('${z.id}')">${_dkKljuc() ? '↻ Osvježi sa servera' : '🔒 Osvježi (PIN)'}</button>` : '';
+  el.hidden = !!k; // sloj postoji ⇒ prekidač „Prikaži granice odjela” na vrhu je dovoljan
   if (!k) {
     el.className = 'karta-hub-card kh-gran';
     el.innerHTML = `<div class="kg-top"><i>▱</i><div><h3>Granice odjela <span class="kh-bedz srv">☁ server</span></h3><p>Sloj „Granice taksacije” još nije na telefonu — preuzmi ga sa servera ili dodaj svoj KML.</p></div></div><div class="kg-akc">${z ? `<button class="glavno" onclick="_khSrvAkcija('${z.id}')">${_dkKljuc() ? '⬇ Preuzmi granice odjela' : '🔒 Otključaj i preuzmi'}</button>` : '<button class="glavno" onclick="openUcitajKmlSection()">☁ Učitaj granice odjela</button>'}</div>`;
@@ -6401,7 +6359,7 @@ function _khSlojevi() {
   el.hidden = false;
   const svi = [...l.filter(k => !k.samoOdabir), ...tr], vidSvi = svi.filter(x => x.grp ? _kmlNaKarti(x) : x.visible !== false).length;
   const sakrijBtn = svi.length ? `<button class="kh-sakrij${vidSvi ? '' : ' off'}" onclick="_khMojiVid(${vidSvi ? 'false' : 'true'})" aria-label="${vidSvi ? 'Sakrij sve moje slojeve' : 'Prikaži sve moje slojeve'}">${vidSvi ? '🙈 Sakrij sve' : '👁 Prikaži sve'}</button>` : '';
-  el.innerHTML = `<div class="kh-lista-zag"><h3>📁 Moji slojevi</h3>${sakrijBtn}</div>` + kml + tragovi + '<div class="kg-akc" style="margin-top:10px"><button class="glavno" onclick="document.getElementById(\'kml-file-input\').click()">＋ Dodaj KML / KMZ / SHP</button></div>';
+  el.innerHTML = `<div class="kh-lista-zag">${sakrijBtn}</div>` + kml + tragovi + '<div class="kg-akc" style="margin-top:10px"><button class="glavno" onclick="document.getElementById(\'kml-file-input\').click()">＋ Dodaj KML / KMZ / SHP</button></div>' + (kmlLs.length ? '<div class="kg-akc kh-alati"><button onclick="_khKmlTrazi()">🔎 Objekti i pretraga</button><button onclick="_kedListaOtvori()">🎨 Stil slojeva</button></div>' : '');
 }
 function _khKmlTrazi() {
   const q = document.getElementById('kh-kml-trazi')?.value || '';

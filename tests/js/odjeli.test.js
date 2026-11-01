@@ -76,9 +76,10 @@ t('Karte: tabovi Na telefonu (granice, offline, moji, KML preglednik, editor) / 
   assert.ok(grid.includes('data-tabovi="karte"') && ['data-t="tel"', 'data-t="srv"', 'data-t="pod"'].every(x => grid.includes(x)));
   const sek = t => { const a = grid.indexOf('<div class="gf-tab-sek" data-tab="' + t + '">'); return grid.slice(a, grid.indexOf('<div class="gf-tab-sek"', a + 10) > 0 ? grid.indexOf('<div class="gf-tab-sek"', a + 10) : undefined); };
   const uRedu = (txt, nizovi) => { const r = nizovi.map(x => txt.indexOf(x)); assert.ok(r.every((v, i) => v >= 0 && (i === 0 || v > r[i - 1])), nizovi.join(' → ') + ': ' + r.join(',')); };
-  uRedu(sek('tel'), ['id="kh-gran"', 'id="kh-offline-kartica"', 'id="kh-lista"', 'KML — preglednik poligona <span', 'Editor slojeva']);
+  uRedu(sek('tel'), ['id="kh-gran"', 'id="kh-offline-kartica"', 'id="kh-lista"']);
   uRedu(sek('srv'), ['id="kt-pin"', 'id="kt-srv-karte"', 'id="kh-server"']);
-  uRedu(sek('pod'), ['id="kh-razmjera"', 'Bazna karta</h3>', 'id="karta-base-list"', 'Nagib terena</h3>', 'Ekspozicija i sjenčenje</h3>', 'id="terrain-shade"']);
+  uRedu(sek('pod'), ['id="kh-razmjera"', 'Podloga</h3>', 'id="karta-base-list"', 'Nagib terena</h4>', 'id="terrain-aspect"', 'id="terrain-shade"']);
+  assert.ok(grid.indexOf('id="kh-pregled"') < grid.indexOf('data-tabovi="karte"'), '„Na karti sada” iznad tabova');
   assert.ok(!grid.includes('Tematska'), 'bez tematske karte');
   assert.ok(HTML.includes("_renderKartaBaseList(); _khStat(); }") && HTML.includes('id="kml-trazi"') && HTML.includes('function _kmlTraziHtml('));
 });

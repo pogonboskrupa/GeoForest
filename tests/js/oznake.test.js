@@ -2,9 +2,9 @@ const fs = require('fs'), assert = require('assert');
 const H = fs.readFileSync('index.html', 'utf8');
 // editor oznaka: kartica u tabu Karte ispod KML preglednika, sloj-po-sloj postavke (i za preuzete KML), ne-interaktivni natpisi s ograničenjem
 const grid = H.slice(H.indexOf('<div class="karta-hub-grid">'), H.indexOf('<!-- Postavke panel -->'));
-assert(grid.indexOf('KML — preglednik poligona') < grid.indexOf('Editor slojeva') && grid.indexOf('Editor slojeva') < grid.indexOf('Nagib terena'), 'ispod KML preglednika');
+assert(H.includes('<button onclick="_kedListaOtvori()">🎨 Stil slojeva</button>'), 'editor slojeva je alat u kartici Moji slojevi');
 // editor sloja: kartice Linija / Ispuna / Oznake, klizači providnosti, živi pregled i vraćanje na Odustani
-for (const t of ["'〰 Linija'", "'▨ Ispuna'", "'🏷 Oznake'", "'Providnost linije'", "'Providnost ispune'", 'function _kedSvg(', 'uzivo(c, { ...st })', '_kedHubRender()']) assert(H.includes(t), t);
+for (const t of ["'〰 Linija'", "'▨ Ispuna'", "'🏷 Oznake'", "'Providnost linije'", "'Providnost ispune'", 'function _kedSvg(', 'uzivo(c, { ...st })', '_kedListaOtvori()']) assert(H.includes(t), t);
 assert(H.includes("if (!r) { primijeni(k.col, k.stil); return; }"), 'Odustani vraća stil sloja');
 assert(H.includes('const o0 = { color: o.color') && H.includes('r.l.setStyle(o0)'), 'objekat se vraća iz snimka (setStyle mijenja options)');
 assert(H.includes("const _OZN_KEY = 'usf_oznake'") && H.includes('_OZN_MAX = 250') && H.includes('interactive: false'));
@@ -16,7 +16,7 @@ const f = new Function('_odjelOznaka', H.match(/function _oznTekst\(l, cfg\) \{[
 const l = { _kmlName: 'Odsjek A', _kmlExtData: { ODJEL: '88/1', ODSJEK: '00', GAZ: ' 4111 ' } };
 assert.strictEqual(f(l, { polje: '__naziv' }), 'Odsjek A'); assert.strictEqual(f(l, { polje: '__odjel' }), '88/1 · 00'); assert.strictEqual(f(l, { polje: 'GAZ' }), '4111'); assert.strictEqual(f(l, { polje: 'NEMA' }), '');
 // kartica u tabu Karte NE nabraja slojeve (samo dugme → lista u editoru); natpisi zadano isključeni; novi fajl = linija + blaga ispuna
-assert(grid.includes('onclick="_kedListaOtvori()"') && !grid.includes('ked-hub-red'), 'slojevi tek u editoru');
+assert(H.includes('onclick="_kedListaOtvori()"') && !grid.includes('ked-hub-red'), 'slojevi tek u editoru');
 assert(H.includes("const _oznCfg = k => ({ on: false,"), 'natpisi zadano isključeni');
 assert(/const _KML_STIL_NOVI = \{ w: 2, crta: 'puna', op: 90, ispuna: (\d+) \}/.test(H) && +H.match(/_KML_STIL_NOVI = \{[^}]*ispuna: (\d+)/)[1] > 0 && +H.match(/_KML_STIL_NOVI = \{[^}]*ispuna: (\d+)/)[1] <= 20, 'blaga ispuna');
 assert(H.includes('const grp = await pkmlAsync(doc, col, undefined, stil);') && H.includes('_kmlSaveContent(file.name, usedText, col, stil);'), 'novi KML dobija i pamti zadani stil');

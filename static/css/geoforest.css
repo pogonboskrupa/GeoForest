@@ -716,3 +716,65 @@ html.desk #meni-panel .mn-grp { grid-template-columns: 1fr 1fr; }
 #postavke-panel .set-blok > h4 { margin: 0 0 10px; font-size: 16px; font-weight: 800; color: var(--nv-txt); }
 #postavke-panel .set-blok .set-nap { font-size: 13px; color: var(--nv-dim); }
 #postavke-panel .set-str > .set-blok:only-of-type > h4 { display: none; }
+
+/* Karte — novi izgled (v1.3.5) */
+#karte-panel.gf-nov .karta-hub-card { margin: 0 0 10px; padding: 14px; border-radius: var(--nv-r); background: var(--nv-kar); border: 1px solid var(--nv-crta); border-left-width: 1px; box-shadow: none; }
+#karte-panel.gf-nov .karta-hub-card::before { display: none; }
+#karte-panel.gf-nov .karta-hub-card[hidden] { display: none; }
+#karte-panel.gf-nov .karta-hub-card h4 { margin: 0 0 8px; font-size: 16px; font-weight: 800; color: var(--nv-txt); }
+#karte-panel.gf-nov .karta-hub-card .kg-top i { display: none; }
+#karte-panel.gf-nov .karta-hub-card h3 { margin: 0 0 4px; font-size: 16px; letter-spacing: 0; text-transform: none; color: var(--nv-txt); }
+#karte-panel.gf-nov .karta-hub-card p { color: var(--nv-dim); font-size: 13px; }
+#karte-panel.gf-nov .karta-hub-grid > .gf-tab-sek > h3:first-child { margin-top: 6px; }
+/* Na karti sada */
+#karte-panel .kh-sada { margin: 8px 0 10px; }
+#karte-panel .kh-sada h3 { margin: 4px 4px 8px; }
+#karte-panel .kh-sada-g { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+#karte-panel .kh-sada .kh-pl { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 60px; padding: 10px 12px; border-radius: 14px; background: var(--nv-kar); border: 1px solid var(--nv-crta); color: var(--nv-txt); text-align: left; box-shadow: none; }
+#karte-panel .kh-sada .kh-pl small { font-size: 12px; font-weight: 700; color: var(--nv-dim); text-transform: none; }
+#karte-panel .kh-sada .kh-pl b { font-size: 15px; font-weight: 800; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#karte-panel .kh-sada .kh-pl.on { border-color: color-mix(in srgb, var(--nv-acc) 55%, var(--nv-crta)); }
+#karte-panel .kh-sada .kh-pl.on b { color: #bae6fd; }
+/* granice odjela — prekidač */
+#karte-panel.gf-nov .kh-gran-sve { margin: 0 0 12px; padding: 12px 14px; border-radius: var(--nv-r); background: var(--nv-kar); border: 1px solid var(--nv-crta); box-shadow: none; }
+#karte-panel.gf-nov .kh-gran-sve.on { border-color: color-mix(in srgb, #4ade80 50%, var(--nv-crta)); }
+/* tabovi */
+#karte-panel.gf-nov .gf-tabs { margin: 4px 0 6px; padding: 4px; gap: 4px; border-radius: 16px; background: var(--nv-kar); border: 1px solid var(--nv-crta); position: static; top: auto; }
+#karte-panel.gf-nov .gf-tabs button { min-height: 48px; flex-direction: row; gap: 6px; border-radius: 12px; border: 0; background: none; color: var(--nv-dim); font-size: 14px; font-weight: 800; box-shadow: none; }
+#karte-panel.gf-nov .gf-tabs button i svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; display: block; }
+#karte-panel.gf-nov .gf-tabs button.on { background: color-mix(in srgb, var(--nv-acc) 20%, var(--nv-kar)); color: #e0f2fe; }
+#karte-panel.gf-nov .gf-tabs button b:empty, #karte-panel.gf-nov .gf-tabs button b[hidden] { display: none; }
+/* PIN — mali red */
+#karte-panel.gf-nov .kt-pin { display: flex; align-items: center; gap: 10px; margin: 6px 0 4px; padding: 10px 12px; border-radius: 14px; background: var(--nv-kar); border: 1px solid var(--nv-crta); box-shadow: none; }
+#karte-panel.gf-nov .kt-pin.ok { border-color: color-mix(in srgb, #4ade80 45%, var(--nv-crta)); }
+#karte-panel.gf-nov .kt-pin b { font-size: 14px; }
+#karte-panel.gf-nov .kt-pin small { font-size: 12px; color: var(--nv-dim); }
+/* podloga — pločice */
+#karte-panel.gf-nov #karta-base-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+#karte-panel.gf-nov #karta-base-list button { min-height: 56px; border-radius: 14px; background: var(--nv-kar2); border: 1px solid var(--nv-crta); color: var(--nv-txt); font-size: 15px; font-weight: 800; box-shadow: none; }
+#karte-panel.gf-nov #karta-base-list button.active { border: 2px solid var(--nv-acc); background: color-mix(in srgb, var(--nv-acc) 16%, var(--nv-kar2)); }
+#karte-panel.gf-nov #protomaps-status { margin: 10px 2px 0; font-size: 12px; }
+/* teren — redovi s prekidačem */
+#karte-panel .kt-sw { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: 4px 0; }
+#karte-panel .kt-sw > span:first-child { display: flex; flex-direction: column; }
+#karte-panel .kt-sw b { font-size: 16px; color: var(--nv-txt); }
+#karte-panel .kt-sw small { font-size: 13px; color: var(--nv-dim); }
+#karte-panel .kt-sw .ng-switch { width: 56px; height: 32px; }
+#karte-panel .kt-sw .ng-switch span { border-radius: 16px; }
+#karte-panel .kt-sw .ng-switch span::after { top: 4px; left: 4px; width: 22px; height: 22px; }
+#karte-panel .kt-sw .ng-switch input:checked + span::after { transform: translateX(24px); }
+#karte-panel .kt-teren .asp-broj { margin: 0 0 6px; }
+#karte-panel .kt-teren #terrain-legend { font-size: 12px; line-height: 1.8; margin-top: 8px; }
+#karte-panel .kh-alati { margin-top: 8px; }
+#karte-panel .kh-alati button { font-size: 14px; }
+#karte-panel.gf-nov .karta-hub-card { border: 1px solid var(--nv-crta) !important; }
+#karte-panel.gf-nov .karta-hub-card.kh-razm.sk { border-color: color-mix(in srgb, #f59e0b 60%, var(--nv-crta)) !important; }
+#karte-panel.gf-nov .karta-hub-grid, #karte-panel.gf-nov .karta-hub-grid > .gf-tab-sek { display: block; }
+#karte-panel.gf-nov .karta-hub-grid > .gf-tab-sek[hidden] { display: none; }
+#karte-panel.gf-nov .karta-hub-grid > .gf-tab-sek > h3 { margin: 18px 4px 8px; }
+#karte-panel.gf-nov .gf-tabs button { position: relative; }
+#karte-panel.gf-nov .gf-tabs button b { position: static; display: inline-block; min-width: 0; margin-left: 2px; padding: 0 6px; border-radius: 999px; font-size: 11px; line-height: 18px; background: var(--nv-kar2); color: var(--nv-dim); box-shadow: none; transform: none; }
+#karte-panel.gf-nov #kt-srv-karte { padding: 0; background: none; border: 0 !important; }
+#karte-panel.gf-nov #kt-srv-karte .kt-red { margin: 0 0 8px; border-radius: var(--nv-r); background: var(--nv-kar); border: 1px solid var(--nv-crta); }
+#karte-panel.gf-nov .gf-tabs button b { display: none; }
+#karte-panel.gf-nov .karta-hub-card .kg-top { margin: 0; padding: 0; min-height: 0; align-items: flex-start; }

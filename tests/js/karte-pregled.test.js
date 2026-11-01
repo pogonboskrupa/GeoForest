@@ -1,9 +1,11 @@
 const fs = require('fs'), assert = require('assert');
 const H = fs.readFileSync('index.html', 'utf8');
-assert(H.includes('id="kh-pregled"') && H.includes('id="kh-offline-kartica"') && H.includes('id="kh-server"') && H.includes('id="kh-b-kml"'));
+assert(H.includes('id="kh-pregled"') && H.includes('id="kh-offline-kartica"') && H.includes('id="kh-server"'));
 const f = H.slice(H.indexOf('function _khStat() {'), H.indexOf('function _khKmlTrazi()'));
-// pregled: podloga, offline, KML, slojevi terena; svaki dodir vodi negdje
-for (const t of ['openUcitajKartuSection()', '_khKmlTrazi()', 'offline podloga', 'uključenih slojeva']) assert(f.includes(t), t);
+// „Na karti sada” (v1.3.5): podloga, offline karta, slojevi, teren; dodir otvara odgovarajući tab
+for (const t of ['Na karti sada', "'Podloga'", "'Offline karta'", "'Slojevi'", "'Teren'", "USFTabovi.izaberi('karte','"]) assert(f.includes(t), t);
+assert(f.includes('_khKmlTrazi()') && f.includes('_kedListaOtvori()'), 'preglednik i stil slojeva su alati u kartici Moji slojevi');
+assert(!H.includes('function _khObavijest') && !H.includes('Razumijem</button>'), 'bez onboarding kartice');
 assert(!f.includes('_tematski'));
-assert(/\.kh-pl\.on/.test(H) && /\.kh-bedz/.test(H) && /@media \(min-width:700px\) \{ \.kh-pregled/.test(H));
+assert(/\.kh-sada \.kh-pl\.on/.test(fs.readFileSync('static/css/geoforest.css', 'utf8')));
 console.log('karte-pregled ok');
