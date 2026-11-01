@@ -95,11 +95,11 @@ t('pauza: fiksevi se prate ali ne ulaze u pojas i ne stvaraju prekid', () => {
   const nov2 = () => ({ pid: 'x', ime: 'T', boja: '#fff', pts: [], zadT: 1000, zadFixT: 0, prekidi: { n: 0, maxS: 0 }, skokova: 0, pauza: false });
   const sn = nov2(); D._postaviSnimanje(sn);
   assert.strictEqual(D._tackaDodaj(la0, lo0, 5, 2000), true);
-  sn.pauza = true;
+  sn.pauza = true; sn.pauze = [{ s: 2500, e: null }];
   assert.strictEqual(D._tackaDodaj(la0 + 0.001, lo0, 5, 3000), false, 'u pauzi tačka ne ulazi');
   assert.strictEqual(D._tackaDodaj(la0 + 0.002, lo0, 5, 3000 + 5 * 60 * 1000), false);
   assert.strictEqual(sn.prekidi.n, 0, 'duga pauza nije prekid GPS-a');
-  sn.pauza = false;
+  sn.pauza = false; sn.pauze[0].e = 3000 + 5 * 60 * 1000 + 1000;
   assert.strictEqual(D._tackaDodaj(la0 + 0.003, lo0, 5, 3000 + 5 * 60 * 1000 + 2000), true, 'poslije nastavka ulazi');
   D._postaviSnimanje(null);
 });

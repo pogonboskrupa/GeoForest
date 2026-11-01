@@ -156,7 +156,9 @@
     const rend = rendSl = rendera(rendSl, 0.4);
     S.projekti.filter(p => p.vis !== false).forEach(p => {
       if (p.ring) L.polygon(p.ring, { pane: pane(), renderer: rend, color: '#fde68a', weight: 2, fill: false, interactive: false }).addTo(slojevi);
-      const pod = p._pod;
+      const poj = p._poj;
+      if (poj && prikaz(p) === 'pojasevi') poj.pojasi.forEach(b => b.poligoni.forEach(rs => L.polygon(rs, { pane: pane(), renderer: rend, color: b.boja, weight: 1.5, opacity: 0.9, fillColor: b.boja, fillOpacity: 0.18, interactive: false }).addTo(slojevi)));
+      const pod = prikaz(p) === 'podjela' ? p._pod : null;
       if (pod) {
         pod.regije.forEach((r, n) => {
           const t = p.tragovi[r.i]; if (!t) return;
@@ -188,6 +190,15 @@
   if (typeof _kartaKlikIzvor === 'function') _kartaKlikIzvor((ll, kp) => {
     const out = [];
     if (!imaKartu()) return out;
+    S.projekti.filter(p => p.vis !== false && p._poj && prikaz(p) === 'pojasevi').forEach(p => p._poj.pojasi.forEach(b => {
+      const tr = p.tragovi.find(t => t.id === b.id); if (!tr) return;
+      const d = _pxDoLinije(kp, tr.pts.map(x => L.latLng(x[0], x[1])), false);
+      if (d <= 26) out.push({ vrsta: 'linija', d, otvori: at => {
+        const redovi = [['Površina (procjena)', fmt(b.ha, 2) + ' ha'], [b.spojen ? 'Granica' : 'Bafer', b.spojen ? 'dijeli granicu sa susjedom' : '± ' + sirina(p) + ' m od GPS-a'], ['Datum', vrijeme(tr.od || tr.t)]];
+        const html = typeof _popKartica === 'function' ? _popKartica({ ikona: '🧭', boja: tr.boja, naslov: tr.projektant, tip: 'Pojas', meta: p.naziv, redovi }) : esc(tr.projektant);
+        L.popup({ maxWidth: 300, minWidth: 200, className: 'pk-pop' }).setLatLng(at).setContent(html).openOn(map);
+      } });
+    }));
     S.projekti.filter(p => p.vis !== false && p.stabla && p.stabla.length).forEach(p => (p.pojasi || []).forEach(q => {
       const d = _pxDoLinije(kp, q.ids.map(i => L.latLng(p.stabla[i].la, p.stabla[i].lo)), false);
       if (d <= 22) out.push({ vrsta: 'linija', d, otvori: at => pojasKartica(p, q, at) });
@@ -305,12 +316,15 @@
     q.dodan = true; return true;
   }
   // Preračun podjele je skup (Voronoi + unije): odgođen i samo kad se promijene pojasevi
+  const sirina = p => (p.sirina > 0 ? p.sirina : 20); // m po strani (ukupno 2R)
+  const prikaz = p => (p.prikaz === 'podjela' ? 'podjela' : 'pojasevi');
   function preracunaj(p, odmah) {
-    const potpis = p.tragovi.map(t => t.id + ':' + t.pts.length).join('|') + '#' + (p.ring ? p.ring.length : 0);
-    if (p._pot === potpis && p._pod) return;
+    const potpis = p.tragovi.map(t => t.id + ':' + t.pts.length).join('|') + '#' + (p.ring ? p.ring.length : 0) + '#' + sirina(p) + '#' + prikaz(p);
+    if (p._pot === potpis && p._poj) return;
     p._pot = potpis; p._racuna = true;
     const posao = () => {
-      try { p._pod = podijeli(p.ring, p.tragovi.map(t => t.pts)); } catch (e) { p._pod = null; toast('⚠ Podjela pojaseva: ' + e.message); }
+      try { p._poj = window.USFDozPojas ? window.USFDozPojas.pojasevi(p.ring, p.tragovi, sirina(p)) : null; } catch (e) { p._poj = { pojasi: [], ukupnoHa: 0, zbirHa: 0, preklopHa: 0, poKorisniku: {}, odjelHa: 0 }; toast('⚠ Obračun pojaseva: ' + e.message); }
+      try { p._pod = prikaz(p) === 'podjela' ? podijeli(p.ring, p.tragovi.map(t => t.pts)) : null; } catch (e) { p._pod = null; toast('⚠ Podjela odjela: ' + e.message); }
       p._racuna = false; crtaj(); render();
     };
     if (odmah) posao(); else { clearTimeout(racunaTimer); racunaTimer = setTimeout(posao, 30); }
@@ -324,16 +338,17 @@
   let snima = null;
   function snimaPisi() {
     if (!snima) return true;
-    try { localStorage.setItem(KLJUC_SNIMA, JSON.stringify({ pid: snima.pid, ime: snima.ime, boja: snima.boja, pts: snima.pts, zadT: snima.zadT, prekidi: snima.prekidi, skokova: snima.skokova, t0: snima.t0, pauzaMs: snima.pauzaMs, pauza: snima.pauza, pauzaOd: snima.pauzaOd })); return true; }
+    try { localStorage.setItem(KLJUC_SNIMA, JSON.stringify({ pid: snima.pid, ime: snima.ime, boja: snima.boja, pts: snima.pts, tt: snima.tt, pauze: snima.pauze, zadT: snima.zadT, prekidi: snima.prekidi, skokova: snima.skokova, t0: snima.t0, pauzaMs: snima.pauzaMs, pauza: snima.pauza, pauzaOd: snima.pauzaOd })); return true; }
     catch (e) { if (!snima.upozPisi) { snima.upozPisi = true; toast('⚠ Nema mjesta za zaštitnu kopiju pojasa — oslobodi memoriju'); } return false; }
   }
   // Prihvata fiks (la, lo, ac m, t ms). Vraća true ako je tačka ušla u pojas.
   function tackaDodaj(la, lo, ac, t) {
     if (!snima || !(t > snima.zadT)) return false;
     // prekid GPS-a: razmak između uzastopnih fiksova (ne dolaska paketa — paketi kasne kad je ekran ugašen)
-    if (!snima.pauza && snima.zadFixT && t - snima.zadFixT > PREKID_S * 1000) { snima.prekidi.n++; snima.prekidi.maxS = Math.max(snima.prekidi.maxS, Math.round((t - snima.zadFixT) / 1000)); }
+    const uPauzi = (snima.pauze || []).some(x => t >= x.s && (x.e == null || t <= x.e)); // pauza se gleda po VREMENU tačke (native bafer stiže kasnije)
+    if (!uPauzi && snima.zadFixT && t - snima.zadFixT > PREKID_S * 1000) { snima.prekidi.n++; snima.prekidi.maxS = Math.max(snima.prekidi.maxS, Math.round((t - snima.zadFixT) / 1000)); }
     snima.zadFixT = t;
-    if (snima.pauza) return false; // pauza: fiksevi se prate (nema lažnog „nema GPS”), ali ne ulaze u pojas
+    if (uPauzi) return false; // pauza: fiksevi se prate (nema lažnog „nema GPS”), ali ne ulaze u pojas
     // dobra tačnost ≤ 20 m; slabija (≤ 40 m) tek kad dobrih nema duže od 12 s, da u pojasu nema rupe
     const zazor = t - snima.zadT > ZAZOR_S * 1000;
     if (!(ac <= AC_DOBRA || (ac <= AC_SLABA && zazor))) return false;
@@ -343,7 +358,7 @@
       if (d < Math.min(8, Math.max(2.5, 0.4 * ac))) return false;     // šum u mjestu
       if (d / dtS > SKOK_MS && dtS < 30) { snima.skokova++; return false; } // GPS skok (> 18 km/h pješice)
     }
-    snima.pts.push([la, lo]); snima.zadT = t;
+    snima.pts.push([la, lo]); (snima.tt = snima.tt || []).push(t); snima.zadT = t;
     return true;
   }
   function nativno(pts) {
@@ -353,6 +368,18 @@
     snimaOsvjezi();
   }
   const tisina = () => (snima && snima.zadFixT ? Date.now() - snima.zadFixT : 0);
+  // Upozorenje „prelaziš u tuđi pojas” (najviše svakih 5 s; na 3. uzastopni pogodak; ne češće od 15 s) + crveni marker 30 s
+  function tudjiProvjera() {
+    const POJ = window.USFDozPojas;
+    if (!snima || snima.pauza || !POJ) return;
+    const sad = Date.now(); if (sad - (snima.tudjiT || 0) < 5000) return; snima.tudjiT = sad;
+    const p = nadji(snima.pid), z = snima.pts[snima.pts.length - 1]; if (!p || !z || !p.tragovi.length) return;
+    const rz = POJ.tudjiPojas(z[0], z[1], p.tragovi, snima.ime);
+    if (!POJ.tudjiOdluka(snima.tudji = snima.tudji || {}, rz, sad)) return;
+    toast('⚠ Prelazite u pojas: ' + rz.imeTudji);
+    try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch (e) {}
+    if (imaKartu()) { const m = L.circleMarker(z, { pane: pane(), radius: 9, color: '#fff', weight: 2, fillColor: '#ef4444', fillOpacity: 1, interactive: false }).addTo(map); setTimeout(() => { try { map.removeLayer(m); } catch (e) {} }, 30000); }
+  }
   const proteklo = () => (snima ? Math.max(0, (snima.pauza ? snima.pauzaOd : Date.now()) - snima.t0 - snima.pauzaMs) : 0);
   const sat = ms => { const q = Math.floor(ms / 1000), h = Math.floor(q / 3600), m = Math.floor(q % 3600 / 60), sk = q % 60, d = n => String(n).padStart(2, '0'); return (h ? h + ':' + d(m) : m) + ':' + d(sk); };
   function snimaOsvjezi() {
@@ -365,6 +392,7 @@
       const z = snima.pts[snima.pts.length - 1];
       if (z && !snima.slobodan && !snima.pauza && !map.getBounds().pad(-0.3).contains(z)) map.panTo(z, { animate: true, duration: 0.4 });
     }
+    tudjiProvjera();
     const bar = document.getElementById('doz-bar'); if (!bar) return;
     if (izbor) return;
     bar.classList.toggle('show', !!snima);
@@ -381,8 +409,9 @@
   }
   function snimaPauza() {
     if (!snima) return;
-    if (snima.pauza) { snima.pauzaMs += Date.now() - snima.pauzaOd; snima.pauza = false; snima.pauzaOd = 0; toast('▶ Snimanje nastavljeno'); }
-    else { snima.pauza = true; snima.pauzaOd = Date.now(); toast('⏸ Pauza — tačke se ne dodaju dok ne nastaviš'); }
+    const sad = Date.now(); snima.pauze = snima.pauze || [];
+    if (snima.pauza) { snima.pauzaMs += sad - snima.pauzaOd; snima.pauza = false; snima.pauzaOd = 0; const z = snima.pauze[snima.pauze.length - 1]; if (z && z.e == null) z.e = sad; toast('▶ Snimanje nastavljeno'); }
+    else { snima.pauza = true; snima.pauzaOd = sad; snima.pauze.push({ s: sad, e: null }); toast('⏸ Pauza — tačke se ne dodaju dok ne nastaviš'); }
     snimaPisi(); snimaOsvjezi();
   }
   function snimaPrati() { if (!snima) return; snima.slobodan = false; const z = snima.pts[snima.pts.length - 1] || (typeof lastP !== 'undefined' && lastP ? [lastP.la, lastP.lo] : null); if (z && imaKartu()) map.panTo(z); snimaOsvjezi(); }
@@ -407,7 +436,9 @@
   function snimaPocni(p, ime, boja, stari) {
     const bg = typeof window !== 'undefined' ? window.usfPozadina : null;
     if (typeof gpsOn !== 'undefined' && !gpsOn && typeof startGPS === 'function') startGPS();
-    snima = { pid: p.id, ime, boja, pts: stari ? stari.pts : [], zadT: stari ? stari.zadT : Date.now(), zadFixT: stari ? stari.zadT : 0, prekidi: (stari && stari.prekidi) || { n: 0, maxS: 0 }, skokova: (stari && stari.skokova) || 0,
+    const pts0 = stari ? stari.pts : [];
+    snima = { pid: p.id, ime, boja, pts: pts0, tt: stari && Array.isArray(stari.tt) && stari.tt.length === pts0.length ? stari.tt : pts0.map((_, i) => (stari ? stari.zadT : Date.now()) - (pts0.length - 1 - i) * 1000),
+      pauze: stari && Array.isArray(stari.pauze) ? stari.pauze : (stari && stari.pauza ? [{ s: stari.pauzaOd || Date.now(), e: null }] : []), tudji: {}, zadT: stari ? stari.zadT : Date.now(), zadFixT: stari ? stari.zadT : 0, prekidi: (stari && stari.prekidi) || { n: 0, maxS: 0 }, skokova: (stari && stari.skokova) || 0,
       restartT: Date.now(), nat: !!(bg && bg.nativno()), tik: setInterval(snimaTik, 1000),
       t0: (stari && stari.t0) || Date.now(), pauzaMs: (stari && stari.pauzaMs) || 0, pauza: !!(stari && stari.pauza), pauzaOd: stari && stari.pauza ? (stari.pauzaOd || Date.now()) : 0, slobodan: false, nacrtano: 0, barHtml: '' };
     if (imaKartu()) { map.off('dragstart', naPovlacenje); map.on('dragstart', naPovlacenje); }
@@ -430,13 +461,18 @@
     const s = snima, p = nadji(s.pid), d = duzinaLL(s.pts);
     snimaGasi(true); // zaštitna kopija ostaje dok pojas nije sigurno upisan
     if (!p) return;
-    if (s.pts.length < 2 || d < 20) { try { localStorage.removeItem(KLJUC_SNIMA); } catch (e) {} toast('⚠ Pojas je prekratak (' + Math.round(d) + ' m) — nije sačuvan'); render(); return; }
-    p.tragovi.push({ id: uid(), projektant: s.ime, boja: bojaProjektanta(p, s.ime), pts: s.pts, t: Date.now(), izvor: 'gps', prekidi: s.prekidi, skokova: s.skokova });
-    p.t = Date.now();
+    // Razmak > 5 min ili pauza počinje NOVI pojas (svaki prolaz je zaseban pojas); prekratak (< 20 m ili < 2 tačke) se odbacuje
+    const POJ = window.USFDozPojas, tt = s.tt || [];
+    const seg = POJ ? POJ.segmentiraj(s.pts.map((q, i) => ({ la: q[0], lo: q[1], t: tt[i] != null ? tt[i] : s.zadT })), s.pauze).filter(g => duzinaLL(g.pts) >= 20)
+      : (s.pts.length >= 2 && d >= 20 ? [{ pts: s.pts, od: s.t0, do: Date.now() }] : []);
+    if (!seg.length) { try { localStorage.removeItem(KLJUC_SNIMA); } catch (e) {} toast('⚠ Pojas je prekratak (' + Math.round(d) + ' m) — nije sačuvan'); render(); return; }
+    const boja = bojaProjektanta(p, s.ime), novi = seg.map((g, i) => ({ id: uid(), projektant: s.ime, boja, pts: g.pts, t: g.do || Date.now(), od: g.od, do: g.do, izvor: 'gps', ...(i === 0 ? { prekidi: s.prekidi, skokova: s.skokova } : {}) }));
+    p.tragovi.push(...novi); p.t = Date.now();
     if (pisi()) { try { localStorage.removeItem(KLJUC_SNIMA); } catch (e) {} }
-    else { p.tragovi.pop(); toast('⚠ Pojas NIJE upisan (nema mjesta) — kopija je sačuvana, oslobodi memoriju pa ponovo pokreni aplikaciju'); render(); return; }
+    else { p.tragovi.length -= novi.length; toast('⚠ Pojas NIJE upisan (nema mjesta) — kopija je sačuvana, oslobodi memoriju pa ponovo pokreni aplikaciju'); render(); return; }
     preracunaj(p); crtaj(); render();
-    toast('✅ Pojas sačuvan · ' + fmtM(d) + (s.prekidi.n ? ' · ⚠ ' + s.prekidi.n + (s.prekidi.n === 1 ? ' prekid GPS-a' : ' prekida GPS-a') + ' (najduži ' + s.prekidi.maxS + ' s)' : ''));
+    const uk = seg.reduce((a, g) => a + duzinaLL(g.pts), 0);
+    toast('✅ ' + (novi.length > 1 ? novi.length + ' pojasa sačuvano' : 'Pojas sačuvan') + ' · ' + fmtM(uk) + (s.prekidi.n ? ' · ⚠ ' + s.prekidi.n + (s.prekidi.n === 1 ? ' prekid GPS-a' : ' prekida GPS-a') + ' (najduži ' + s.prekidi.maxS + ' s)' : ''));
     if (typeof switchMainTab === 'function') { _otvoriPanel(); }
   }
   async function snimaOdbaci() {
@@ -466,24 +502,30 @@
   }
 
   const IZV = { gps: ['📍', 'GPS'], kml: ['📥', 'uvezeno'], stabla: ['🌲', 'iz stabala'] };
+  const SIRINE = [10, 15, 20, 25, 30];
+  const vrijeme = t => new Date(t).toLocaleString('bs', { day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   function projektHtml(p) {
-    const pod = p._pod, poPr = {};
-    p.tragovi.forEach((t, i) => { const o = poPr[t.projektant] = poPr[t.projektant] || { boja: t.boja, n: 0, km: 0, ha: 0 }; o.n++; o.km += duzinaLL(t.pts); const r = pod && pod.regije.find(x => x.i === i); if (r) o.ha += r.ha; });
-    const imena = Object.keys(poPr), uk = pod ? pod.regije.reduce((a, r) => a + r.ha, 0) : 0, pct = v => (p.ha > 0 ? Math.min(100, v / p.ha * 100) : 0);
-    // traka obuhvata: segment po projektantu u njegovoj boji
-    const traka = pod && p.ha > 0 ? `<div class="dz-prog" role="img" aria-label="Obuhvaćeno ${Math.round(pct(uk))} %">${imena.map(i => `<i style="width:${pct(poPr[i].ha).toFixed(1)}%;background:${esc(poPr[i].boja)}"></i>`).join('')}</div><div class="dz-prog-t"><b>${Math.round(pct(uk))} %</b> odjela obuhvaćeno · ${fmt(Math.max(0, p.ha - uk), 2)} ha ostalo</div>` : '';
-    const red = imena.map(i => `<div class="dz-proj"><button class="dz-boja" style="--c:${esc(poPr[i].boja)}" data-a="boja" data-ime="${esc(i)}" aria-label="Promijeni boju: ${esc(i)}"></button><div><b>${esc(i)}</b><small>${poPr[i].n} ${poPr[i].n === 1 ? 'pojas' : 'pojasa'} · ${fmtM(poPr[i].km)}</small>${pod && p.ha > 0 ? `<div class="dz-udio"><i style="width:${pct(poPr[i].ha).toFixed(1)}%;background:${esc(poPr[i].boja)}"></i></div>` : ''}</div><span>${pod ? fmt(poPr[i].ha, 2) + ' ha' + (p.ha ? '<small>' + Math.round(pct(poPr[i].ha)) + ' %</small>' : '') : '…'}</span></div>`).join('');
-    const tr = p.tragovi.map((t, i) => { const r = pod && pod.regije.find(x => x.i === i), iz = IZV[t.izvor] || IZV.gps, pk = t.prekidi && t.prekidi.n;
+    const poj = p._poj, poPr = {};
+    p.tragovi.forEach(t => { const o = poPr[t.projektant] = poPr[t.projektant] || { boja: t.boja, n: 0, km: 0 }; o.n++; o.km += duzinaLL(t.pts); });
+    const imena = Object.keys(poPr), uk = poj ? poj.ukupnoHa : 0, pct = v => (p.ha > 0 ? Math.min(100, v / p.ha * 100) : 0), haKor = i => (poj && poj.poKorisniku[i]) || 0;
+    // traka obuhvata: segment po projektantu u njegovoj boji (unija njegovih pojaseva)
+    const traka = poj && p.ha > 0 ? `<div class="dz-prog" role="img" aria-label="Obuhvaćeno ${Math.round(pct(uk))} %">${imena.map(i => `<i style="width:${pct(haKor(i)).toFixed(1)}%;background:${esc(poPr[i].boja)}"></i>`).join('')}</div><div class="dz-prog-t"><b>${Math.round(pct(uk))} %</b> odjela obuhvaćeno · ${fmt(Math.max(0, p.ha - uk), 2)} ha ostalo${poj.preklopHa > 0.005 ? ` · <span class="up">preklop ${fmt(poj.preklopHa, 2)} ha</span>` : ''}</div>` : '';
+    const red = imena.map(i => `<div class="dz-proj"><button class="dz-boja" style="--c:${esc(poPr[i].boja)}" data-a="boja" data-ime="${esc(i)}" aria-label="Promijeni boju: ${esc(i)}"></button><div><b>${esc(i)}</b><small>${poPr[i].n} ${poPr[i].n === 1 ? 'pojas' : 'pojasa'} · ${fmtM(poPr[i].km)}</small>${poj && p.ha > 0 ? `<div class="dz-udio"><i style="width:${pct(haKor(i)).toFixed(1)}%;background:${esc(poPr[i].boja)}"></i></div>` : ''}</div><span>${poj ? fmt(haKor(i), 2) + ' ha' + (p.ha ? '<small>' + Math.round(pct(haKor(i))) + ' %</small>' : '') : '…'}</span></div>`).join('');
+    const tr = p.tragovi.map((t, i) => { const b = poj && poj.pojasi.find(x => x.id === t.id), iz = IZV[t.izvor] || IZV.gps, pk = t.prekidi && t.prekidi.n;
       return `<div class="dz-trag" style="--c:${esc(t.boja)}" data-id="${esc(t.id)}"><div class="dz-t-i"><b>${esc(t.projektant)} · pojas ${i + 1}</b>
-        <div class="dz-ch"><span>📏 ${fmtM(duzinaLL(t.pts))}</span>${r ? `<span>▦ ${fmt(r.ha, 2)} ha</span>` : ''}<span>${iz[0]} ${iz[1]}</span><span>📅 ${new Date(t.t).toLocaleDateString('bs')}</span>${pk ? `<span class="up">⚠ ${t.prekidi.n} ${t.prekidi.n === 1 ? 'prekid' : 'prekida'} GPS-a</span>` : ''}</div></div>
+        <div class="dz-ch"><span>📏 ${fmtM(duzinaLL(t.pts))}</span>${b ? `<span>▦ ${fmt(b.ha, 2)} ha${b.spojen ? ' · dijeli granicu' : ''}</span>` : ''}<span>${iz[0]} ${iz[1]}</span><span>📅 ${new Date(t.od || t.t).toLocaleDateString('bs')}</span>${pk ? `<span class="up">⚠ ${t.prekidi.n} ${t.prekidi.n === 1 ? 'prekid' : 'prekida'} GPS-a</span>` : ''}</div></div>
         <div class="dz-t-a"><button data-a="tzoom" aria-label="Na karti">🔍</button><button data-a="tim" aria-label="Projektant">✏</button><button data-a="tsend" aria-label="Pošalji">📤</button><button data-a="tbris" aria-label="Obriši">🗑</button></div></div>`; }).join('');
     const kor = window.USFKorisnik ? USFKorisnik.ime() : '';
+    const sir = sirina(p), pk = prikaz(p);
     return `<section class="ng-card dz-kar">
-      <div class="dz-kpi"><div><b>${fmt(p.ha, 2)} ha</b><span>površina odjela</span></div><div><b>${p.tragovi.length}</b><span>pojaseva</span></div><div><b>${pod ? fmt(uk, 2) + ' ha' : p._racuna ? '⏳' : '—'}</b><span>obuhvaćeno</span></div></div>
+      <div class="dz-kpi"><div><b>${fmt(p.ha, 2)} ha</b><span>površina odjela</span></div><div><b>${p.tragovi.length}</b><span>pojaseva</span></div><div><b>${poj ? fmt(uk, 2) + ' ha' : p._racuna ? '⏳' : '—'}</b><span>obuhvaćeno</span></div></div>
       ${traka}
       <div class="sl-dug"><button class="zp-glavno dz-snimi" data-a="snimi"><b>▶ Snimi pojas (GPS)</b><small>${kor ? '👤 ' + esc(kor) : '⚠ upiši ime u Postavkama → Korisnik aplikacije'}</small></button></div>
       <div class="sl-dug"><button data-a="uvezi">📥 Uvezi trag (KML)</button><button data-a="posalji" ${p.tragovi.length ? '' : 'disabled'}>📤 Pošalji sve</button></div>
       <input type="file" id="doz-fajl" accept=".kml,application/vnd.google-earth.kml+xml,text/xml" hidden>
+      <div class="dz-sr"><b>Širina pojasa (sa svake strane): ${sir} m · ukupno ${2 * sir} m</b><div class="dz-chips">${SIRINE.map(v => `<button data-a="sirina" data-v="${v}" class="${v === sir ? 'on' : ''}">${v} m</button>`).join('')}</div></div>
+      <div class="dz-sr"><b>Prikaz na karti</b><div class="dz-chips"><button data-a="prikaz" data-v="pojasevi" class="${pk === 'pojasevi' ? 'on' : ''}">Pojasevi</button><button data-a="prikaz" data-v="podjela" class="${pk === 'podjela' ? 'on' : ''}">Podjela odjela</button></div></div>
+      <p class="dz-prazno dz-proc">Površina pojasa je <b>procjena</b> (GPS bafer presječen granicom odjela), ne izmjera. Pokrivenost je unija pojaseva: isti dio pređen dvaput se ne računa dvaput.</p>
       ${red ? `<h4 class="dz-h">Projektanti</h4>${red}` : ''}
       ${tr ? `<h4 class="dz-h">Pojasevi</h4>${tr}` : '<p class="dz-prazno">Još nema pojaseva — pritisni <b>Snimi pojas</b> i kreni kroz odjel.</p>'}</section>`;
   }
@@ -497,7 +539,7 @@
     const p = aktivni();
     e.innerHTML = `<section class="ng-card dz-uvod"><h3>Doznaka stabala</h3>
       <div class="sl-dug"><button class="zp-glavno" data-a="novi">＋ Novi projekat</button></div>${lista ? `<div class="dz-lista">${lista}</div>` : ''}</section>${p ? tabHtml() + (tab === 'stab' ? stablaHtml(p) : projektHtml(p)) : ''}`;
-    if (p && !p._pod && !p._racuna && p.tragovi.length) preracunaj(p);
+    if (p && !p._poj && !p._racuna && p.tragovi.length) preracunaj(p);
   }
 
   const bbox = r => r.reduce((b, q) => [Math.min(b[0], q[0]), Math.min(b[1], q[1]), Math.max(b[2], q[0]), Math.max(b[3], q[1])], [90, 180, -90, -180]);
@@ -632,6 +674,8 @@
       S.projekti = S.projekti.filter(x => x.id !== p.id); if (S.akt === p.id) S.akt = (S.projekti[0] || {}).id || null; pisi(); crtaj(); return render();
     }
     if (a === 'snimi') return snimi();
+    if (a === 'sirina') { p.sirina = +cvor.dataset.v; p._pot = null; p._poj = null; pisi(); preracunaj(p); return render(); }
+    if (a === 'prikaz') { p.prikaz = cvor.dataset.v; p._pot = null; p._poj = null; pisi(); preracunaj(p); crtaj(); return render(); }
     if (a === 'uvezi') { const f = document.getElementById('doz-fajl'); if (f) f.click(); return; }
     if (a === 'tab') { tab = cvor.dataset.t; return render(); }
     if (a === 'stuvezi') { const f = document.getElementById('doz-stabla-fajl'); if (f) f.click(); return; }
@@ -669,7 +713,7 @@
       p.projektanti = p.projektanti || {}; p.projektanti[ime] = p.projektanti[ime] || p.projektanti[stari] || bojaProjektanta(p, ime); delete p.projektanti[stari];
       (p.pojasi || []).forEach(q => { if (q.r === stari) { q.r = ime; if (q.sig) { p.prIme = p.prIme || {}; p.prIme[q.sig] = ime; } } });
       p.tragovi.forEach(t => { if (t.izvor === 'stabla' && t.projektant === stari) { t.projektant = ime; t.boja = p.projektanti[ime]; } });
-      p._pot = null; p._pod = null; pisi(); preracunaj(p); crtaj(); return render();
+      p._pot = null; p._pod = null; p._poj = null; pisi(); preracunaj(p); crtaj(); return render();
     }
     if (a === 'stukloni') {
       if (typeof _dlgConfirm === 'function' && !await _dlgConfirm('Ukloniti sva uvezena stabla i pojase od njih (' + (p.stabla || []).length + ' stabala)?', { title: 'Ukloni stabla', danger: true, okLabel: 'Ukloni' })) return;
@@ -678,12 +722,12 @@
     if (a === 'pzoom' || a === 'pdodaj') {
       const q = (p.pojasi || [])[+((cvor.closest('.dz-poj') || {}).dataset || {}).i]; if (!q) return;
       if (a === 'pzoom') { if (imaKartu()) { switchMainTab('karta'); map.fitBounds(L.latLngBounds(q.ids.map(i => [p.stabla[i].la, p.stabla[i].lo])).pad(0.3), { maxZoom: 19 }); } return; }
-      if (await pojasUProjekt(p, q)) { p._pot = null; p._pod = null; pisi(); preracunaj(p); crtaj(); render(); toast('➕ Pojas dodan u projekat'); }
+      if (await pojasUProjekt(p, q)) { p._pot = null; p._pod = null; p._poj = null; pisi(); preracunaj(p); crtaj(); render(); toast('➕ Pojas dodan u projekat'); }
       return;
     }
     if (a === 'pdodajsve') {
       let n = 0; for (const q of (p.pojasi || [])) { if (q.dodan) continue; if (await pojasUProjekt(p, q)) n++; else break; }
-      if (n) { p._pot = null; p._pod = null; pisi(); preracunaj(p); crtaj(); render(); toast('➕ Dodano pojaseva: ' + n); }
+      if (n) { p._pot = null; p._pod = null; p._poj = null; pisi(); preracunaj(p); crtaj(); render(); toast('➕ Dodano pojaseva: ' + n); }
       return;
     }
     if (a === 'posalji') return posalji(p, p.tragovi);
@@ -701,7 +745,7 @@
     }
     if (a === 'tbris') {
       if (typeof _dlgConfirm === 'function' && !await _dlgConfirm('Obrisati pojas (' + fmtM(duzinaLL(t.pts)) + ')?', { title: 'Obriši pojas', danger: true, okLabel: 'Obriši' })) return;
-      p.tragovi = p.tragovi.filter(x => x !== t); p._pot = null; p._pod = null; pisi(); preracunaj(p); crtaj(); render();
+      p.tragovi = p.tragovi.filter(x => x !== t); p._pot = null; p._pod = null; p._poj = null; pisi(); preracunaj(p); crtaj(); render();
     }
   }
   function veze() {
