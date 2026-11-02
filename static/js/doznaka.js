@@ -217,7 +217,7 @@
   function stablaOznake() {
     if (!imaKartu()) return;
     if (oznSloj) { map.removeLayer(oznSloj); oznSloj = null; }
-    const p = aktivni(); if (!p || p.vis === false || p.stabBr === false || !p.stabla || !p.stabla.length || map.getZoom() < 16) return;
+    const p = aktivni(); if (!p || true || !p.stabla || !p.stabla.length || map.getZoom() < 16) return;
     const v = map.getBounds(), kept = []; oznSloj = L.layerGroup();
     // razrijeđeno: natpis tek ako je od prethodnog udaljen ≥ 30 px (brojevi se ne gomilaju na manjem zumu)
     p.stabla.filter(x => v.contains([x.la, x.lo])).forEach(x => {
@@ -240,24 +240,21 @@
   function stablaHtml(p) {
     const s = p.stabla || [], po = p.pojasi || [], pr = p.stabPrag || 50, grupe = new Map();
     s.forEach(x => { const k = (x.r || '—') + (x.d ? ' · ' + x.d : ''); const o = grupe.get(k) || grupe.set(k, { n: 0, a: Infinity, b: -Infinity }).get(k); o.n++; if (x.n != null) { o.a = Math.min(o.a, x.n); o.b = Math.max(o.b, x.n); } });
-    const gr = [...grupe].map(([k, o]) => `<div class="dz-trag" style="--c:#94a3b8"><div class="dz-t-i"><b>${esc(k)}</b><small>${o.n} stabala${isFinite(o.a) ? ' · br. ' + o.a + '–' + o.b : ''}</small></div></div>`).join('');
+    const gr = [...grupe].map(([k, o]) => `<div class="dz-trag" style="--c:#94a3b8"><div class="dz-t-i"><b>${esc(k)}</b><small>${o.n} stabala</small></div></div>`).join('');
     const poR = new Map();
     po.forEach(q => { if (!q.r) return; const o = poR.get(q.r) || poR.set(q.r, { r: q.r, sig: q.sig, n: 0, st: 0, dug: 0, a: Infinity, b: -Infinity }).get(q.r); o.n++; o.st += q.ids.length; o.dug += q.dug; q.ids.forEach(i => { const n = s[i].n; if (n != null) { o.a = Math.min(o.a, n); o.b = Math.max(o.b, n); } }); });
-    const prj = [...poR.values()].map(o => `<div class="dz-proj"><button class="dz-boja" style="--c:${esc(bojaR(p, o.r))}" data-a="boja" data-ime="${esc(o.r)}" aria-label="Promijeni boju: ${esc(o.r)}"></button><div><b>${esc(o.r)}</b><small>${o.n} ${o.n === 1 ? 'pojas' : 'pojasa'} · ${o.st} stabala${isFinite(o.a) ? ' · br. ' + o.a + '–' + o.b : ''} · ${fmtM(o.dug)}</small></div><button data-a="prime" data-ime="${esc(o.r)}" aria-label="Preimenuj">✏</button></div>`).join('');
+    const prj = [...poR.values()].map(o => `<div class="dz-proj"><button class="dz-boja" style="--c:${esc(bojaR(p, o.r))}" data-a="boja" data-ime="${esc(o.r)}" aria-label="Promijeni boju: ${esc(o.r)}"></button><div><b>${esc(o.r)}</b><small>${o.n} ${o.n === 1 ? 'pojas' : 'pojasa'} · ${o.st} stabala · ${fmtM(o.dug)}</small></div><button data-a="prime" data-ime="${esc(o.r)}" aria-label="Preimenuj">✏</button></div>`).join('');
     const raspon = q => { const b = q.ids.map(i => s[i].n).filter(n => n != null); return b.length ? ' · br. ' + Math.min(...b) + '–' + Math.max(...b) : ''; };
-    const pj = po.map((q, i) => `<div class="dz-trag dz-poj" style="--c:${esc(bojaR(p, q.r))}" data-i="${i}"><div class="dz-t-i"><b>Pojas ${i + 1}${q.r ? ' · ' + esc(q.r) : ''}</b><small>${q.ids.length} stabala${raspon(q)} · ${fmtM(q.dug)}${q.d ? ' · ' + esc(q.d) : ''}</small></div>
+    const pj = po.map((q, i) => `<div class="dz-trag dz-poj" style="--c:${esc(bojaR(p, q.r))}" data-i="${i}"><div class="dz-t-i"><b>Pojas ${i + 1}${q.r ? ' · ' + esc(q.r) : ''}</b><small>${q.ids.length} stabala · ${fmtM(q.dug)}${q.d ? ' · ' + esc(q.d) : ''}</small></div>
       <div class="dz-t-a"><button data-a="pzoom" aria-label="Na karti">🔍</button><button data-a="pdodaj" aria-label="U pojaseve projekta" ${q.dodan ? 'disabled' : ''}>${q.dodan ? '✓' : '➕'}</button></div></div>`).join('');
     return `<section class="ng-card dz-kar">
       <div class="dz-kpi"><div><b>${s.length}</b><span>stabala</span></div><div><b>${grupe.size}</b><span>grupa</span></div><div><b>${po.length}</b><span>pojasa</span></div></div>
       <div class="sl-dug"><button class="zp-glavno" data-a="stuvezi">📥 Uvezi stabla (KML)</button></div>
       <input type="file" id="doz-stabla-fajl" accept=".kml,application/vnd.google-earth.kml+xml,text/xml" hidden>
-      ${s.length ? `<div class="dz-chips" role="group" aria-label="Najveći razmak u pojasu">${[30, 50, 80].map(v => `<button data-a="prag" data-v="${v}" class="${pr === v ? 'on' : ''}">${v} m</button>`).join('')}</div>
-      ${bezOznaka(p) ? `<div class="dz-chips"><button data-a="nacin" data-v="skok" class="${blokNacin(p) === 'skok' ? 'on' : ''}">Blok po skoku</button><button data-a="nacin" data-v="korak" class="${blokNacin(p) === 'korak' ? 'on' : ''}">Blok po broju</button></div>
-      <label class="dz-korak"><span>Broj projektanata u odjelu</span><input id="doz-brpr" type="number" inputmode="numeric" min="0" max="12" placeholder="—" value="${p.stabBrPr > 0 ? p.stabBrPr : ''}"></label>
-      <label class="dz-korak"><span>${blokNacin(p) === 'skok' ? 'Skok među brojevima (m)' : 'Pločica po inženjeru'}</span><input id="doz-blok" type="number" inputmode="numeric" min="1" value="${blokVrijednost(p)}"></label>` : ''}
-      <div class="sl-dug"><button class="zp-glavno" data-a="pojas">🔗 Pojas</button></div>
+      ${s.length ? (bezOznaka(p) ? `<div class="dz-auto">🧠 Pojasevi se prate automatski po nizu brojeva pločica${p.stabPragAuto ? ' · prekid pojasa ' + p.stabPragAuto + ' m' : ''}</div>` : `<div class="dz-chips" role="group" aria-label="Najveći razmak u pojasu">${[30, 50, 80].map(v => `<button data-a="prag" data-v="${v}" class="${pr === v ? 'on' : ''}">${v} m</button>`).join('')}</div>`) + `
+      <div class="sl-dug"><button class="zp-glavno" data-a="pojas">🔗 Preračunaj pojaseve</button></div>
       <div class="sl-dug"><button data-a="pdodajsve" ${po.length ? '' : 'disabled'}>➕ Sve u pojaseve projekta</button></div>
-      <div class="sl-dug dz-tgl"><button data-a="stvid" class="${p.stabVid === false ? '' : 'on'}">👁 Stabla</button><button data-a="stbr" class="${p.stabBr === false ? '' : 'on'}">🔢 Brojevi</button><button data-a="stilot" class="${stilOtv ? 'on' : ''}">🎨 Linije</button><button data-a="stukloni" aria-label="Ukloni stabla">🗑</button></div>
+      <div class="sl-dug dz-tgl"><button data-a="stvid" class="${p.stabVid === false ? '' : 'on'}">👁 Stabla</button><button data-a="stilot" class="${stilOtv ? 'on' : ''}">🎨 Linije</button><button data-a="stukloni" aria-label="Ukloni stabla">🗑</button></div>
       ${stilOtv ? stilHtml(p) : ''}
       ${bezOznaka(p) && (p.stabBl || []).length ? `<h4 class="dz-h">Inženjeri (blokovi pločica)</h4>${blokHtml(p)}` : prj ? `<h4 class="dz-h">Projektanti</h4>${prj}` : gr ? `<h4 class="dz-h">Grupe</h4>${gr}` : ''}${pj ? `<h4 class="dz-h">Pojasevi</h4>${pj}` : ''}${p.pojUsam ? `<h4 class="dz-h">Usamljena stabla: ${p.pojUsam}</h4>` : ''}${p.pojBezBroja ? `<h4 class="dz-h">Bez broja: ${p.pojBezBroja}</h4>` : ''}` : ''}</section>`;
   }
@@ -271,6 +268,7 @@
     let n = 0;
     novo.forEach(x => { const k = x.n + '|' + x.la.toFixed(6) + '|' + x.lo.toFixed(6); if (ima.has(k)) return; ima.add(k); const o = { n: x.n, la: +x.la.toFixed(7), lo: +x.lo.toFixed(7) }; if (x.t != null && String(x.t) !== String(x.n)) o.t = x.t; if (x.r) o.r = x.r; if (x.d) o.d = x.d; p.stabla.push(o); n++; });
     pisi(); crtaj(); render();
+    if (bezOznaka(p) && n) { p.stabBl = null; p.stabBlStep = null; stablaPojas(p); }
     if (imaKartu()) { try { map.fitBounds(L.latLngBounds(p.stabla.map(x => [x.la, x.lo])).pad(0.15), { maxZoom: 18 }); } catch (e) {} }
     toast('📥 Stabla: +' + n + (novo.length - n ? ' (' + (novo.length - n) + ' već ima)' : ''));
   }
@@ -294,9 +292,17 @@
   }
   const bezOznaka = p => (p.stabla || []).length > 0 && p.stabla.every(x => !x.r);
   function stablaPojas(p) {
-    const s = p.stabla || [], prag = p.stabPrag || 50;
-    let r;
-    if (bezOznaka(p)) { blokoviOsvjezi(p); r = ST().gradiBlokove(s, prag, p.stabBl); } else r = ST().gradi(s, prag);
+    const s = p.stabla || [];
+    let r, prag = p.stabPrag || 50;
+    if (bezOznaka(p)) {
+      // pametno: prag i skok iz razmaka susjednih brojeva pločica, pa konsolidacija komada pojasa (vidi USFDozStabla.parametri/konsoliduj)
+      const par = ST().parametri(s); prag = par.prag; p.stabPragAuto = prag; p.stabNacin = 'skok'; p.stabSkok = par.skok;
+      blokoviOsvjezi(p);
+      r = ST().gradiBlokove(s, prag, p.stabBl, { gap: true });
+      r.pojasi = ST().konsoliduj(s, r.pojasi, r.singles, prag);
+      const u = new Set(); r.pojasi.forEach(q => q.ids.forEach(i => u.add(i)));
+      r.usamljena = r.singles.filter(x => !u.has(x.i)).length;
+    } else r = ST().gradi(s, prag);
     p.pojasi = r.pojasi; p.pojUsam = r.usamljena; p.pojBezBroja = r.bezBroja || 0;
     p.pojasi.forEach(q => { if (q.r) bojaProjektanta(p, q.r); });
     pisi(); crtaj(); render();
@@ -305,7 +311,7 @@
   function blokHtml(p) {
     return (p.stabBl || []).map((b, i) => {
       const st = (p.stabla || []).filter(x => x.n != null && x.n >= b.od && x.n <= b.do).length, pj = (p.pojasi || []).filter(q => q.sig === b.od + '-' + b.do), dug = pj.reduce((a, q) => a + q.dug, 0);
-      return `<div class="dz-proj dz-bl" data-i="${i}"><button class="dz-boja" style="--c:${esc(bojaR(p, b.ime))}" data-a="boja" data-ime="${esc(b.ime)}" aria-label="Promijeni boju: ${esc(b.ime)}"></button><div><b>${esc(b.ime)}</b><small>br. ${b.od}–${b.do} · ${st} stabala · ${pj.length} ${pj.length === 1 ? 'pojas' : 'pojasa'} · ${fmtM(dug)}</small></div><button data-a="bime" aria-label="Preimenuj">✏</button><button data-a="bgr" aria-label="Granica bloka">✂</button></div>`;
+      return `<div class="dz-proj dz-bl" data-i="${i}"><button class="dz-boja" style="--c:${esc(bojaR(p, b.ime))}" data-a="boja" data-ime="${esc(b.ime)}" aria-label="Promijeni boju: ${esc(b.ime)}"></button><div><b>${esc(b.ime)}</b><small>${st} stabala · ${pj.length} ${pj.length === 1 ? 'pojas' : 'pojasa'} · ${fmtM(dug)}</small></div><button data-a="bime" aria-label="Preimenuj">✏</button><button data-a="bgr" aria-label="Granica bloka">✂</button></div>`;
     }).join('');
   }
   async function pojasUProjekt(p, q) {

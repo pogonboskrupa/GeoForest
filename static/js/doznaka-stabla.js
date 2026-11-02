@@ -147,24 +147,78 @@
   }
   // Pojasi po blokovima: stabla bloka redom po broju; razmak veći od praga prekida pojas.
   // → { pojasi: [{ r: ime, d: '', sig: 'od-do', ids, dug }], usamljena, bezBroja }
-  function gradiBlokove(stabla, prag, bl) {
+  function gradiBlokove(stabla, prag, bl, opc) {
+    const gap = !!(opc && opc.gap);
     prag = prag > 0 ? prag : PRAG_ZAD;
     if (!stabla || !stabla.length || !bl || !bl.length) return { pojasi: [], usamljena: 0, bezBroja: stabla ? stabla.length : 0 };
     const P = ravan(stabla[0].la, stabla[0].lo), xy = stabla.map(s => P.fw([s.la, s.lo]));
-    const pojasi = []; let usamljena = 0, dodijeljeno = 0;
+    const pojasi = [], singles = []; let usamljena = 0, dodijeljeno = 0;
     for (const b of bl) {
       const ids = []; stabla.forEach((s, i) => { if (s.n != null && s.n >= b.od && s.n <= b.do) ids.push(i); });
       ids.sort((x, y) => stabla[x].n - stabla[y].n || x - y);
       dodijeljeno += ids.length;
       let tek = [];
-      const zatvori = () => { if (tek.length > 1) { let dug = 0; for (let j = 1; j < tek.length; j++) dug += dist(xy[tek[j - 1]], xy[tek[j]]); pojasi.push({ r: b.ime, d: '', sig: b.od + '-' + b.do, ids: tek, dug }); } else if (tek.length === 1) usamljena++; tek = []; };
-      for (const i of ids) { if (tek.length && dist(xy[tek[tek.length - 1]], xy[i]) > prag) zatvori(); tek.push(i); }
+      const zatvori = () => { if (tek.length === 1 && gap) singles.push({ r: b.ime, sig: b.od + '-' + b.do, i: tek[0] }); if (tek.length > 1) { let dug = 0; for (let j = 1; j < tek.length; j++) dug += dist(xy[tek[j - 1]], xy[tek[j]]); pojasi.push({ r: b.ime, d: '', sig: b.od + '-' + b.do, ids: tek, dug }); } else if (tek.length === 1) usamljena++; tek = []; };
+      for (const i of ids) {
+        if (tek.length) {
+          const pr = tek[tek.length - 1], g = Math.max(1, (stabla[i].n || 0) - (stabla[pr].n || 0)); // preskočeni brojevi = preskočena stabla → veći dozvoljeni razmak
+          const lim = gap ? prag * (1 + 0.6 * Math.min(g - 1, 5)) : prag;
+          if (dist(xy[pr], xy[i]) > lim) zatvori();
+        }
+        tek.push(i);
+      }
       zatvori();
     }
-    return { pojasi, usamljena, bezBroja: stabla.length - dodijeljeno };
+    return { pojasi, usamljena, bezBroja: stabla.length - dodijeljeno, singles };
   }
 
-  const api = { izKml, gradi, blokovi, blokoviSkok, dodijeli, gradiBlokove, brojIzNaziva, danIz, PRAG_ZAD };
+  // ── Pametno: prag i skok iz samih podataka, pa konsolidacija ──
+  // Prati niz brojeva pločica: medijan razmaka između SUSJEDNIH brojeva (n, n+1) daje tipičan korak doznake; prag prekida pojasa = 4× korak
+  // (25–100 m), skok među inženjerima = max(300 m, 6× prag). Konsolidacija spaja komade pojasa istog bloka koje razdvaja samo rupa u
+  // brojevima ili kratak razmak, a usamljeno stablo vezuje za pojas kojem je najbliži kraj (≤ 2× prag, brojevi susjedni).
+  function parametri(stabla) {
+    const l = stabla.map((s, i) => ({ n: s.n, i })).filter(x => x.n != null).sort((a, b) => a.n - b.n || a.i - b.i);
+    if (l.length < 2) return { prag: PRAG_ZAD, skok: 300, korak: null };
+    const P = ravan(stabla[l[0].i].la, stabla[l[0].i].lo), xy = stabla.map(s => P.fw([s.la, s.lo])), d = [];
+    for (let k = 1; k < l.length; k++) if (l[k].n - l[k - 1].n === 1) d.push(dist(xy[l[k - 1].i], xy[l[k].i]));
+    d.sort((a, b) => a - b);
+    const korak = d.length ? d[Math.floor(d.length / 2)] : null;
+    const prag = korak ? Math.max(25, Math.min(100, Math.round(korak * 4))) : PRAG_ZAD;
+    return { prag, skok: Math.max(300, prag * 6), korak };
+  }
+  function konsoliduj(stabla, pojasi, singles, prag) {
+    if (!pojasi.length && !(singles || []).length) return pojasi;
+    const P = ravan(stabla[0].la, stabla[0].lo), xy = stabla.map(s => P.fw([s.la, s.lo]));
+    const n = i => stabla[i].n, lim = prag * 2;
+    const duz = ids => { let d = 0; for (let j = 1; j < ids.length; j++) d += dist(xy[ids[j - 1]], xy[ids[j]]); return d; };
+    const po = pojasi.map(q => ({ ...q, ids: q.ids.slice() }));
+    // 1) usamljena stabla: na kraj ili početak pojasa istog bloka kad su brojevi susjedni (≤ 3 razlike) i razmak ≤ 2× prag
+    for (const sg of singles || []) {
+      let naj = null, nd = Infinity, kraj = true;
+      for (const q of po) {
+        if (q.sig !== sg.sig) continue;
+        const a = q.ids[0], z = q.ids[q.ids.length - 1];
+        const dz = dist(xy[z], xy[sg.i]), da = dist(xy[a], xy[sg.i]);
+        if (n(sg.i) > n(z) && n(sg.i) - n(z) <= 3 && dz <= lim && dz < nd) { nd = dz; naj = q; kraj = true; }
+        if (n(sg.i) < n(a) && n(a) - n(sg.i) <= 3 && da <= lim && da < nd) { nd = da; naj = q; kraj = false; }
+      }
+      if (naj) { if (kraj) naj.ids.push(sg.i); else naj.ids.unshift(sg.i); }
+    }
+    // 2) spajanje komada istog bloka: sljedeći počinje blizu kraja prethodnog i brojevi se nastavljaju (rupa ≤ 8)
+    po.sort((a, b) => (a.sig === b.sig ? n(a.ids[0]) - n(b.ids[0]) : 0));
+    const izlaz = [];
+    for (const q of po) {
+      const pr = izlaz.length ? izlaz[izlaz.length - 1] : null;
+      if (pr && pr.sig === q.sig) {
+        const z = pr.ids[pr.ids.length - 1], a = q.ids[0], g = n(a) - n(z);
+        if (g >= 1 && g <= 8 && dist(xy[z], xy[a]) <= lim) { pr.ids = pr.ids.concat(q.ids); continue; }
+      }
+      izlaz.push(q);
+    }
+    return izlaz.map(q => ({ r: q.r, d: q.d || '', sig: q.sig, ids: q.ids, dug: duz(q.ids) }));
+  }
+
+  const api = { izKml, gradi, blokovi, blokoviSkok, dodijeli, gradiBlokove, parametri, konsoliduj, brojIzNaziva, danIz, PRAG_ZAD };
   root.USFDozStabla = api;
   if (typeof module !== 'undefined') module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);
