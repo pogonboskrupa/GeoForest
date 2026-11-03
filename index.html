@@ -2222,7 +2222,7 @@ body.sl-uredi #sl-ured { display: block; }
 // android/app/build.gradle versionCode+versionName. Sva tri MORAJU biti
 // usklađena prije svakog commita.
 // =====================================================================
-const APP_VER = 'v1.4.0';
+const APP_VER = 'v1.4.1';
 document.getElementById('meni-ver-badge').textContent = 'GeoForest ' + APP_VER;
 
 // Verzije koriste tri jednocifrena segmenta: patch i minor idu 0–9.
@@ -2493,9 +2493,10 @@ const map = L.map('map', {
   preferCanvas: true
 }).setView(_initMapCenter, _initMapZoom);
 
-map.on('moveend', () => {
-  const c = map.getCenter();
-  localStorage.setItem('usf_last_pos', JSON.stringify({ la: c.lat, lo: c.lng, z: map.getZoom() }));
+let _lastPosT = 0;
+map.on('moveend', () => { // upis odgođen: sinhroni localStorage usred povlačenja blokira nit
+  clearTimeout(_lastPosT);
+  _lastPosT = setTimeout(() => { const c = map.getCenter(); try { localStorage.setItem('usf_last_pos', JSON.stringify({ la: c.lat, lo: c.lng, z: map.getZoom() })); } catch (e) {} }, 800);
 });
 
 // Paneovi slojeva (mjerenja/trag/KML dijele istu kartu; klik ide kroz _kartaKlikIzvor).
@@ -6662,7 +6663,7 @@ function _nativeSqlmapAdd(info) {
   const bounds = _sqlParseBounds(meta);
   const layer = new _NativeSqlTileLayer(_NATIVE_TILE_URL + encodeURIComponent(info.id) + '/{z}/{x}/{y}', {
     pane:'offlineBasePane', ..._sqlZoomOpts(info.minzoom, info.maxzoom),
-    tileSize:256, updateWhenIdle:false, updateWhenZooming:false, keepBuffer:2,
+    tileSize:256, updateWhenIdle:true, updateWhenZooming:false, keepBuffer:2,
     nativeId:info.id, format:info.format || 'png'
   });
   layer._urlRadi = false; layer._mostSamo = false;
