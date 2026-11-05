@@ -1983,6 +1983,8 @@ body.sl-uredi #sl-ured { display: block; }
       </section>
       <div id="set-korisnik-dno"><div id="set-korisnik-box"></div></div>
     </section>
+    <div class="set-trazi-box"><input type="search" id="set-trazi" placeholder="Traži postavku (npr. GPS, razmjera, kopija)" autocomplete="off" aria-label="Traži postavku"><div id="set-trazi-rez" class="set-lista" hidden></div></div>
+    <div id="set-kopija" class="set-kopija" role="status"></div>
     <section class="update-card" id="set-update-card" data-phase="idle">
       <div class="update-card-head">
         <div class="update-card-icon">⇩</div>
@@ -2222,7 +2224,7 @@ body.sl-uredi #sl-ured { display: block; }
 // android/app/build.gradle versionCode+versionName. Sva tri MORAJU biti
 // usklađena prije svakog commita.
 // =====================================================================
-const APP_VER = 'v1.4.2';
+const APP_VER = 'v1.4.3';
 document.getElementById('meni-ver-badge').textContent = 'GeoForest ' + APP_VER;
 
 // Verzije koriste tri jednocifrena segmenta: patch i minor idu 0–9.
@@ -7590,7 +7592,7 @@ function _setPodaci() {
   el.innerHTML = polja.map(([t, v]) => `<div><b>${v}</b><small>${t}</small></div>`).join('');
 }
 // ── Rezervna kopija: localStorage ključevi aplikacije (bez keševa) ──
-const _SET_BACKUP_BEZ = /^(usf_pozari_kes|usf_pozari_god_cache|usf_crash_trag|usf_batt_hint|usf_pozari_notif_seen)/;
+const _SET_BACKUP_BEZ = /^(usf_pozari_kes|usf_pozari_god_cache|usf_crash_trag|usf_batt_hint|usf_pozari_notif_seen|usf_kopija_zadnja)/;
 function _setBackupKljucevi() {
   const out = {};
   for (let i = 0; i < localStorage.length; i++) {
@@ -7613,6 +7615,7 @@ async function _setBackup() {
   if (typeof _izvozFajl !== 'function') { showToast('⚠ Izvoz nije dostupan'); return; }
   _izvozFajl('geoforest_kopija_' + new Date().toISOString().slice(0, 10) + '.json', sadrzaj, 'application/json', 'GeoForest — rezervna kopija');
   showToast('💾 Kopija: ' + Object.keys(kljucevi).length + ' stavki');
+  if (window.USFIzgled) USFIzgled.kopijaZabiljezi();
 }
 // Prima i kopiju iz Grmeč Navigatora (isti usf_ ključevi) — prelazak bez gubitka podataka.
 const _KOPIJA_APP = ['geoforest', 'grmec-navigator'];
