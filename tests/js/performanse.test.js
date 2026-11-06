@@ -15,7 +15,7 @@ t('Doznaka ne pravi novi L.canvas pri svakom crtanju', () => {
   assert.strictEqual(n, 1, 'L.canvas( mora biti samo u pomoćnoj funkciji rendera, a ima ih ' + n);
   assert.ok(D.includes('rendera(rendSl') && D.includes('rendera(rendIzb'));
 });
-t('KML renderer nema ogroman padding', () => { assert.ok(/_kmlRenderer = L\.canvas\(\{ pane: 'tragMsrLines', padding: 0\.4 \}\)/.test(H)); });
+t('KML renderer nema ogroman padding', () => { assert.ok(/_kmlRenderer = L\.canvas\(\{ pane: 'tragMsrLines', padding: 0\.25 \})/.test(H)); });
 t('visina u značci koordinata je odgođena', () => { assert.ok(H.includes('_geoBadgeT = setTimeout(_geoBadgeUpdate, 350)')); });
 t('Firebase se ne učitava blokirajuće i Firestore se ne inicijalizuje', () => {
   assert.ok(!/<script src="static\/libs\/firebase\//.test(H), 'firebase script tag u zaglavlju');

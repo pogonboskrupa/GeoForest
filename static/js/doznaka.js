@@ -153,7 +153,7 @@
     if (!imaKartu()) return;
     if (slojevi) { map.removeLayer(slojevi); slojevi = null; }
     slojevi = L.layerGroup();
-    const rend = rendSl = rendera(rendSl, 0.4);
+    const rend = rendSl = rendera(rendSl, 0.25);
     S.projekti.filter(p => p.vis !== false).forEach(p => {
       if (p.ring) L.polygon(p.ring, { pane: pane(), renderer: rend, color: '#fde68a', weight: 2, fill: false, interactive: false }).addTo(slojevi);
       const poj = p._poj;
@@ -560,7 +560,7 @@
   function izbCrtaj() {
     if (izbSloj && imaKartu()) { try { map.removeLayer(izbSloj); } catch (e) {} } izbSloj = null;
     if (!izbor || !imaKartu()) return;
-    const g = izbSloj = L.layerGroup().addTo(map), v = map.getBounds(), rend = rendIzb = rendera(rendIzb, 0.3);
+    const g = izbSloj = L.layerGroup().addTo(map), v = map.getBounds(), rend = rendIzb = rendera(rendIzb, 0.2);
     const vidi = x => x.bb[2] >= v.getSouth() && x.bb[0] <= v.getNorth() && x.bb[3] >= v.getWest() && x.bb[1] <= v.getEast();
     izbor.lista.filter(x => izbor.sel.includes(x) || (map.getZoom() >= 11 && vidi(x))).slice(0, 900).forEach(x => {
       const sel = izbor.sel.includes(x);

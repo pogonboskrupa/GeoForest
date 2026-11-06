@@ -78,54 +78,6 @@
     }
   }
 
-  // ── Postavke: stanje rezervne kopije i pretraga ──
-  const KOPIJA_KEY = 'usf_kopija_zadnja', DAN = 864e5;
-  // Čista funkcija (test): ISO datum zadnje kopije → {nivo:'nikad'|'star'|'ok', tekst}
-  function kopijaStanje(iso, now) {
-    const t = iso ? Date.parse(iso) : NaN;
-    if (!isFinite(t)) return { nivo: 'nikad', tekst: 'Kopija još nije napravljena' };
-    const d = Math.max(0, Math.floor(((now == null ? Date.now() : now) - t) / DAN));
-    const tekst = d === 0 ? 'Zadnja kopija: danas' : d === 1 ? 'Zadnja kopija: jučer' : 'Zadnja kopija: prije ' + d + ' dana';
-    return { nivo: d > 14 ? 'star' : 'ok', tekst };
-  }
-  function kopijaZabiljezi() { try { localStorage.setItem(KOPIJA_KEY, new Date().toISOString()); } catch (e) {} kopijaOsvjezi(); }
-  function kopijaOsvjezi() {
-    const el = document.getElementById('set-kopija'); if (!el) return;
-    let iso = null; try { iso = localStorage.getItem(KOPIJA_KEY); } catch (e) {}
-    const st = kopijaStanje(iso);
-    el.dataset.nivo = st.nivo;
-    el.innerHTML = `<span class="sk-ik" aria-hidden="true">${st.nivo === 'ok' ? '✓' : '⚠'}</span><span class="sk-tx"><b>Rezervna kopija</b><small>${esc(st.tekst)}</small></span><button type="button" data-a="kopija">${st.nivo === 'ok' ? 'Napravi novu' : 'Napravi sada'}</button>`;
-  }
-  // Pretraga: blokovi .set-blok[id] po naslovu i sadržaju, rezultat vodi na podstranicu
-  function pretrazi(q, blokovi) {
-    q = String(q || '').trim().toLowerCase(); if (q.length < 2) return [];
-    return blokovi.map(b => ({ b, naslov: b.naslov.toLowerCase(), tekst: b.tekst.toLowerCase() }))
-      .filter(x => x.naslov.includes(q) || x.tekst.includes(q))
-      .sort((x, y) => (y.naslov.includes(q) ? 1 : 0) - (x.naslov.includes(q) ? 1 : 0))
-      .slice(0, 8).map(x => x.b);
-  }
-  function setPretraga() {
-    const inp = document.getElementById('set-trazi'), out = document.getElementById('set-trazi-rez'); if (!inp || !out) return;
-    const blokovi = () => [...document.querySelectorAll('#postavke-panel .set-blok[id]')].map(el => {
-      const h = el.querySelector('h4'), str = el.closest('.set-str[data-str]');
-      return { id: el.id, naslov: h ? h.textContent.trim() : el.id, str: str ? str.dataset.naslov || '' : '', tekst: el.textContent || '' };
-    });
-    inp.addEventListener('input', () => {
-      const r = pretrazi(inp.value, blokovi());
-      out.hidden = inp.value.trim().length < 2;
-      out.innerHTML = r.length ? r.map(b => `<button type="button" class="mn-red" data-id="${esc(b.id)}"><span class="mn-tx"><b>${esc(b.naslov)}</b><small>${esc(b.str)}</small></span><svg class="mn-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>`).join('') : '<p class="set-nap">Nema rezultata.</p>';
-    });
-    out.addEventListener('click', e => {
-      const b = e.target.closest('button[data-id]'); if (!b) return;
-      inp.value = ''; out.hidden = true;
-      if (typeof _setSkok === 'function') _setSkok(b.dataset.id);
-    });
-  }
-  if (typeof document !== 'undefined') {
-    const init = () => { kopijaOsvjezi(); setPretraga(); const k = document.getElementById('set-kopija'); if (k) k.addEventListener('click', e => { if (e.target.closest('button[data-a="kopija"]') && typeof _setBackup === 'function') _setBackup(); }); };
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
-  }
-
-  W.USFIzgled = { nastavi, stavke, setStr, setZa, kopijaZabiljezi, kopijaOsvjezi };
-  if (typeof module !== 'undefined') module.exports = { stavke, kopijaStanje, pretrazi };
+  W.USFIzgled = { nastavi, stavke, setStr, setZa };
+  if (typeof module !== 'undefined') module.exports = { stavke };
 })(typeof window !== 'undefined' ? window : globalThis);

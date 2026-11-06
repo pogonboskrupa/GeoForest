@@ -133,7 +133,7 @@
   function pripremi() {
     if (grp || typeof map === 'undefined') return !!grp;
     map.createPane('inventuraPane'); map.getPane('inventuraPane').style.zIndex = '416'; map.getPane('inventuraPane').style.pointerEvents = 'none';
-    ren = L.canvas({ pane: 'inventuraPane', padding: 0.5 });
+    ren = L.canvas({ pane: 'inventuraPane', padding: 0.25 });
     grp = L.layerGroup().addTo(map); natpisi = L.layerGroup().addTo(map); aktGrp = L.layerGroup().addTo(map);
     map.on('moveend zoomend', crtaj);
     return true;

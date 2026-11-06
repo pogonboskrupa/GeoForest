@@ -800,17 +800,3 @@ html.desk #meni-panel .mn-grp { grid-template-columns: 1fr 1fr; }
 #karte-panel .kl-d { display: inline-block; margin-top: 2px; font-size: 12px; font-weight: 800; color: #7dd3fc; }
 #karte-panel .kl-d.in { color: #86efac; }
 #karte-panel .kh-prazno { margin: 6px 2px; font-size: 14px; color: var(--nv-dim); }
-
-/* Postavke — pretraga i stanje rezervne kopije (v1.4.3) */
-.set-trazi-box { margin: 0 0 10px; }
-.set-trazi-box input { width: 100%; min-height: var(--gf-tap, 52px); padding: 0 14px; border-radius: 14px; border: 2px solid var(--gf-rub, #3d5a4b); background: var(--gf-kar-2, #1c2b24); color: var(--gf-txt, #e8f1ec); font: inherit; font-size: 15px; box-sizing: border-box; }
-.set-trazi-box .set-lista { margin-top: 8px; }
-.set-kopija { display: flex; align-items: center; gap: 12px; margin: 0 0 12px; padding: 12px 14px; border-radius: 16px; border: 2px solid var(--gf-rub, #3d5a4b); background: var(--gf-kar, #16241e); }
-.set-kopija .sk-ik { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-weight: 900; background: #14532d; color: #86efac; }
-.set-kopija .sk-tx { flex: 1; min-width: 0; display: grid; gap: 2px; }
-.set-kopija .sk-tx b { font-size: 15px; }
-.set-kopija .sk-tx small { font-size: 13.5px; opacity: .8; }
-.set-kopija button { flex: none; min-height: 44px; padding: 0 14px; border-radius: 12px; border: 2px solid #3d5a4b; background: var(--gf-kar-2, #1c2b24); color: inherit; font: inherit; font-weight: 800; touch-action: manipulation; }
-.set-kopija:not([data-nivo="ok"]) { border-color: #d97706; }
-.set-kopija:not([data-nivo="ok"]) .sk-ik { background: #78350f; color: #fcd34d; }
-.set-kopija:not([data-nivo="ok"]) button { background: #d97706; border-color: #d97706; color: #1a1205; }
