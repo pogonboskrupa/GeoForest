@@ -84,9 +84,22 @@
   function bandXY(v, drugi, R) {
     const t = T();
     let spojen = false;
+    // Mreža ćelija 2R: udaljenost do susjeda važi samo do 2R (dalje je širina R), pa se testiraju segmenti iz susjednih ćelija
+    const C = 2 * R, grid = new Map(), kljuc = (i, j) => i * 100003 + j;
+    for (const sg of drugi) {
+      const i0 = Math.floor(Math.min(sg[0][0], sg[1][0]) / C), i1 = Math.floor(Math.max(sg[0][0], sg[1][0]) / C);
+      const j0 = Math.floor(Math.min(sg[0][1], sg[1][1]) / C), j1 = Math.floor(Math.max(sg[0][1], sg[1][1]) / C);
+      for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) { const k = kljuc(i, j); let l = grid.get(k); if (!l) grid.set(k, l = []); l.push(sg); }
+    }
     let w = v.map(q => {
       let d = Infinity;
-      for (const s of drugi) { const dd = dSeg(q, s[0], s[1]); if (dd >= BLIZU && dd < d) d = dd; }
+      if (grid.size) {
+        const ci = Math.floor(q[0] / C), cj = Math.floor(q[1] / C);
+        for (let i = ci - 1; i <= ci + 1; i++) for (let j = cj - 1; j <= cj + 1; j++) {
+          const l = grid.get(kljuc(i, j)); if (!l) continue;
+          for (const sg of l) { const dd = dSeg(q, sg[0], sg[1]); if (dd >= BLIZU && dd < d) d = dd; }
+        }
+      }
       const x = Math.min(R, Math.max(W_MIN, d / 2));
       if (x < R - 0.5) spojen = true;
       return x;
@@ -94,23 +107,43 @@
     if (w.length > 2) w = w.map((x, i) => (i === 0 || i === w.length - 1 ? x : (w[i - 1] + 2 * x + w[i + 1]) / 4)); // zaglađivanje
     const poli = [];
     const krug = (c, r) => { const k = []; for (let i = 0; i < 12; i++) k.push([c[0] + r * Math.cos(i * Math.PI / 6), c[1] + r * Math.sin(i * Math.PI / 6)]); k.push(k[0]); return t.polygon([k]); };
-    let prevD = null;
-    for (let i = 0; i + 1 < v.length; i++) {
-      const a = v[i], b = v[i + 1], dx = b[0] - a[0], dy = b[1] - a[1], d = Math.hypot(dx, dy);
-      if (d < 0.05) continue;
-      const nx = -dy / d, ny = dx / d;
-      poli.push(t.polygon([[[a[0] + nx * w[i], a[1] + ny * w[i]], [b[0] + nx * w[i + 1], b[1] + ny * w[i + 1]], [b[0] - nx * w[i + 1], b[1] - ny * w[i + 1]], [a[0] - nx * w[i], a[1] - ny * w[i]], [a[0] + nx * w[i], a[1] + ny * w[i]]]]));
-      const ugao = prevD ? Math.abs(Math.atan2(prevD[0] * dy / d - prevD[1] * dx / d, prevD[0] * dx / d + prevD[1] * dy / d)) : 99;
-      if (i === 0 || ugao > 0.14) poli.push(krug(a, w[i]));
-      prevD = [dx / d, dy / d];
+    // Tjemena bez nula-dužina; glatki dijelovi (zaokret mali u odnosu na dužinu susjednih segmenata i širinu) čine JEDAN poligon
+    // (lijevi lanac + desni lanac unazad, spoj po simetrali), oštri zaokreti prekidaju trakt i dobijaju krug.
+    const tj = [], ww = [];
+    v.forEach((q, i) => { const z = tj[tj.length - 1]; if (!z || Math.hypot(q[0] - z[0], q[1] - z[1]) >= 0.05) { tj.push(q); ww.push(w[i]); } });
+    const n = tj.length, dir = [], dl = [];
+    for (let i = 0; i + 1 < n; i++) { const dx = tj[i + 1][0] - tj[i][0], dy = tj[i + 1][1] - tj[i][1], d = Math.hypot(dx, dy); dir.push([dx / d, dy / d]); dl.push(d); }
+    let lijevo = [], desno = [];
+    const zatvoriTrakt = () => {
+      if (lijevo.length >= 2) {
+        const r = lijevo.concat(desno.slice().reverse()); r.push(r[0]);
+        try { poli.push(t.polygon([r])); } catch (e) { /* degenerisan trakt */ }
+      }
+      lijevo = []; desno = [];
+    };
+    const tacka = (i, nx, ny, k) => { lijevo.push([tj[i][0] + nx * ww[i] * k, tj[i][1] + ny * ww[i] * k]); desno.push([tj[i][0] - nx * ww[i] * k, tj[i][1] - ny * ww[i] * k]); };
+    for (let i = 0; i < n; i++) {
+      if (i === 0) { const d = dir[0]; tacka(0, -d[1], d[0], 1); poli.push(krug(tj[0], ww[0])); continue; }
+      if (i === n - 1) { const d = dir[n - 2]; tacka(i, -d[1], d[0], 1); zatvoriTrakt(); poli.push(krug(tj[i], ww[i])); break; }
+      const d0 = dir[i - 1], d1 = dir[i], cos = d0[0] * d1[0] + d0[1] * d1[1], ugao = Math.acos(Math.max(-1, Math.min(1, cos)));
+      const izvlaci = ww[i] * Math.tan(ugao / 2) > 0.5 * Math.min(dl[i - 1], dl[i]) || ugao > 0.3;
+      if (izvlaci) { // oštar zaokret: završi trakt ravnim krajem, krug u tjemenu, novi trakt iz sljedećeg segmenta
+        tacka(i, -d0[1], d0[0], 1); zatvoriTrakt(); poli.push(krug(tj[i], ww[i])); tacka(i, -d1[1], d1[0], 1);
+      } else { // simetrala: normala srednjeg smjera, produžena 1/cos(ugao/2)
+        let mx = d0[0] + d1[0], my = d0[1] + d1[1]; const ml = Math.hypot(mx, my) || 1; mx /= ml; my /= ml;
+        tacka(i, -my, mx, 1 / Math.max(0.5, Math.cos(ugao / 2)));
+      }
     }
-    poli.push(krug(v[v.length - 1], w[w.length - 1]));
     return { f: unija(poli), spojen };
   }
 
   // tragovi [{ id, projektant, boja, pts: [[la, lo]], t, od, do }]; ring [[la, lo]] = granica odjela; R = m po strani
   // → { pojasi: [{ id, projektant, boja, t, od, do, ha, spojen, poligoni }], ukupnoHa, zbirHa, preklopHa, poKorisniku: {ime: ha}, odjelHa }
-  function pojasevi(ring, tragovi, R) {
+  // Jezgro kao generator: yield između koraka (po tragu i po krugu unije) — async verzija popušta UI niti, sinhrona ga samo odvrti.
+  // kes (opciono, objekat): pojas pojedinog traga se pamti po potpisu (tačke, R, susjedni tragovi) pa dodavanje/brisanje jednog traga
+  // ne računa ponovo ostale.
+  const potpis = (x, ring) => x.id + '|' + x.pts.length + '|' + x.pts[0] + '|' + x.pts[x.pts.length >> 1] + '|' + x.pts[x.pts.length - 1] + '|' + ring.length + '|' + ring[0];
+  function* jezgro(ring, tragovi, R, kes) {
     const t = T(); R = R > 0 ? R : R_ZADANO;
     const prazno = { pojasi: [], ukupnoHa: 0, zbirHa: 0, preklopHa: 0, poKorisniku: {}, odjelHa: 0 };
     if (!t || !ring || ring.length < 3) return prazno;
@@ -118,22 +151,63 @@
     const valj = (tragovi || []).filter(x => x && x.pts && x.pts.length >= 2).map(x => ({ x, xy: dp(x.pts.map(P.fw), 1.2) })).filter(v => v.xy.length >= 2);
     const segs = valj.map(v => { const s = []; for (let i = 0; i + 1 < v.xy.length; i++) s.push([v.xy[i], v.xy[i + 1]]); return s; });
     const bb = valj.map(v => { const xs = v.xy.map(q => q[0]), ys = v.xy.map(q => q[1]); return [Math.min(...xs) - 2 * R, Math.min(...ys) - 2 * R, Math.max(...xs) + 2 * R, Math.max(...ys) + 2 * R]; });
-    const pojasi = [], fs = [];
-    valj.forEach((v, k) => {
-      const drugi = [];
-      valj.forEach((o, j) => { if (j !== k && !(bb[j][2] < bb[k][0] || bb[j][0] > bb[k][2] || bb[j][3] < bb[k][1] || bb[j][1] > bb[k][3])) segs[j].forEach(s => drugi.push(s)); });
-      let b; try { b = bandXY(zgusni(v.xy, KORAK), drugi, R); } catch (e) { b = null; }
-      if (!b || !b.f) return;
-      let f = null; try { f = t.intersect(b.f, odjelF); } catch (e) { f = null; }
-      if (!f) return;
-      const ha = haF(f), o = v.x;
-      fs.push({ f, ime: o.projektant, ha });
-      pojasi.push({ id: o.id, projektant: o.projektant, boja: o.boja, t: o.t, od: o.od, do: o.do, ha, spojen: b.spojen, poligoni: prstenovi(f).map(rs => rs.map(r => r.map(P.bw))) });
-    });
-    const ukupno = fs.length ? haF(unija(fs.map(x => x.f))) : 0, zbir = fs.reduce((a, x) => a + x.ha, 0);
+    const sig = valj.map(v => potpis(v.x, ring));
+    const pojasi = [], fs = [], novi = {};
+    for (let k = 0; k < valj.length; k++) {
+      const v = valj[k], susjedi = [];
+      valj.forEach((o, j) => { if (j !== k && !(bb[j][2] < bb[k][0] || bb[j][0] > bb[k][2] || bb[j][3] < bb[k][1] || bb[j][1] > bb[k][3])) susjedi.push(j); });
+      const kk = sig[k] + '#' + R + '#' + susjedi.map(j => sig[j]).sort().join(',');
+      let r = kes && kes[kk];
+      if (!r) {
+        const drugi = []; susjedi.forEach(j => segs[j].forEach(sg => drugi.push(sg)));
+        let b; try { b = bandXY(zgusni(v.xy, KORAK), drugi, R); } catch (e) { b = null; }
+        let f = null;
+        if (b && b.f) { try { f = t.intersect(b.f, odjelF); } catch (e) { f = null; } }
+        r = f ? { f, ha: haF(f), spojen: b.spojen, poligoni: prstenovi(f).map(rs => rs.map(q => q.map(P.bw))) } : { f: null };
+        yield;
+      }
+      novi[kk] = r;
+      if (!r.f) continue;
+      const o = v.x;
+      fs.push({ f: r.f, ime: o.projektant, ha: r.ha });
+      pojasi.push({ id: o.id, projektant: o.projektant, boja: o.boja, t: o.t, od: o.od, do: o.do, ha: r.ha, spojen: r.spojen, poligoni: r.poligoni });
+    }
+    if (kes) { Object.keys(kes).forEach(x => delete kes[x]); Object.assign(kes, novi); }
+    const ukupno = fs.length ? haF(yield* unijaGen(fs.map(x => x.f))) : 0, zbir = fs.reduce((a, x) => a + x.ha, 0);
     const poKorisniku = {};
-    [...new Set(fs.map(x => x.ime))].forEach(ime => { const l = fs.filter(x => x.ime === ime); poKorisniku[ime] = haF(unija(l.map(x => x.f))); });
+    for (const ime of new Set(fs.map(x => x.ime))) poKorisniku[ime] = haF(yield* unijaGen(fs.filter(x => x.ime === ime).map(x => x.f)));
     return { pojasi, ukupnoHa: ukupno, zbirHa: zbir, preklopHa: Math.max(0, zbir - ukupno), poKorisniku, odjelHa };
+  }
+  function* unijaGen(lista) {
+    const t = T(); lista = lista.filter(Boolean);
+    while (lista.length > 1) {
+      const n = [];
+      for (let i = 0; i < lista.length; i += 2) {
+        if (i + 1 >= lista.length) { n.push(lista[i]); continue; }
+        let u = null; try { u = t.union(lista[i], lista[i + 1]); } catch (e) { u = null; }
+        n.push(u || lista[i]); yield;
+      }
+      lista = n;
+    }
+    return lista[0] || null;
+  }
+  function pojasevi(ring, tragovi, R, kes) { const g = jezgro(ring, tragovi, R, kes); for (;;) { const s = g.next(); if (s.done) return s.value; } }
+  // Async: obračun u komadima od ~25 ms, između komada se vraća UI niti (mapa i dodir ostaju odzivni); otkazi() → null
+  function pojaseviAsync(ring, tragovi, R, kes, otkazi) {
+    return new Promise((res, rej) => {
+      const g = jezgro(ring, tragovi, R, kes);
+      const korak = () => {
+        try {
+          const t0 = Date.now();
+          for (;;) {
+            if (otkazi && otkazi()) return res(null);
+            const s = g.next(); if (s.done) return res(s.value);
+            if (Date.now() - t0 > 25) return setTimeout(korak, 0);
+          }
+        } catch (e) { rej(e); }
+      };
+      korak();
+    });
   }
 
   // Upozorenje „prelaziš u tuđi pojas”: udaljenosti (m) tačke do najbližeg tuđeg i najbližeg vlastitog traga
@@ -158,7 +232,7 @@
     return false;
   }
 
-  const API = { segmentiraj, pojasevi, tudjiPojas, tudjiOdluka, ravan, R_ZADANO, GAP_MS };
+  const API = { segmentiraj, pojasevi, pojaseviAsync, tudjiPojas, tudjiOdluka, ravan, R_ZADANO, GAP_MS };
   W.USFDozPojas = API;
   if (typeof module !== 'undefined') module.exports = API;
 })(typeof window !== 'undefined' ? window : globalThis);

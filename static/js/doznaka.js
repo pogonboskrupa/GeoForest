@@ -328,10 +328,21 @@
     const potpis = p.tragovi.map(t => t.id + ':' + t.pts.length).join('|') + '#' + (p.ring ? p.ring.length : 0) + '#' + sirina(p) + '#' + prikaz(p);
     if (p._pot === potpis && p._poj) return;
     p._pot = potpis; p._racuna = true;
-    const posao = () => {
-      try { p._poj = window.USFDozPojas ? window.USFDozPojas.pojasevi(p.ring, p.tragovi, sirina(p)) : null; } catch (e) { p._poj = { pojasi: [], ukupnoHa: 0, zbirHa: 0, preklopHa: 0, poKorisniku: {}, odjelHa: 0 }; toast('⚠ Obračun pojaseva: ' + e.message); }
+    const prazno = { pojasi: [], ukupnoHa: 0, zbirHa: 0, preklopHa: 0, poKorisniku: {}, odjelHa: 0 };
+    const kraj = () => {
       try { p._pod = prikaz(p) === 'podjela' ? podijeli(p.ring, p.tragovi.map(t => t.pts)) : null; } catch (e) { p._pod = null; toast('⚠ Podjela odjela: ' + e.message); }
       p._racuna = false; crtaj(); render();
+    };
+    // Obračun pojaseva ide u komadima (async) da mapa i dodir ostanu odzivni; keš po tragu `_pojKes` — dodan/obrisan trag ne računa ostale ponovo
+    const posao = async () => {
+      const U = window.USFDozPojas, kes = p._pojKes || (p._pojKes = {});
+      if (!U) { p._poj = null; return kraj(); }
+      try {
+        const r = odmah ? U.pojasevi(p.ring, p.tragovi, sirina(p), kes) : await U.pojaseviAsync(p.ring, p.tragovi, sirina(p), kes, () => p._pot !== potpis);
+        if (r === null) return; // preračun je u međuvremenu zamijenjen novijim
+        p._poj = r;
+      } catch (e) { p._poj = prazno; toast('⚠ Obračun pojaseva: ' + e.message); }
+      kraj();
     };
     if (odmah) posao(); else { clearTimeout(racunaTimer); racunaTimer = setTimeout(posao, 30); }
   }

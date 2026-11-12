@@ -81,4 +81,16 @@ t('tuđi pojas: udaljenosti, odluka tek na 3. uzastopni pogodak i najviše jedno
   assert.strictEqual(Z.tudjiOdluka(st, p, 6000), false, 'ne češće od 15 s');
   assert.strictEqual(Z.tudjiOdluka(st, p, 21000), true);
 });
+t('keš: ponovni obračun daje isto, novi trag računa samo svoje; async = sinhrono', async () => {
+  const a = trag('a', 'A', 60), b = trag('b', 'B', 200), kes = {};
+  const r1 = Z.pojasevi(odjel, [a, b], 20, kes), n1 = Object.keys(kes).length;
+  const r2 = Z.pojasevi(odjel, [a, b], 20, kes);
+  assert.strictEqual(n1, 2); assert.strictEqual(r1.ukupnoHa, r2.ukupnoHa);
+  const c = trag('c', 'A', 120), r3 = Z.pojasevi(odjel, [a, b, c], 20, kes);
+  assert.strictEqual(Object.keys(kes).length, 3); assert.ok(r3.ukupnoHa > r1.ukupnoHa);
+  const ra = await Z.pojaseviAsync(odjel, [a, b, c], 20, {}, null);
+  assert.ok(Math.abs(ra.ukupnoHa - r3.ukupnoHa) < 1e-9);
+  assert.strictEqual(await Z.pojaseviAsync(odjel, [a, b, c], 20, {}, () => true), null, 'otkazan obračun vraća null');
+});
+
 console.log('\n' + pass + ' prošlo — doznaka pojasevi');
